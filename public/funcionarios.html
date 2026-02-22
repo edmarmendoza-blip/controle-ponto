@@ -263,9 +263,28 @@
               </div>
             </div>
             <div>
-              <label class="block text-sm font-medium mb-1">Descricao da Jornada</label>
-              <textarea id="func-jornada-texto" rows="3" placeholder="Ex: Segunda a sexta, das 08:00 as 17:00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"></textarea>
+              <label class="block text-sm font-medium mb-1">Descricao da Jornada (Texto Natural)</label>
+              <textarea id="func-jornada-texto" rows="3" placeholder="Ex: Segunda a sexta, das 08:00 as 17:48, com 1h de almoco. Sabado e domingo nao trabalha." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"></textarea>
+              <button type="button" onclick="parseJornada()" id="btn-parse-jornada" class="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium transition-colors">
+                <i class="bi bi-stars"></i>
+                <span>Interpretar com IA</span>
+              </button>
             </div>
+            <!-- AI Preview -->
+            <div id="jornada-preview" class="hidden">
+              <div class="p-4 rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/20">
+                <div class="flex items-center justify-between mb-3">
+                  <h4 class="text-sm font-semibold text-purple-700 dark:text-purple-400 flex items-center gap-2">
+                    <i class="bi bi-stars"></i> Jornada Interpretada pela IA
+                  </h4>
+                  <button type="button" onclick="aplicarJornada()" class="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium transition-colors flex items-center gap-1">
+                    <i class="bi bi-check-lg"></i> Aplicar
+                  </button>
+                </div>
+                <div id="jornada-preview-content" class="space-y-2 text-sm"></div>
+              </div>
+            </div>
+            <input type="hidden" id="func-jornada-json">
           </div>
 
           <!-- Tab: Beneficios -->
@@ -577,7 +596,7 @@
         const showInactive = document.getElementById('toggle-inativos').checked;
         const url = '/api/funcionarios' + (showInactive ? '?includeInactive=true' : '');
         const res = await fetch(url, {
-          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+          headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('ponto_token') || localStorage.getItem('token')) }
         });
         if (!res.ok) throw new Error('Erro ao carregar');
         const data = await res.json();
@@ -676,6 +695,10 @@
       document.getElementById('transportes-list').innerHTML = '';
       transporteRowIndex = 0;
 
+      // Reset AI jornada preview
+      parsedJornada = null;
+      document.getElementById('jornada-preview').classList.add('hidden');
+
       // Switch to first tab
       switchTab('pessoais');
 
@@ -706,6 +729,14 @@
         document.getElementById('func-dia-especial').value = func.valor_dia_especial != null ? func.valor_dia_especial : '320';
         document.getElementById('func-jornada').value = func.jornada_diaria != null ? func.jornada_diaria : '9.8';
         document.getElementById('func-jornada-texto').value = func.jornada_texto || '';
+        document.getElementById('func-jornada-json').value = func.jornada_json || '';
+        // Show preview if jornada_json exists
+        if (func.jornada_json) {
+          try {
+            parsedJornada = JSON.parse(func.jornada_json);
+            parseJornadaPreview(parsedJornada);
+          } catch(e) { /* ignore parse errors */ }
+        }
 
         // Beneficios
         document.getElementById('func-contabiliza-hora-extra').checked = func.contabiliza_hora_extra !== false;
@@ -739,7 +770,8 @@
         if (func.notificacoes_ativas) {
           document.getElementById('func-notificacoes-ativas').checked = true;
           document.getElementById('sub-notificacoes').classList.remove('hidden');
-          const notifs = func.notificacoes || {};
+          let notifs = {};
+          try { notifs = func.notificacoes_config ? JSON.parse(func.notificacoes_config) : {}; } catch(e) {}
           document.getElementById('func-notif-resumo-semanal').checked = !!notifs.resumo_semanal;
           document.getElementById('func-notif-aviso-holerite').checked = !!notifs.aviso_holerite;
           document.getElementById('func-notif-comprovante-pagamento').checked = !!notifs.comprovante_pagamento;
@@ -788,12 +820,13 @@
         valor_dia_especial: parseFloat(document.getElementById('func-dia-especial').value) || 320,
         jornada_diaria: parseFloat(document.getElementById('func-jornada').value) || 9.8,
         jornada_texto: document.getElementById('func-jornada-texto').value,
+        jornada_json: document.getElementById('func-jornada-json').value || null,
 
         // Beneficios
-        contabiliza_hora_extra: document.getElementById('func-contabiliza-hora-extra').checked,
-        recebe_vt: document.getElementById('func-recebe-vt').checked,
-        recebe_va: document.getElementById('func-recebe-va').checked,
-        contabiliza_feriado: document.getElementById('func-contabiliza-feriado').checked,
+        contabiliza_hora_extra: document.getElementById('func-contabiliza-hora-extra').checked ? 1 : 0,
+        recebe_vt: document.getElementById('func-recebe-vt').checked ? 1 : 0,
+        recebe_va: document.getElementById('func-recebe-va').checked ? 1 : 0,
+        contabiliza_feriado: document.getElementById('func-contabiliza-feriado').checked ? 1 : 0,
 
         // Vale-Transporte
         tipo_transporte: document.getElementById('func-tipo-transporte').value,
@@ -803,7 +836,7 @@
         transportes: getTransportes(),
 
         // Vale-Alimentacao
-        tem_vale_alimentacao: document.getElementById('func-tem-va').checked,
+        tem_vale_alimentacao: document.getElementById('func-tem-va').checked ? 1 : 0,
         valor_va_dia: document.getElementById('func-tem-va').checked
           ? (parseFloat(document.getElementById('func-valor-va-dia').value) || 0)
           : null,
@@ -814,13 +847,13 @@
         pix_banco: document.getElementById('func-pix-banco').value,
 
         // Comunicacao
-        notificacoes_ativas: document.getElementById('func-notificacoes-ativas').checked,
-        notificacoes: {
+        notificacoes_ativas: document.getElementById('func-notificacoes-ativas').checked ? 1 : 0,
+        notificacoes_config: JSON.stringify({
           resumo_semanal: document.getElementById('func-notif-resumo-semanal').checked,
           aviso_holerite: document.getElementById('func-notif-aviso-holerite').checked,
           comprovante_pagamento: document.getElementById('func-notif-comprovante-pagamento').checked,
           lembrete_ponto: document.getElementById('func-notif-lembrete-ponto').checked
-        }
+        })
       };
 
       if (id) {
@@ -837,7 +870,7 @@
           method,
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
+            'Authorization': 'Bearer ' + (localStorage.getItem('ponto_token') || localStorage.getItem('token'))
           },
           body: JSON.stringify(body)
         });
@@ -858,7 +891,7 @@
       try {
         const res = await fetch(`/api/funcionarios/${id}`, {
           method: 'DELETE',
-          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+          headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('ponto_token') || localStorage.getItem('token')) }
         });
         if (!res.ok) throw new Error('Erro ao excluir');
         if (typeof showToast === 'function') showToast('Funcionario desativado!', 'success');
@@ -872,6 +905,85 @@
     document.getElementById('modal-funcionario').addEventListener('click', function(e) {
       if (e.target === this) closeModal();
     });
+
+    // ===== AI Jornada Parsing =====
+    let parsedJornada = null;
+
+    function parseJornadaPreview(j) {
+      const preview = document.getElementById('jornada-preview');
+      const content = document.getElementById('jornada-preview-content');
+      const diasMap = { seg: 'Seg', ter: 'Ter', qua: 'Qua', qui: 'Qui', sex: 'Sex', sab: 'Sab', dom: 'Dom' };
+      const escalaMap = { fixa: 'Fixa', '12x36': '12x36', escala: 'Escala', diarista: 'Diarista', outro: 'Outro' };
+      content.innerHTML = `
+        <div class="grid grid-cols-2 gap-2">
+          <div><span class="text-gray-500 dark:text-gray-400">Dias:</span> <span class="font-medium">${(j.dias_semana || []).map(d => diasMap[d] || d).join(', ') || '-'}</span></div>
+          <div><span class="text-gray-500 dark:text-gray-400">Escala:</span> <span class="font-medium">${escalaMap[j.tipo_escala] || j.tipo_escala || '-'}</span></div>
+          <div><span class="text-gray-500 dark:text-gray-400">Entrada:</span> <span class="font-medium">${j.horario_entrada || '-'}</span></div>
+          <div><span class="text-gray-500 dark:text-gray-400">Saida:</span> <span class="font-medium">${j.horario_saida || '-'}</span></div>
+          <div><span class="text-gray-500 dark:text-gray-400">Carga Horaria:</span> <span class="font-medium">${j.carga_horaria_diaria ? j.carga_horaria_diaria + 'h' : '-'}</span></div>
+          <div><span class="text-gray-500 dark:text-gray-400">Hora Extra:</span> <span class="font-medium">${j.regra_hora_extra || '-'}</span></div>
+        </div>
+        ${j.folgas && j.folgas.length ? `<div class="mt-1"><span class="text-gray-500 dark:text-gray-400">Folgas:</span> <span class="font-medium">${j.folgas.join(', ')}</span></div>` : ''}
+        ${j.observacoes ? `<div class="mt-1"><span class="text-gray-500 dark:text-gray-400">Obs:</span> <span class="font-medium">${j.observacoes}</span></div>` : ''}
+      `;
+      preview.classList.remove('hidden');
+    }
+
+    async function parseJornada() {
+      const texto = document.getElementById('func-jornada-texto').value.trim();
+      if (!texto) {
+        if (typeof showToast === 'function') showToast('Digite a descricao da jornada primeiro', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btn-parse-jornada');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> <span>Processando...</span>';
+
+      try {
+        const token = localStorage.getItem('ponto_token') || localStorage.getItem('token');
+        const res = await fetch('/api/funcionarios/parse-jornada', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({ texto })
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Erro ao interpretar jornada');
+        }
+
+        const data = await res.json();
+        parsedJornada = data.jornada;
+        parseJornadaPreview(parsedJornada);
+        if (typeof showToast === 'function') showToast('Jornada interpretada com sucesso!', 'success');
+      } catch (err) {
+        if (typeof showToast === 'function') showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-stars"></i> <span>Interpretar com IA</span>';
+      }
+    }
+
+    function aplicarJornada() {
+      if (!parsedJornada) return;
+
+      // Apply parsed values to form fields
+      if (parsedJornada.horario_entrada) {
+        document.getElementById('func-horario').value = parsedJornada.horario_entrada;
+      }
+      if (parsedJornada.carga_horaria_diaria) {
+        document.getElementById('func-jornada').value = parsedJornada.carga_horaria_diaria;
+      }
+
+      // Save JSON to hidden field
+      document.getElementById('func-jornada-json').value = JSON.stringify(parsedJornada);
+
+      if (typeof showToast === 'function') showToast('Dados da jornada aplicados!', 'success');
+    }
 
     window.onAuthReady = function() {
       loadFuncionarios();

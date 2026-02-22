@@ -18,6 +18,68 @@ router.get('/', authenticateToken, (req, res) => {
   }
 });
 
+// POST /api/funcionarios/parse-jornada - AI-powered schedule parsing
+// MUST be before /:id to avoid being caught by the param route
+router.post('/parse-jornada', authenticateToken, requireGestor, [
+  body('texto').notEmpty().withMessage('Texto da jornada obrigatório')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { texto } = req.body;
+
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return res.status(500).json({ error: 'ANTHROPIC_API_KEY não configurada' });
+    }
+
+    const Anthropic = require('@anthropic-ai/sdk');
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+    const response = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 500,
+      messages: [{
+        role: 'user',
+        content: `Analise esta descrição de jornada de trabalho e retorne APENAS um JSON válido (sem markdown, sem explicação) com a estrutura abaixo. Se algum campo não puder ser determinado, use null.
+
+Descrição: "${texto}"
+
+Estrutura esperada:
+{
+  "dias_semana": ["seg", "ter", "qua", "qui", "sex"],
+  "horario_entrada": "09:00",
+  "horario_saida": "18:00",
+  "carga_horaria_diaria": 8,
+  "regra_hora_extra": "acima de 8h por dia",
+  "folgas": [],
+  "tipo_escala": "fixa",
+  "observacoes": ""
+}
+
+Valores possíveis para tipo_escala: "fixa", "12x36", "escala", "diarista", "outro".
+Dias da semana: "seg", "ter", "qua", "qui", "sex", "sab", "dom".`
+      }]
+    });
+
+    const content = response.content[0].text.trim();
+    let parsed;
+    try {
+      const jsonStr = content.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+      parsed = JSON.parse(jsonStr);
+    } catch (parseErr) {
+      return res.status(422).json({ error: 'Não foi possível interpretar a jornada', raw: content });
+    }
+
+    res.json({ jornada: parsed, texto_original: texto });
+  } catch (err) {
+    console.error('Parse jornada error:', err);
+    res.status(500).json({ error: 'Erro ao processar jornada: ' + err.message });
+  }
+});
+
 // GET /api/funcionarios/search
 router.get('/search', authenticateToken, [
   query('q').notEmpty().trim().withMessage('Termo de busca obrigatório')
