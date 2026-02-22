@@ -563,7 +563,7 @@
                   <td>${r.entrada || '-'}</td>
                   <td>${r.saida || '-'}</td>
                   <td><span class="badge bg-${r.tipo === 'whatsapp' ? 'success' : 'secondary'} bg-opacity-10 text-${r.tipo === 'whatsapp' ? 'success' : 'secondary'}">${r.tipo}</span></td>
-                  <td>${r.latitude && r.longitude ? `<a class="location-link" onclick="App.showLocationMap(${r.latitude}, ${r.longitude})" title="Ver no mapa"><i class="bi bi-geo-alt-fill"></i></a>` : '<i class="bi bi-geo-alt text-muted"></i>'}</td>
+                  <td>${r.latitude != null && r.longitude != null && isFinite(r.latitude) && isFinite(r.longitude) ? `<a class="location-link" onclick="App.showLocationMap(${parseFloat(r.latitude)}, ${parseFloat(r.longitude)})" title="Ver no mapa"><i class="bi bi-geo-alt-fill"></i></a>` : '<i class="bi bi-geo-alt text-muted"></i>'}</td>
                   <td>${r.observacao || '-'}</td>
                   <td>
                     <button class="btn btn-action btn-outline-primary" onclick="App.openRegistroModal(${r.id})" title="Editar"><i class="bi bi-pencil"></i></button>
@@ -611,10 +611,18 @@
   }
 
   function showLocationMap(lat, lng) {
+    lat = parseFloat(lat);
+    lng = parseFloat(lng);
+    if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      showToast('Localização inválida para este registro', 'warning');
+      return;
+    }
     const body = `<div id="location-detail-map" class="map-container" style="height:350px;"></div>
       <p class="mt-2 text-muted text-center">${lat.toFixed(6)}, ${lng.toFixed(6)}</p>`;
-    const modal = openModal('Localização do Registro', body, '');
+    openModal('Localização do Registro', body, '');
     setTimeout(() => {
+      const mapEl = document.getElementById('location-detail-map');
+      if (!mapEl) return;
       const map = L.map('location-detail-map').setView([lat, lng], 16);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap'
