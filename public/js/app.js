@@ -1676,8 +1676,9 @@
     try {
       const status = await api('/api/whatsapp/status');
       const isConnected = status.status === 'connected';
-      const statusColor = isConnected ? 'success' : status.status === 'waiting_qr' ? 'warning' : 'danger';
-      const statusText = isConnected ? 'Conectado' : status.status === 'waiting_qr' ? 'Aguardando QR Code' : 'Desconectado';
+      const isInitializing = status.status === 'initializing';
+      const statusColor = isConnected ? 'success' : isInitializing ? 'info' : status.status === 'waiting_qr' ? 'warning' : 'danger';
+      const statusText = isConnected ? 'Conectado' : isInitializing ? 'Conectando...' : status.status === 'waiting_qr' ? 'Aguardando QR Code' : 'Desconectado';
 
       content.innerHTML = `
         <div class="row g-3 mb-4">
@@ -1701,11 +1702,18 @@
           <h5><i class="bi bi-qr-code me-2"></i>QR Code / Conexao</h5>
           ${isConnected
             ? '<div class="text-center py-4"><i class="bi bi-check-circle text-success" style="font-size:3rem;"></i><p class="mt-2 text-success fw-bold">WhatsApp conectado e monitorando o grupo!</p></div>'
+            : isInitializing
+            ? '<div class="text-center py-4"><div class="spinner-border text-info" role="status"></div><p class="mt-2 text-info fw-bold">Conectando ao WhatsApp...</p></div>'
             : `<div class="text-center py-3">
                 <p>Escaneie o QR Code para conectar o WhatsApp ao sistema.</p>
-                <a href="/api/whatsapp/qr" target="_blank" class="btn btn-success">
-                  <i class="bi bi-qr-code me-1"></i> Abrir QR Code
-                </a>
+                <div class="d-flex justify-content-center gap-2">
+                  <a href="/api/whatsapp/qr" target="_blank" class="btn btn-success">
+                    <i class="bi bi-qr-code me-1"></i> Abrir QR Code
+                  </a>
+                  ${status.status === 'disconnected' ? `<button class="btn btn-warning" onclick="App.reconnectWhatsApp()">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Reconectar
+                  </button>` : ''}
+                </div>
               </div>`
           }
         </div>
@@ -1743,6 +1751,17 @@
     try {
       await api('/api/whatsapp/test', { method: 'POST', body: JSON.stringify({ message: msg }) });
       showToast('Mensagem enviada no grupo!');
+    } catch (err) {
+      showToast(err.message, 'danger');
+    }
+  }
+
+  async function reconnectWhatsApp() {
+    try {
+      showToast('Iniciando reconexao...', 'info');
+      await api('/api/whatsapp/reconnect', { method: 'POST' });
+      showToast('Reconexao iniciada! Aguarde...');
+      setTimeout(() => renderWhatsApp(), 3000);
     } catch (err) {
       showToast(err.message, 'danger');
     }
@@ -2114,6 +2133,7 @@
     saveFeriado: saveFeriado,
     deleteFeriado: deleteFeriado,
     sendWhatsAppTest: sendWhatsAppTest,
+    reconnectWhatsApp: reconnectWhatsApp,
     openUsuarioModal: openUsuarioModal,
     saveUsuario: saveUsuario,
     deleteUsuario: deleteUsuario,

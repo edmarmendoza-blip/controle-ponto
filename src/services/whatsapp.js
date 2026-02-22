@@ -36,7 +36,11 @@ class WhatsAppService {
     this.groupChat = null;
     this.groupId = null;
     this.qrCode = null; // current QR code string for web display
-    this.status = 'disconnected'; // disconnected, waiting_qr, connected
+    this.status = 'disconnected'; // disconnected, waiting_qr, connected, initializing
+    this._initRetries = 0;
+    this._maxRetries = 3;
+    this._retryDelay = 30000; // 30s between retries
+    this._retrying = false;
   }
 
   async initialize() {
@@ -54,6 +58,7 @@ class WhatsAppService {
     }
 
     console.log('[WhatsApp] Initializing client...');
+    this.status = 'initializing';
 
     this.client = new Client({
       authStrategy: new LocalAuth({ dataPath: '.wwebjs_auth' }),
@@ -88,6 +93,7 @@ class WhatsAppService {
       this.ready = true;
       this.qrCode = null;
       this.status = 'connected';
+      this._initRetries = 0;
       console.log('[WhatsApp] Client connected and ready!');
       await this.findGroup();
     });
@@ -103,19 +109,19 @@ class WhatsAppService {
       this.status = 'disconnected';
     });
 
+    this.client.on('change_state', (state) => {
+      console.log('[WhatsApp] State changed:', state);
+    });
+
     this.client.on('disconnected', (reason) => {
       console.log('[WhatsApp] Disconnected:', reason);
       this.ready = false;
       this.status = 'disconnected';
       this.groupChat = null;
       this.groupId = null;
-      // Auto-reconnect after 30 seconds
-      setTimeout(() => {
-        console.log('[WhatsApp] Attempting reconnection...');
-        this.client.initialize().catch(err => {
-          console.error('[WhatsApp] Reconnection failed:', err.message);
-        });
-      }, 30000);
+      // Auto-reconnect with retry
+      this._initRetries = 0;
+      this._retryInitialize();
     });
 
     this.client.on('message_create', async (msg) => {
@@ -126,10 +132,75 @@ class WhatsAppService {
       }
     });
 
+    await this._attemptInitialize();
+  }
+
+  async _attemptInitialize() {
+    this._initRetries = 0;
+    await this._retryInitialize();
+  }
+
+  async _retryInitialize() {
+    if (this._retrying) {
+      console.log('[WhatsApp] Retry already in progress, skipping.');
+      return;
+    }
+    this._retrying = true;
     try {
-      await this.client.initialize();
+      while (this._initRetries < this._maxRetries) {
+        this._initRetries++;
+        const attempt = this._initRetries;
+        try {
+          console.log(`[WhatsApp] Initialize attempt ${attempt}/${this._maxRetries}...`);
+          this.status = 'initializing';
+          await this.client.initialize();
+          return; // success
+        } catch (err) {
+          console.error(`[WhatsApp] Initialize attempt ${attempt} failed:`, err.message);
+          if (attempt < this._maxRetries) {
+            console.log(`[WhatsApp] Retrying in ${this._retryDelay / 1000}s...`);
+            await new Promise(resolve => setTimeout(resolve, this._retryDelay));
+          }
+        }
+      }
+      console.error(`[WhatsApp] All ${this._maxRetries} initialize attempts failed.`);
+      this.status = 'disconnected';
+    } finally {
+      this._retrying = false;
+    }
+  }
+
+  async reconnect() {
+    console.log('[WhatsApp] Manual reconnect requested.');
+    if (this.status === 'initializing') {
+      return { success: false, message: 'Já está tentando conectar.' };
+    }
+    if (this.status === 'connected') {
+      return { success: false, message: 'Já está conectado.' };
+    }
+
+    // Destroy existing client if needed, removing listeners first to prevent
+    // the old 'disconnected' event from triggering a competing retry loop
+    try {
+      if (this.client) {
+        this.client.removeAllListeners();
+        await this.client.destroy();
+      }
     } catch (err) {
-      console.error('[WhatsApp] Failed to initialize:', err.message);
+      console.error('[WhatsApp] Error destroying old client:', err.message);
+    }
+
+    this.ready = false;
+    this.groupChat = null;
+    this.groupId = null;
+    this.qrCode = null;
+
+    // Re-initialize from scratch
+    try {
+      await this.initialize();
+      return { success: true, message: 'Reconexão iniciada.' };
+    } catch (err) {
+      return { success: false, message: 'Falha ao reconectar: ' + err.message };
     }
   }
 

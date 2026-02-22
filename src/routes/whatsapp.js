@@ -55,6 +55,20 @@ router.get('/qr', (req, res) => {
   `);
 });
 
+// POST /api/whatsapp/reconnect - Force reconnection (admin only)
+router.post('/reconnect', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const result = await whatsappService.reconnect();
+    if (result.success) {
+      res.json({ success: true, message: result.message });
+    } else {
+      res.status(400).json({ success: false, error: result.message });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Erro ao reconectar: ' + err.message });
+  }
+});
+
 // POST /api/whatsapp/test - Send a test message to the group
 router.post('/test', authenticateToken, requireAdmin, async (req, res) => {
   const message = req.body.message || 'Teste do bot de controle de ponto. Estou conectado e monitorando este grupo!';
