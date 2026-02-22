@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatórios - Altium Controle de Ponto</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+    }
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-[#1e40af] text-white z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col">
+    <div class="p-5 border-b border-white/20">
+      <a href="/dashboard.html" class="flex items-center gap-3 text-xl font-bold">
+        <i class="bi bi-clock-history text-2xl"></i>
+        <span>Altium</span>
+      </a>
+    </div>
+    <nav class="flex-1 overflow-y-auto py-4">
+      <ul class="space-y-1 px-3">
+        <li>
+          <a href="/dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="/funcionarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-people"></i><span>Funcionários</span>
+          </a>
+        </li>
+        <li>
+          <a href="/registros.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-clock"></i><span>Registros</span>
+          </a>
+        </li>
+        <li>
+          <a href="/relatorios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/20 font-medium">
+            <i class="bi bi-file-earmark-text"></i><span>Relatórios</span>
+          </a>
+        </li>
+        <li>
+          <a href="/relatorios-graficos.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-bar-chart-line"></i><span>Gráficos</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/entregas.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-box-seam"></i><span>Entregas</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/holerites.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-receipt"></i><span>Holerites</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/ferias.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-calendar-heart"></i><span>Férias</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/usuarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-shield-lock"></i><span>Usuários</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="p-4 border-t border-white/20">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+          <i class="bi bi-person-fill"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium truncate" id="user-name">Carregando...</div>
+          <div class="text-xs text-white/70" id="user-role">-</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="theme-toggle" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-sm">
+          <i class="bi bi-moon-fill" id="theme-icon"></i>
+          <span>Tema</span>
+        </button>
+        <button id="logout-btn" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-500/80 hover:bg-red-500 transition-colors text-sm">
+          <i class="bi bi-box-arrow-left"></i>
+          <span>Sair</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Sidebar Overlay -->
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+
+  <!-- Main Content -->
+  <main class="md:ml-64 min-h-screen">
+    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+      <div class="flex items-center gap-3">
+        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300">
+          <i class="bi bi-list text-xl"></i>
+        </button>
+        <h1 class="text-xl font-semibold">Relatórios</h1>
+      </div>
+      <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
+    </header>
+
+    <div class="p-4 md:p-6" id="page-content">
+      <!-- Tab Navigation -->
+      <div class="flex border-b border-gray-200 dark:border-gray-700 mb-6">
+        <button id="tab-mensal" onclick="switchTab('mensal')" class="px-4 py-3 text-sm font-medium border-b-2 border-primary text-primary transition-colors">
+          Relatório Mensal
+        </button>
+        <button id="tab-folha" onclick="switchTab('folha')" class="px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
+          Folha de Pagamento
+        </button>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-6">
+        <div class="flex flex-col md:flex-row items-start md:items-end gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Mês</label>
+            <select id="filter-mes" class="px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <option value="1">Janeiro</option>
+              <option value="2">Fevereiro</option>
+              <option value="3">Março</option>
+              <option value="4">Abril</option>
+              <option value="5">Maio</option>
+              <option value="6">Junho</option>
+              <option value="7">Julho</option>
+              <option value="8">Agosto</option>
+              <option value="9">Setembro</option>
+              <option value="10">Outubro</option>
+              <option value="11">Novembro</option>
+              <option value="12">Dezembro</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Ano</label>
+            <input type="number" id="filter-ano" min="2020" max="2030" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+          </div>
+          <div class="flex-1 min-w-0">
+            <label class="block text-sm font-medium mb-1">Funcionário</label>
+            <select id="filter-funcionario" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div class="flex gap-2 flex-wrap">
+            <button onclick="gerarRelatorio()" class="px-4 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+              <i class="bi bi-play-fill"></i>
+              <span>Gerar</span>
+            </button>
+            <button onclick="exportExcel()" class="px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+              <i class="bi bi-file-earmark-excel"></i>
+              <span>Excel</span>
+            </button>
+            <button onclick="exportPDF()" class="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+              <i class="bi bi-file-earmark-pdf"></i>
+              <span>PDF</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mensal Content -->
+      <div id="content-mensal">
+        <!-- Stats -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="mensal-stats">
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Dias Úteis</p>
+            <p class="text-2xl font-bold mt-1" id="stat-dias-uteis">-</p>
+          </div>
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Funcionários</p>
+            <p class="text-2xl font-bold mt-1" id="stat-funcionarios">-</p>
+          </div>
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Total H. Extras</p>
+            <p class="text-2xl font-bold mt-1 text-yellow-600 dark:text-yellow-400" id="stat-horas-extras">-</p>
+          </div>
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Custo Total</p>
+            <p class="text-2xl font-bold mt-1 text-green-600 dark:text-green-400" id="stat-custo-total">-</p>
+          </div>
+        </div>
+
+        <!-- Results Container -->
+        <div id="mensal-results" class="space-y-6">
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 text-center text-gray-400">
+            <i class="bi bi-file-earmark-text text-4xl"></i>
+            <p class="mt-3">Selecione os filtros e clique em "Gerar" para visualizar o relatório</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Folha Content (hidden initially) -->
+      <div id="content-folha" class="hidden">
+        <div id="folha-results" class="space-y-6">
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 text-center text-gray-400">
+            <i class="bi bi-file-earmark-text text-4xl"></i>
+            <p class="mt-3">Selecione os filtros e clique em "Gerar" para visualizar a folha de pagamento</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+  <script src="/js/shared.js"></script>
+  <script>
+    let currentTab = 'mensal';
+    let lastReportData = null;
+
+    function formatCurrency(val) {
+      if (val == null || isNaN(val)) return 'R$ 0,00';
+      return 'R$ ' + Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const parts = dateStr.split('-');
+      if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      return dateStr;
+    }
+
+    function formatTime(t) {
+      if (!t) return '-';
+      return t.substring(0, 5);
+    }
+
+    function formatHours(h) {
+      if (h == null || isNaN(h)) return '0.0';
+      return Number(h).toFixed(1);
+    }
+
+    function getDayName(dateStr) {
+      if (!dateStr) return '-';
+      const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+      const d = new Date(dateStr + 'T12:00:00');
+      return days[d.getDay()] || '-';
+    }
+
+    function setDefaults() {
+      const now = new Date();
+      document.getElementById('filter-mes').value = now.getMonth() + 1;
+      document.getElementById('filter-ano').value = now.getFullYear();
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      const tabMensal = document.getElementById('tab-mensal');
+      const tabFolha = document.getElementById('tab-folha');
+      const contentMensal = document.getElementById('content-mensal');
+      const contentFolha = document.getElementById('content-folha');
+
+      if (tab === 'mensal') {
+        tabMensal.classList.add('border-primary', 'text-primary');
+        tabMensal.classList.remove('border-transparent', 'text-gray-500');
+        tabFolha.classList.remove('border-primary', 'text-primary');
+        tabFolha.classList.add('border-transparent', 'text-gray-500');
+        contentMensal.classList.remove('hidden');
+        contentFolha.classList.add('hidden');
+      } else {
+        tabFolha.classList.add('border-primary', 'text-primary');
+        tabFolha.classList.remove('border-transparent', 'text-gray-500');
+        tabMensal.classList.remove('border-primary', 'text-primary');
+        tabMensal.classList.add('border-transparent', 'text-gray-500');
+        contentFolha.classList.remove('hidden');
+        contentMensal.classList.add('hidden');
+      }
+    }
+
+    async function loadFuncionariosList() {
+      try {
+        const res = await fetch('/api/funcionarios', {
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data.funcionarios || []);
+        const select = document.getElementById('filter-funcionario');
+        list.forEach(f => {
+          select.appendChild(new Option(f.nome, f.id));
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function gerarRelatorio() {
+      const mes = document.getElementById('filter-mes').value;
+      const ano = document.getElementById('filter-ano').value;
+      const funcId = document.getElementById('filter-funcionario').value;
+
+      if (currentTab === 'mensal') {
+        await gerarMensal(mes, ano, funcId);
+      } else {
+        await gerarFolha(mes, ano, funcId);
+      }
+    }
+
+    async function gerarMensal(mes, ano, funcId) {
+      const container = document.getElementById('mensal-results');
+      container.innerHTML = '<div class="text-center py-8 text-gray-400"><i class="bi bi-arrow-repeat animate-spin text-2xl"></i><p class="mt-2">Gerando relatório...</p></div>';
+
+      try {
+        let url = `/api/relatorios/mensal?mes=${mes}&ano=${ano}`;
+        if (funcId) url += `&funcionarioId=${funcId}`;
+
+        const res = await fetch(url, {
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+        });
+        if (!res.ok) throw new Error('Erro ao gerar relatório');
+        const data = await res.json();
+        lastReportData = data;
+
+        // Update stats
+        const resumo = data.resumo || data;
+        document.getElementById('stat-dias-uteis').textContent = resumo.diasUteis || resumo.dias_uteis || '-';
+        document.getElementById('stat-funcionarios').textContent = resumo.totalFuncionarios || resumo.total_funcionarios || '-';
+        document.getElementById('stat-horas-extras').textContent = formatHours(resumo.totalHorasExtras || resumo.total_horas_extras) + 'h';
+        document.getElementById('stat-custo-total').textContent = formatCurrency(resumo.custoTotal || resumo.custo_total);
+
+        // Render per employee
+        const funcionarios = data.funcionarios || data.dados || [];
+        if (funcionarios.length === 0) {
+          container.innerHTML = '<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 text-center text-gray-400"><i class="bi bi-inbox text-3xl"></i><p class="mt-2">Sem dados para o período selecionado</p></div>';
+          return;
+        }
+
+        container.innerHTML = funcionarios.map(func => {
+          const registros = func.registros || func.dias || [];
+          const resumoFunc = func.resumo || func;
+          return `
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+              <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+                <div>
+                  <h3 class="font-semibold text-lg">${func.nome || func.funcionario_nome || '-'}</h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">${func.cargo || ''}</p>
+                </div>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="bg-gray-50 dark:bg-gray-700/50">
+                      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Data</th>
+                      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Dia</th>
+                      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Entrada</th>
+                      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Saída</th>
+                      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Horas</th>
+                      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Extras</th>
+                      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    ${registros.map(r => `
+                      <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                        <td class="px-4 py-2">${formatDate(r.data)}</td>
+                        <td class="px-4 py-2">${getDayName(r.data) || r.dia_semana || '-'}</td>
+                        <td class="px-4 py-2">${formatTime(r.entrada)}</td>
+                        <td class="px-4 py-2">${formatTime(r.saida)}</td>
+                        <td class="px-4 py-2">${formatHours(r.horas || r.horas_trabalhadas)}</td>
+                        <td class="px-4 py-2 ${(r.horas_extras || r.extras || 0) > 0 ? 'text-yellow-600 dark:text-yellow-400 font-medium' : ''}">${formatHours(r.horas_extras || r.extras)}</td>
+                        <td class="px-4 py-2">${formatCurrency(r.valor || r.valor_dia)}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+              <div class="p-4 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-100 dark:border-gray-700">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <span class="text-gray-500 dark:text-gray-400">Dias Trabalhados:</span>
+                    <span class="font-semibold ml-1">${resumoFunc.diasTrabalhados || resumoFunc.dias_trabalhados || registros.length}</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-500 dark:text-gray-400">Total Horas:</span>
+                    <span class="font-semibold ml-1">${formatHours(resumoFunc.totalHoras || resumoFunc.total_horas)}h</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-500 dark:text-gray-400">Horas Extras:</span>
+                    <span class="font-semibold ml-1 text-yellow-600 dark:text-yellow-400">${formatHours(resumoFunc.totalExtras || resumoFunc.total_extras)}h</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-500 dark:text-gray-400">Valor Total:</span>
+                    <span class="font-semibold ml-1 text-green-600 dark:text-green-400">${formatCurrency(resumoFunc.valorTotal || resumoFunc.valor_total)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        container.innerHTML = `<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-red-200 dark:border-red-800 p-8 text-center text-red-500"><i class="bi bi-exclamation-circle text-3xl"></i><p class="mt-2">${err.message}</p></div>`;
+      }
+    }
+
+    async function gerarFolha(mes, ano, funcId) {
+      const container = document.getElementById('folha-results');
+      container.innerHTML = '<div class="text-center py-8 text-gray-400"><i class="bi bi-arrow-repeat animate-spin text-2xl"></i><p class="mt-2">Gerando folha...</p></div>';
+
+      try {
+        let url = `/api/relatorios/folha?mes=${mes}&ano=${ano}`;
+        if (funcId) url += `&funcionarioId=${funcId}`;
+
+        const res = await fetch(url, {
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+        });
+        if (!res.ok) throw new Error('Erro ao gerar folha');
+        const data = await res.json();
+        lastReportData = data;
+
+        const funcionarios = data.funcionarios || data.dados || [];
+        if (funcionarios.length === 0) {
+          container.innerHTML = '<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 text-center text-gray-400"><i class="bi bi-inbox text-3xl"></i><p class="mt-2">Sem dados para o período selecionado</p></div>';
+          return;
+        }
+
+        let grandTotal = 0;
+
+        const html = funcionarios.map(func => {
+          const registros = func.registros || func.dias || [];
+          const resumoFunc = func.resumo || func;
+          const totalMensal = resumoFunc.totalMensal || resumoFunc.total_mensal || resumoFunc.valorTotal || resumoFunc.valor_total || 0;
+          grandTotal += Number(totalMensal) || 0;
+
+          return `
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+              <div class="p-5 border-b border-gray-100 dark:border-gray-700">
+                <h3 class="font-semibold text-lg">${func.nome || func.funcionario_nome || '-'}</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">${func.cargo || ''}</p>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="bg-gray-50 dark:bg-gray-700/50">
+                      <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Data</th>
+                      <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Dia</th>
+                      <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Entrada</th>
+                      <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Saída</th>
+                      <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">H.Trab</th>
+                      <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">H.Extra</th>
+                      <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Tipo Dia</th>
+                      <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Pgto HE</th>
+                      <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Pgto FDS</th>
+                      <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Total Dia</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    ${registros.map(r => {
+                      const tipoDia = r.tipo_dia || r.tipoDia || 'normal';
+                      const tipoBadge = tipoDia === 'fds' || tipoDia === 'fim_de_semana'
+                        ? '<span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">FDS</span>'
+                        : tipoDia === 'feriado'
+                        ? '<span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">Feriado</span>'
+                        : '<span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">Normal</span>';
+                      return `
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                          <td class="px-3 py-2">${formatDate(r.data)}</td>
+                          <td class="px-3 py-2">${getDayName(r.data) || r.dia_semana || '-'}</td>
+                          <td class="px-3 py-2">${formatTime(r.entrada)}</td>
+                          <td class="px-3 py-2">${formatTime(r.saida)}</td>
+                          <td class="px-3 py-2">${formatHours(r.horas_trabalhadas || r.horas)}</td>
+                          <td class="px-3 py-2 ${(r.horas_extras || r.extras || 0) > 0 ? 'text-yellow-600 font-medium' : ''}">${formatHours(r.horas_extras || r.extras)}</td>
+                          <td class="px-3 py-2">${tipoBadge}</td>
+                          <td class="px-3 py-2">${formatCurrency(r.pagamento_hora_extra || r.pgto_he)}</td>
+                          <td class="px-3 py-2">${formatCurrency(r.pagamento_fds || r.pgto_fds)}</td>
+                          <td class="px-3 py-2 font-medium">${formatCurrency(r.total_dia || r.totalDia)}</td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+              <div class="p-4 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-100 dark:border-gray-700">
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+                  <div>
+                    <span class="text-gray-500 dark:text-gray-400 block">Dias Trabalhados</span>
+                    <span class="font-bold text-lg">${resumoFunc.diasTrabalhados || resumoFunc.dias_trabalhados || registros.length}</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-500 dark:text-gray-400 block">Total Horas</span>
+                    <span class="font-bold text-lg">${formatHours(resumoFunc.totalHoras || resumoFunc.total_horas)}h</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-500 dark:text-gray-400 block">Pgto Normal</span>
+                    <span class="font-bold text-lg">${formatCurrency(resumoFunc.pagamentoNormal || resumoFunc.pgto_normal)}</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-500 dark:text-gray-400 block">Pgto Extras</span>
+                    <span class="font-bold text-lg text-yellow-600 dark:text-yellow-400">${formatCurrency(resumoFunc.pagamentoExtras || resumoFunc.pgto_extras)}</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-500 dark:text-gray-400 block">TOTAL MENSAL</span>
+                    <span class="font-bold text-xl text-green-600 dark:text-green-400">${formatCurrency(totalMensal)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Grand total if multiple employees
+        let grandTotalHtml = '';
+        if (funcionarios.length > 1) {
+          grandTotalHtml = `
+            <div class="bg-primary/5 dark:bg-primary/10 rounded-xl border-2 border-primary/30 p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500 dark:text-gray-400 uppercase font-semibold">Total Consolidado (${funcionarios.length} funcionários)</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-3xl font-bold text-primary">${formatCurrency(grandTotal)}</p>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        container.innerHTML = html + grandTotalHtml;
+      } catch (err) {
+        container.innerHTML = `<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-red-200 dark:border-red-800 p-8 text-center text-red-500"><i class="bi bi-exclamation-circle text-3xl"></i><p class="mt-2">${err.message}</p></div>`;
+      }
+    }
+
+    async function exportExcel() {
+      const mes = document.getElementById('filter-mes').value;
+      const ano = document.getElementById('filter-ano').value;
+      const funcId = document.getElementById('filter-funcionario').value;
+      const tipo = currentTab;
+
+      try {
+        let url = `/api/relatorios/${tipo === 'mensal' ? 'mensal' : 'folha'}/export/excel?mes=${mes}&ano=${ano}`;
+        if (funcId) url += `&funcionarioId=${funcId}`;
+
+        const res = await fetch(url, {
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+        });
+        if (!res.ok) throw new Error('Erro ao exportar');
+        const blob = await res.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `relatorio_${tipo}_${ano}_${mes}.xlsx`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        if (typeof showToast === 'function') showToast('Excel exportado com sucesso!', 'success');
+      } catch (err) {
+        if (typeof showToast === 'function') showToast(err.message, 'error');
+      }
+    }
+
+    async function exportPDF() {
+      const mes = document.getElementById('filter-mes').value;
+      const ano = document.getElementById('filter-ano').value;
+      const funcId = document.getElementById('filter-funcionario').value;
+      const tipo = currentTab;
+
+      try {
+        let url = `/api/relatorios/${tipo === 'mensal' ? 'mensal' : 'folha'}/export/pdf?mes=${mes}&ano=${ano}`;
+        if (funcId) url += `&funcionarioId=${funcId}`;
+
+        const res = await fetch(url, {
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+        });
+        if (!res.ok) throw new Error('Erro ao exportar');
+        const blob = await res.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `relatorio_${tipo}_${ano}_${mes}.pdf`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        if (typeof showToast === 'function') showToast('PDF exportado com sucesso!', 'success');
+      } catch (err) {
+        if (typeof showToast === 'function') showToast(err.message, 'error');
+      }
+    }
+
+    window.onAuthReady = function() {
+      setDefaults();
+      loadFuncionariosList();
+    };
+  </script>
+</body>
+</html>

@@ -63,6 +63,12 @@ function initializeDatabase() {
       db.exec('ALTER TABLE funcionarios ADD COLUMN valor_dia_especial REAL DEFAULT 320.00');
       db.exec('ALTER TABLE funcionarios ADD COLUMN jornada_diaria REAL DEFAULT 9.8');
     }
+
+    // Add recorrente column to feriados
+    const ferCols = db.prepare("PRAGMA table_info(feriados)").all().map(c => c.name);
+    if (ferCols.length > 0 && !ferCols.includes('recorrente')) {
+      db.exec('ALTER TABLE feriados ADD COLUMN recorrente INTEGER DEFAULT 1');
+    }
   } catch (migrationErr) {
     console.error('Migration warning:', migrationErr.message);
   }
@@ -120,7 +126,8 @@ function initializeDatabase() {
       data DATE NOT NULL,
       descricao TEXT NOT NULL,
       tipo TEXT DEFAULT 'nacional' CHECK(tipo IN ('nacional', 'estadual', 'municipal', 'facultativo')),
-      ano INTEGER NOT NULL
+      ano INTEGER NOT NULL,
+      recorrente INTEGER DEFAULT 1
     );
 
     CREATE TABLE IF NOT EXISTS audit_log (
@@ -187,6 +194,39 @@ function initializeDatabase() {
   const insertConfig = db.prepare('INSERT OR IGNORE INTO configuracoes (chave, valor) VALUES (?, ?)');
   for (const [chave, valor] of configs) {
     insertConfig.run(chave, valor);
+  }
+
+  // Seed São Paulo 2026 holidays
+  seedFeriados2026();
+}
+
+function seedFeriados2026() {
+  const feriados = [
+    { data: '2026-01-01', descricao: 'Confraternização Universal', tipo: 'nacional', ano: 2026, recorrente: 1 },
+    { data: '2026-01-25', descricao: 'Aniversário de São Paulo', tipo: 'municipal', ano: 2026, recorrente: 1 },
+    { data: '2026-02-17', descricao: 'Carnaval', tipo: 'nacional', ano: 2026, recorrente: 0 },
+    { data: '2026-04-03', descricao: 'Sexta-feira Santa', tipo: 'nacional', ano: 2026, recorrente: 0 },
+    { data: '2026-04-21', descricao: 'Tiradentes', tipo: 'nacional', ano: 2026, recorrente: 1 },
+    { data: '2026-05-01', descricao: 'Dia do Trabalho', tipo: 'nacional', ano: 2026, recorrente: 1 },
+    { data: '2026-06-19', descricao: 'Corpus Christi', tipo: 'nacional', ano: 2026, recorrente: 0 },
+    { data: '2026-07-09', descricao: 'Revolução Constitucionalista', tipo: 'estadual', ano: 2026, recorrente: 1 },
+    { data: '2026-09-07', descricao: 'Independência do Brasil', tipo: 'nacional', ano: 2026, recorrente: 1 },
+    { data: '2026-10-12', descricao: 'Nossa Sra. Aparecida', tipo: 'nacional', ano: 2026, recorrente: 1 },
+    { data: '2026-11-02', descricao: 'Finados', tipo: 'nacional', ano: 2026, recorrente: 1 },
+    { data: '2026-11-15', descricao: 'Proclamação da República', tipo: 'nacional', ano: 2026, recorrente: 1 },
+    { data: '2026-11-20', descricao: 'Consciência Negra', tipo: 'municipal', ano: 2026, recorrente: 1 },
+    { data: '2026-12-25', descricao: 'Natal', tipo: 'nacional', ano: 2026, recorrente: 1 }
+  ];
+
+  const insertFeriado = db.prepare(
+    'INSERT OR IGNORE INTO feriados (data, descricao, tipo, ano, recorrente) VALUES (?, ?, ?, ?, ?)'
+  );
+  for (const f of feriados) {
+    // Only insert if not already exists for this date
+    const existing = db.prepare('SELECT id FROM feriados WHERE data = ?').get(f.data);
+    if (!existing) {
+      insertFeriado.run(f.data, f.descricao, f.tipo, f.ano, f.recorrente);
+    }
   }
 }
 

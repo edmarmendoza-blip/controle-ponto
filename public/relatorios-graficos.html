@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gráficos Comparativos - Altium Controle de Ponto</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+    }
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-[#1e40af] text-white z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col">
+    <div class="p-5 border-b border-white/20">
+      <a href="/dashboard.html" class="flex items-center gap-3 text-xl font-bold">
+        <i class="bi bi-clock-history text-2xl"></i>
+        <span>Altium</span>
+      </a>
+    </div>
+    <nav class="flex-1 overflow-y-auto py-4">
+      <ul class="space-y-1 px-3">
+        <li>
+          <a href="/dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="/funcionarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-people"></i><span>Funcionários</span>
+          </a>
+        </li>
+        <li>
+          <a href="/registros.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-clock"></i><span>Registros</span>
+          </a>
+        </li>
+        <li>
+          <a href="/relatorios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-file-earmark-text"></i><span>Relatórios</span>
+          </a>
+        </li>
+        <li>
+          <a href="/relatorios-graficos.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/20 font-medium">
+            <i class="bi bi-bar-chart-line"></i><span>Gráficos</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/entregas.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-box-seam"></i><span>Entregas</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/holerites.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-receipt"></i><span>Holerites</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/ferias.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-calendar-heart"></i><span>Férias</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/usuarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-shield-lock"></i><span>Usuários</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="p-4 border-t border-white/20">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+          <i class="bi bi-person-fill"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium truncate" id="user-name">Carregando...</div>
+          <div class="text-xs text-white/70" id="user-role">-</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="theme-toggle" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-sm">
+          <i class="bi bi-moon-fill" id="theme-icon"></i>
+          <span>Tema</span>
+        </button>
+        <button id="logout-btn" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-500/80 hover:bg-red-500 transition-colors text-sm">
+          <i class="bi bi-box-arrow-left"></i>
+          <span>Sair</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Sidebar Overlay -->
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+
+  <!-- Main Content -->
+  <main class="md:ml-64 min-h-screen">
+    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+      <div class="flex items-center gap-3">
+        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300">
+          <i class="bi bi-list text-xl"></i>
+        </button>
+        <h1 class="text-xl font-semibold">Gráficos Comparativos</h1>
+      </div>
+      <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
+    </header>
+
+    <div class="p-4 md:p-6" id="page-content">
+      <!-- Filter Bar -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-6">
+        <div class="flex flex-col md:flex-row items-start md:items-end gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Mês</label>
+            <select id="filter-mes" class="px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <option value="1">Janeiro</option>
+              <option value="2">Fevereiro</option>
+              <option value="3">Março</option>
+              <option value="4">Abril</option>
+              <option value="5">Maio</option>
+              <option value="6">Junho</option>
+              <option value="7">Julho</option>
+              <option value="8">Agosto</option>
+              <option value="9">Setembro</option>
+              <option value="10">Outubro</option>
+              <option value="11">Novembro</option>
+              <option value="12">Dezembro</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Ano</label>
+            <input type="number" id="filter-ano" min="2020" max="2030" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+          </div>
+          <div class="flex-1 min-w-0">
+            <label class="block text-sm font-medium mb-1">Funcionário</label>
+            <select id="filter-funcionario" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="gerarGraficos()" class="px-4 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+              <i class="bi bi-play-fill"></i>
+              <span>Gerar</span>
+            </button>
+            <button onclick="exportPNG()" class="px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+              <i class="bi bi-image"></i>
+              <span>Exportar PNG</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Bar Chart: Horas por Funcionário -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold">Horas por Funcionário</h3>
+            <i class="bi bi-bar-chart text-gray-400"></i>
+          </div>
+          <div class="relative" style="height: 320px;">
+            <canvas id="chart-bar"></canvas>
+          </div>
+        </div>
+
+        <!-- Pie/Doughnut Chart: Distribuição -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold">Distribuição de Horas</h3>
+            <i class="bi bi-pie-chart text-gray-400"></i>
+          </div>
+          <div class="relative" style="height: 320px;">
+            <canvas id="chart-pie"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Line Chart: Tendência Diária (full width) -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold">Tendência Diária</h3>
+          <i class="bi bi-graph-up text-gray-400"></i>
+        </div>
+        <div class="relative" style="height: 360px;">
+          <canvas id="chart-line"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+  <script src="/js/shared.js"></script>
+  <script>
+    let chartBar = null;
+    let chartPie = null;
+    let chartLine = null;
+
+    function getChartColors() {
+      const isDark = document.documentElement.classList.contains('dark');
+      return {
+        textColor: isDark ? '#d1d5db' : '#374151',
+        gridColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+        bgColors: [
+          'rgba(59, 130, 246, 0.7)',
+          'rgba(16, 185, 129, 0.7)',
+          'rgba(245, 158, 11, 0.7)',
+          'rgba(239, 68, 68, 0.7)',
+          'rgba(139, 92, 246, 0.7)',
+          'rgba(236, 72, 153, 0.7)',
+          'rgba(20, 184, 166, 0.7)',
+          'rgba(249, 115, 22, 0.7)',
+          'rgba(99, 102, 241, 0.7)',
+          'rgba(34, 197, 94, 0.7)'
+        ],
+        borderColors: [
+          'rgba(59, 130, 246, 1)',
+          'rgba(16, 185, 129, 1)',
+          'rgba(245, 158, 11, 1)',
+          'rgba(239, 68, 68, 1)',
+          'rgba(139, 92, 246, 1)',
+          'rgba(236, 72, 153, 1)',
+          'rgba(20, 184, 166, 1)',
+          'rgba(249, 115, 22, 1)',
+          'rgba(99, 102, 241, 1)',
+          'rgba(34, 197, 94, 1)'
+        ]
+      };
+    }
+
+    function setDefaults() {
+      const now = new Date();
+      document.getElementById('filter-mes').value = now.getMonth() + 1;
+      document.getElementById('filter-ano').value = now.getFullYear();
+    }
+
+    async function loadFuncionariosList() {
+      try {
+        const res = await fetch('/api/funcionarios', {
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data.funcionarios || []);
+        const select = document.getElementById('filter-funcionario');
+        list.forEach(f => {
+          select.appendChild(new Option(f.nome, f.id));
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function destroyCharts() {
+      if (chartBar) { chartBar.destroy(); chartBar = null; }
+      if (chartPie) { chartPie.destroy(); chartPie = null; }
+      if (chartLine) { chartLine.destroy(); chartLine = null; }
+    }
+
+    async function gerarGraficos() {
+      const mes = document.getElementById('filter-mes').value;
+      const ano = document.getElementById('filter-ano').value;
+      const funcId = document.getElementById('filter-funcionario').value;
+
+      try {
+        let url = `/api/relatorios/comparativo?mes=${mes}&ano=${ano}`;
+        if (funcId) url += `&funcionarioId=${funcId}`;
+
+        const res = await fetch(url, {
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+        });
+        if (!res.ok) throw new Error('Erro ao carregar dados');
+        const data = await res.json();
+
+        destroyCharts();
+        renderBarChart(data);
+        renderPieChart(data);
+        renderLineChart(data);
+
+        if (typeof showToast === 'function') showToast('Gráficos gerados com sucesso!', 'success');
+      } catch (err) {
+        console.error(err);
+        if (typeof showToast === 'function') showToast(err.message, 'error');
+      }
+    }
+
+    function renderBarChart(data) {
+      const colors = getChartColors();
+      const funcionarios = data.funcionarios || data.dados || [];
+      const labels = funcionarios.map(f => f.nome || f.funcionario_nome || 'N/A');
+      const horasNormais = funcionarios.map(f => f.horas_normais || f.horasNormais || f.totalHoras || f.total_horas || 0);
+      const horasExtras = funcionarios.map(f => f.horas_extras || f.horasExtras || f.totalExtras || f.total_extras || 0);
+
+      const ctx = document.getElementById('chart-bar').getContext('2d');
+      chartBar = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Horas Normais',
+              data: horasNormais,
+              backgroundColor: 'rgba(59, 130, 246, 0.7)',
+              borderColor: 'rgba(59, 130, 246, 1)',
+              borderWidth: 1,
+              borderRadius: 4
+            },
+            {
+              label: 'Horas Extras',
+              data: horasExtras,
+              backgroundColor: 'rgba(245, 158, 11, 0.7)',
+              borderColor: 'rgba(245, 158, 11, 1)',
+              borderWidth: 1,
+              borderRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: { color: colors.textColor }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: colors.textColor },
+              grid: { color: colors.gridColor }
+            },
+            y: {
+              ticks: { color: colors.textColor },
+              grid: { color: colors.gridColor },
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    function renderPieChart(data) {
+      const colors = getChartColors();
+      const funcionarios = data.funcionarios || data.dados || [];
+
+      let totalNormais = 0;
+      let totalExtras = 0;
+      let totalFDS = 0;
+
+      funcionarios.forEach(f => {
+        totalNormais += Number(f.horas_normais || f.horasNormais || f.totalHoras || f.total_horas || 0);
+        totalExtras += Number(f.horas_extras || f.horasExtras || f.totalExtras || f.total_extras || 0);
+        totalFDS += Number(f.horas_fds || f.horasFDS || f.horas_feriado || 0);
+      });
+
+      // If FDS is 0, use a generic split from extras
+      if (totalFDS === 0 && data.distribuicao) {
+        totalNormais = data.distribuicao.normais || totalNormais;
+        totalExtras = data.distribuicao.extras || totalExtras;
+        totalFDS = data.distribuicao.fds || data.distribuicao.feriados || 0;
+      }
+
+      const ctx = document.getElementById('chart-pie').getContext('2d');
+      chartPie = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Horas Normais', 'Horas Extras', 'FDS/Feriados'],
+          datasets: [{
+            data: [totalNormais, totalExtras, totalFDS],
+            backgroundColor: [
+              'rgba(59, 130, 246, 0.8)',
+              'rgba(245, 158, 11, 0.8)',
+              'rgba(139, 92, 246, 0.8)'
+            ],
+            borderColor: [
+              'rgba(59, 130, 246, 1)',
+              'rgba(245, 158, 11, 1)',
+              'rgba(139, 92, 246, 1)'
+            ],
+            borderWidth: 2,
+            hoverOffset: 10
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { color: colors.textColor, padding: 16 }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const pct = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+                  return `${context.label}: ${context.parsed.toFixed(1)}h (${pct}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderLineChart(data) {
+      const colors = getChartColors();
+      const tendencia = data.tendencia || data.diario || [];
+      const funcionarios = data.funcionarios || data.dados || [];
+
+      // If tendencia data is available directly
+      if (tendencia.length > 0) {
+        const labels = tendencia.map(d => {
+          const parts = (d.data || d.dia || '').split('-');
+          return parts.length === 3 ? `${parts[2]}/${parts[1]}` : d.data || d.dia;
+        });
+        const valores = tendencia.map(d => d.total_horas || d.totalHoras || d.horas || 0);
+
+        const ctx = document.getElementById('chart-line').getContext('2d');
+        chartLine = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Horas Trabalhadas',
+              data: valores,
+              borderColor: 'rgba(59, 130, 246, 1)',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 3,
+              pointHoverRadius: 6,
+              borderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                labels: { color: colors.textColor }
+              }
+            },
+            scales: {
+              x: {
+                ticks: { color: colors.textColor, maxRotation: 45, minRotation: 0 },
+                grid: { color: colors.gridColor }
+              },
+              y: {
+                ticks: { color: colors.textColor },
+                grid: { color: colors.gridColor },
+                beginAtZero: true
+              }
+            }
+          }
+        });
+        return;
+      }
+
+      // Build daily trend from employee data
+      const dailyMap = {};
+      funcionarios.forEach(func => {
+        const regs = func.registros || func.dias || [];
+        regs.forEach(r => {
+          const dia = r.data;
+          if (!dia) return;
+          if (!dailyMap[dia]) dailyMap[dia] = 0;
+          dailyMap[dia] += Number(r.horas || r.horas_trabalhadas || 0);
+        });
+      });
+
+      const sortedDays = Object.keys(dailyMap).sort();
+      const labels = sortedDays.map(d => {
+        const parts = d.split('-');
+        return parts.length === 3 ? `${parts[2]}/${parts[1]}` : d;
+      });
+      const valores = sortedDays.map(d => dailyMap[d]);
+
+      // Per-employee datasets for multi-line
+      if (funcionarios.length > 1 && funcionarios.length <= 10) {
+        const datasets = funcionarios.map((func, i) => {
+          const regs = func.registros || func.dias || [];
+          const funcDaily = {};
+          regs.forEach(r => {
+            if (r.data) funcDaily[r.data] = Number(r.horas || r.horas_trabalhadas || 0);
+          });
+          return {
+            label: func.nome || func.funcionario_nome || `Func ${i + 1}`,
+            data: sortedDays.map(d => funcDaily[d] || 0),
+            borderColor: colors.borderColors[i % colors.borderColors.length],
+            backgroundColor: colors.bgColors[i % colors.bgColors.length],
+            fill: false,
+            tension: 0.3,
+            pointRadius: 2,
+            pointHoverRadius: 5,
+            borderWidth: 2
+          };
+        });
+
+        const ctx = document.getElementById('chart-line').getContext('2d');
+        chartLine = new Chart(ctx, {
+          type: 'line',
+          data: { labels, datasets },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: { color: colors.textColor, boxWidth: 12 }
+              }
+            },
+            scales: {
+              x: {
+                ticks: { color: colors.textColor, maxRotation: 45, minRotation: 0 },
+                grid: { color: colors.gridColor }
+              },
+              y: {
+                ticks: { color: colors.textColor },
+                grid: { color: colors.gridColor },
+                beginAtZero: true
+              }
+            }
+          }
+        });
+        return;
+      }
+
+      // Single line for aggregated or single employee
+      const ctx = document.getElementById('chart-line').getContext('2d');
+      chartLine = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Horas Trabalhadas',
+            data: valores,
+            borderColor: 'rgba(59, 130, 246, 1)',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 3,
+            pointHoverRadius: 6,
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: { color: colors.textColor }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: colors.textColor, maxRotation: 45, minRotation: 0 },
+              grid: { color: colors.gridColor }
+            },
+            y: {
+              ticks: { color: colors.textColor },
+              grid: { color: colors.gridColor },
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    function exportPNG() {
+      const canvases = [
+        { canvas: document.getElementById('chart-bar'), name: 'horas_por_funcionario' },
+        { canvas: document.getElementById('chart-pie'), name: 'distribuicao' },
+        { canvas: document.getElementById('chart-line'), name: 'tendencia_diaria' }
+      ];
+
+      canvases.forEach(({ canvas, name }) => {
+        if (!canvas) return;
+        try {
+          const url = canvas.toDataURL('image/png');
+          const link = document.createElement('a');
+          link.download = `grafico_${name}.png`;
+          link.href = url;
+          link.click();
+        } catch (err) {
+          console.error(`Erro ao exportar ${name}:`, err);
+        }
+      });
+
+      if (typeof showToast === 'function') showToast('Gráficos exportados como PNG!', 'success');
+    }
+
+    window.onAuthReady = function() {
+      setDefaults();
+      loadFuncionariosList();
+    };
+  </script>
+</body>
+</html>

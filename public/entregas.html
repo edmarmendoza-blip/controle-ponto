@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de Entregas - Altium Controle de Ponto</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+    }
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen bg-blue-800 text-white transition-transform -translate-x-full md:translate-x-0">
+    <div class="p-4 border-b border-blue-700">
+      <div class="flex items-center gap-2">
+        <i class="bi bi-clock-history text-2xl"></i>
+        <span class="text-xl font-bold">Altium</span>
+      </div>
+      <p class="text-blue-200 text-xs mt-1">Controle de Ponto</p>
+    </div>
+    <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-180px)]">
+      <a href="/dashboard.html" data-page="dashboard" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+      </a>
+      <a href="/funcionarios.html" data-page="funcionarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-people"></i><span>Funcionários</span>
+      </a>
+      <a href="/registros.html" data-page="registros" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-clock"></i><span>Registros</span>
+      </a>
+      <a href="/relatorios.html" data-page="relatorios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-file-earmark-text"></i><span>Relatórios</span>
+      </a>
+      <a href="/relatorios-graficos.html" data-page="relatorios-graficos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-bar-chart-line"></i><span>Gráficos</span>
+      </a>
+      <a href="/entregas.html" data-page="entregas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-box-seam"></i><span>Entregas</span>
+      </a>
+      <a href="/holerites.html" data-page="holerites" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-receipt"></i><span>Holerites</span>
+      </a>
+      <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-calendar-heart"></i><span>Férias</span>
+      </a>
+      <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-shield-lock"></i><span>Usuários</span>
+      </a>
+    </nav>
+    <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-blue-700 bg-blue-800">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2 text-sm">
+          <i class="bi bi-person-circle"></i>
+          <div>
+            <div id="user-name" class="font-medium">-</div>
+            <div id="user-role" class="text-blue-300 text-xs">-</div>
+          </div>
+        </div>
+        <button id="theme-toggle" class="p-1.5 rounded-lg hover:bg-blue-700 transition-colors">
+          <i id="theme-icon" class="bi bi-moon-fill"></i>
+        </button>
+      </div>
+      <button id="logout-btn" class="w-full py-1.5 text-sm bg-blue-700 hover:bg-blue-600 rounded-lg transition-colors">Sair</button>
+    </div>
+  </aside>
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+
+  <!-- Main Content -->
+  <main class="md:ml-64 min-h-screen">
+    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+      <div class="flex items-center gap-3">
+        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300"><i class="bi bi-list text-xl"></i></button>
+        <h1 class="text-xl font-semibold">Registro de Entregas</h1>
+      </div>
+      <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
+    </header>
+    <div class="p-4 md:p-6" id="page-content">
+
+      <!-- Info Card -->
+      <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center flex-shrink-0">
+            <i class="bi bi-info-circle-fill text-blue-600 dark:text-blue-400 text-lg"></i>
+          </div>
+          <div>
+            <h3 class="font-medium text-blue-800 dark:text-blue-300">Funcionalidade em desenvolvimento</h3>
+            <p class="text-sm text-blue-600 dark:text-blue-400 mt-1">As entregas são registradas automaticamente via fotos no WhatsApp. A funcionalidade completa será ativada em breve.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-6">
+        <div class="flex flex-wrap items-end gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1" for="filter-date">Data</label>
+            <input type="date" id="filter-date"
+              class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors text-sm">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1" for="filter-employee">Funcionário</label>
+            <select id="filter-employee"
+              class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors text-sm min-w-[200px]">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <button onclick="loadEntregas()" class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm">
+            <i class="bi bi-search"></i>
+            <span>Filtrar</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Deliveries Table -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <div class="p-5 border-b border-gray-100 dark:border-gray-700">
+          <h2 class="text-lg font-semibold">Entregas</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="bg-gray-50 dark:bg-gray-700/50">
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data/Hora</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Funcionário</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Imagem</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Destinatário</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Remetente</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Transportadora</th>
+                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="entregas-table" class="divide-y divide-gray-100 dark:divide-gray-700">
+              <tr>
+                <td colspan="7" class="px-5 py-12 text-center text-gray-400">
+                  <div class="flex flex-col items-center">
+                    <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+                      <i class="bi bi-box-seam text-3xl text-gray-400 dark:text-gray-500"></i>
+                    </div>
+                    <p class="text-lg font-medium text-gray-500 dark:text-gray-400">Nenhuma entrega registrada</p>
+                    <p class="text-sm mt-1">As entregas aparecerão aqui quando forem registradas via WhatsApp.</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+  <script src="/js/shared.js"></script>
+  <script>
+    // Set default date to today
+    document.getElementById('filter-date').value = new Date().toISOString().split('T')[0];
+
+    // Load employees for filter
+    async function loadEmployees() {
+      try {
+        const data = await Shared.api('/api/funcionarios');
+        const employees = Array.isArray(data) ? data : (data.funcionarios || []);
+        const select = document.getElementById('filter-employee');
+        employees.forEach(emp => {
+          const opt = document.createElement('option');
+          opt.value = emp.id;
+          opt.textContent = emp.nome;
+          select.appendChild(opt);
+        });
+      } catch (err) {
+        console.error('Erro ao carregar funcionários:', err);
+      }
+    }
+
+    // Placeholder: load entregas
+    function loadEntregas() {
+      // Backend not implemented yet - keep showing the empty state
+      Shared.showToast('Funcionalidade em desenvolvimento', 'info');
+    }
+
+    // Init
+    window.onAuthReady = function(user) {
+      if (user.role !== 'admin') {
+        window.location.href = '/dashboard.html';
+        return;
+      }
+      loadEmployees();
+    };
+  </script>
+</body>
+</html>

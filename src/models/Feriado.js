@@ -16,17 +16,17 @@ class Feriado {
     return db.prepare('SELECT * FROM feriados WHERE data = ?').get(data) || null;
   }
 
-  static create({ data, descricao, tipo, ano }) {
+  static create({ data, descricao, tipo, ano, recorrente = 1 }) {
     const result = db.prepare(
-      'INSERT INTO feriados (data, descricao, tipo, ano) VALUES (?, ?, ?, ?)'
-    ).run(data, descricao, tipo, ano);
+      'INSERT INTO feriados (data, descricao, tipo, ano, recorrente) VALUES (?, ?, ?, ?, ?)'
+    ).run(data, descricao, tipo, ano, recorrente ? 1 : 0);
     return result.lastInsertRowid;
   }
 
   static update(id, data) {
     const fields = [];
     const values = [];
-    const allowed = ['data', 'descricao', 'tipo', 'ano'];
+    const allowed = ['data', 'descricao', 'tipo', 'ano', 'recorrente'];
     for (const [key, value] of Object.entries(data)) {
       if (allowed.includes(key)) {
         fields.push(`${key} = ?`);

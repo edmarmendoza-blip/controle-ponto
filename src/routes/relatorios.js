@@ -244,4 +244,143 @@ router.get('/comparativo', authenticateToken, [
   }
 });
 
+// GET /api/relatorios/feriados
+router.get('/feriados', authenticateToken, [
+  query('mes').optional().isInt({ min: 1, max: 12 }).withMessage('Mês inválido'),
+  query('ano').isInt({ min: 2020, max: 2099 }).withMessage('Ano inválido')
+], (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { mes, ano } = req.query;
+    const anoInt = parseInt(ano);
+    const Feriado = require('../models/Feriado');
+    let feriados = Feriado.getAll(anoInt);
+
+    if (mes) {
+      const mesStr = String(mes).padStart(2, '0');
+      feriados = feriados.filter(f => f.data.substring(5, 7) === mesStr);
+    }
+
+    // For each holiday, check if any employee worked
+    const registrosPorFeriado = feriados.map(f => {
+      const registros = Registro.getByDate(f.data);
+      const trabalharam = registros.filter(r => r.entrada && r.saida);
+      return {
+        ...f,
+        funcionarios_trabalharam: trabalharam.length,
+        detalhes: trabalharam.map(r => ({
+          funcionario_id: r.funcionario_id,
+          nome: r.funcionario_nome,
+          entrada: r.entrada,
+          saida: r.saida
+        }))
+      };
+    });
+
+    res.json({ ano: anoInt, mes: mes ? parseInt(mes) : null, feriados: registrosPorFeriado });
+  } catch (err) {
+    console.error('Relatório feriados error:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// GET /api/relatorios/vale-transporte
+router.get('/vale-transporte', authenticateToken, [
+  query('mes').isInt({ min: 1, max: 12 }).withMessage('Mês inválido'),
+  query('ano').isInt({ min: 2020, max: 2099 }).withMessage('Ano inválido'),
+  query('funcionarioId').optional().isInt().withMessage('ID funcionário inválido')
+], (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { mes, ano, funcionarioId } = req.query;
+    const mesInt = parseInt(mes);
+    const anoInt = parseInt(ano);
+
+    let funcionarios;
+    if (funcionarioId) {
+      const func = Funcionario.findById(parseInt(funcionarioId));
+      if (!func) return res.status(404).json({ error: 'Funcionário não encontrado' });
+      funcionarios = [func];
+    } else {
+      funcionarios = Funcionario.getAll();
+    }
+
+    const resultados = funcionarios.map(func => {
+      const registros = Registro.getMonthlyReport(mesInt, anoInt, func.id);
+      const diasTrabalhados = registros.filter(r => r.entrada && r.saida).length;
+      // VT placeholder: will be calculated from funcionario_transportes when that table exists
+      // For now, use a default daily transport cost
+      const valorDiarioVT = 0; // Will be calculated from sub-table
+      return {
+        funcionario_id: func.id,
+        nome: func.nome,
+        cargo: func.cargo,
+        dias_trabalhados: diasTrabalhados,
+        valor_diario_vt: valorDiarioVT,
+        total_vt: Math.round(diasTrabalhados * valorDiarioVT * 100) / 100
+      };
+    });
+
+    res.json({ mes: mesInt, ano: anoInt, vales: resultados });
+  } catch (err) {
+    console.error('Relatório VT error:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// GET /api/relatorios/vale-alimentacao
+router.get('/vale-alimentacao', authenticateToken, [
+  query('mes').isInt({ min: 1, max: 12 }).withMessage('Mês inválido'),
+  query('ano').isInt({ min: 2020, max: 2099 }).withMessage('Ano inválido'),
+  query('funcionarioId').optional().isInt().withMessage('ID funcionário inválido')
+], (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { mes, ano, funcionarioId } = req.query;
+    const mesInt = parseInt(mes);
+    const anoInt = parseInt(ano);
+
+    let funcionarios;
+    if (funcionarioId) {
+      const func = Funcionario.findById(parseInt(funcionarioId));
+      if (!func) return res.status(404).json({ error: 'Funcionário não encontrado' });
+      funcionarios = [func];
+    } else {
+      funcionarios = Funcionario.getAll();
+    }
+
+    const resultados = funcionarios.map(func => {
+      const registros = Registro.getMonthlyReport(mesInt, anoInt, func.id);
+      const diasTrabalhados = registros.filter(r => r.entrada && r.saida).length;
+      // VA placeholder: will use valor_va_dia from funcionario when field exists
+      const valorDiarioVA = 0; // Will come from func.valor_va_dia
+      return {
+        funcionario_id: func.id,
+        nome: func.nome,
+        cargo: func.cargo,
+        dias_trabalhados: diasTrabalhados,
+        valor_diario_va: valorDiarioVA,
+        total_va: Math.round(diasTrabalhados * valorDiarioVA * 100) / 100
+      };
+    });
+
+    res.json({ mes: mesInt, ano: anoInt, vales: resultados });
+  } catch (err) {
+    console.error('Relatório VA error:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 module.exports = router;

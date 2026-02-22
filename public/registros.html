@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registros de Ponto - Altium Controle de Ponto</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+    }
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-[#1e40af] text-white z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col">
+    <div class="p-5 border-b border-white/20">
+      <a href="/dashboard.html" class="flex items-center gap-3 text-xl font-bold">
+        <i class="bi bi-clock-history text-2xl"></i>
+        <span>Altium</span>
+      </a>
+    </div>
+    <nav class="flex-1 overflow-y-auto py-4">
+      <ul class="space-y-1 px-3">
+        <li>
+          <a href="/dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="/funcionarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-people"></i><span>Funcionários</span>
+          </a>
+        </li>
+        <li>
+          <a href="/registros.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/20 font-medium">
+            <i class="bi bi-clock"></i><span>Registros</span>
+          </a>
+        </li>
+        <li>
+          <a href="/relatorios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-file-earmark-text"></i><span>Relatórios</span>
+          </a>
+        </li>
+        <li>
+          <a href="/relatorios-graficos.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-bar-chart-line"></i><span>Gráficos</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/entregas.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-box-seam"></i><span>Entregas</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/holerites.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-receipt"></i><span>Holerites</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/ferias.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-calendar-heart"></i><span>Férias</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/usuarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-shield-lock"></i><span>Usuários</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="p-4 border-t border-white/20">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+          <i class="bi bi-person-fill"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium truncate" id="user-name">Carregando...</div>
+          <div class="text-xs text-white/70" id="user-role">-</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="theme-toggle" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-sm">
+          <i class="bi bi-moon-fill" id="theme-icon"></i>
+          <span>Tema</span>
+        </button>
+        <button id="logout-btn" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-500/80 hover:bg-red-500 transition-colors text-sm">
+          <i class="bi bi-box-arrow-left"></i>
+          <span>Sair</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Sidebar Overlay -->
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+
+  <!-- Main Content -->
+  <main class="md:ml-64 min-h-screen">
+    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+      <div class="flex items-center gap-3">
+        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300">
+          <i class="bi bi-list text-xl"></i>
+        </button>
+        <h1 class="text-xl font-semibold">Registros de Ponto</h1>
+      </div>
+      <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
+    </header>
+
+    <div class="p-4 md:p-6" id="page-content">
+      <!-- Filter Bar -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-6">
+        <div class="flex flex-col md:flex-row items-start md:items-end gap-4">
+          <div class="flex-1 min-w-0">
+            <label class="block text-sm font-medium mb-1">Data</label>
+            <input type="date" id="filter-data" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+          </div>
+          <div class="flex-1 min-w-0">
+            <label class="block text-sm font-medium mb-1">Data Fim (opcional)</label>
+            <input type="date" id="filter-data-fim" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+          </div>
+          <div class="flex-1 min-w-0">
+            <label class="block text-sm font-medium mb-1">Funcionário</label>
+            <select id="filter-funcionario" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="loadRegistros()" class="px-4 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+              <i class="bi bi-funnel"></i>
+              <span>Filtrar</span>
+            </button>
+            <button id="btn-novo-registro" onclick="openModal()" class="gestor-only hidden px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+              <i class="bi bi-plus-lg"></i>
+              <span>Novo</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results info -->
+      <div class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+        <span id="registros-count">0</span> registros encontrados
+      </div>
+
+      <!-- Table -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="bg-gray-50 dark:bg-gray-700/50">
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Funcionário</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Entrada</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Saída</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tipo</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Observação</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="registros-table" class="divide-y divide-gray-100 dark:divide-gray-700">
+              <tr>
+                <td colspan="7" class="px-5 py-8 text-center text-gray-400">
+                  <i class="bi bi-arrow-repeat animate-spin text-2xl"></i>
+                  <p class="mt-2">Carregando...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal Create/Edit Registro -->
+  <div id="modal-registro" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+        <h3 class="text-lg font-semibold" id="modal-registro-title">Novo Registro</h3>
+        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+          <i class="bi bi-x-lg text-xl"></i>
+        </button>
+      </div>
+      <form id="form-registro" onsubmit="saveRegistro(event)" class="p-5 space-y-4">
+        <input type="hidden" id="reg-id">
+        <div>
+          <label class="block text-sm font-medium mb-1">Funcionário *</label>
+          <select id="reg-funcionario" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Data *</label>
+          <input type="date" id="reg-data" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Entrada *</label>
+            <input type="time" id="reg-entrada" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Saída</label>
+            <input type="time" id="reg-saida" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Observação</label>
+          <textarea id="reg-observacao" rows="3" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"></textarea>
+        </div>
+        <div class="flex justify-end gap-3 pt-3">
+          <button type="button" onclick="closeModal()" class="px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            Cancelar
+          </button>
+          <button type="submit" class="px-4 py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-white font-medium transition-colors">
+            Salvar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+  <script src="/js/shared.js"></script>
+  <script>
+    let allRegistros = [];
+    let funcionariosList = [];
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const parts = dateStr.split('-');
+      if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      return dateStr;
+    }
+
+    function formatTime(t) {
+      if (!t) return '-';
+      return t.substring(0, 5);
+    }
+
+    function getTipoBadge(tipo) {
+      if (tipo === 'whatsapp') {
+        return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"><i class="bi bi-whatsapp mr-1"></i>WhatsApp</span>';
+      }
+      return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"><i class="bi bi-pencil mr-1"></i>Manual</span>';
+    }
+
+    function setDefaultDate() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('filter-data').value = today;
+    }
+
+    async function loadFuncionariosList() {
+      try {
+        const res = await fetch('/api/funcionarios', {
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        funcionariosList = Array.isArray(data) ? data : (data.funcionarios || []);
+
+        const filterSelect = document.getElementById('filter-funcionario');
+        const regSelect = document.getElementById('reg-funcionario');
+
+        funcionariosList.forEach(f => {
+          const opt1 = new Option(f.nome, f.id);
+          const opt2 = new Option(f.nome, f.id);
+          filterSelect.appendChild(opt1);
+          regSelect.appendChild(opt2);
+        });
+      } catch (err) {
+        console.error('Erro ao carregar funcionários:', err);
+      }
+    }
+
+    async function loadRegistros() {
+      try {
+        const data = document.getElementById('filter-data').value;
+        const dataFim = document.getElementById('filter-data-fim').value;
+        const funcId = document.getElementById('filter-funcionario').value;
+
+        let url;
+        if (dataFim) {
+          url = `/api/registros?dataInicio=${data}&dataFim=${dataFim}`;
+          if (funcId) url += `&funcionarioId=${funcId}`;
+        } else {
+          url = `/api/registros?data=${data}`;
+          if (funcId) url += `&funcionarioId=${funcId}`;
+        }
+
+        const res = await fetch(url, {
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+        });
+        if (!res.ok) throw new Error('Erro ao carregar registros');
+        const result = await res.json();
+        allRegistros = Array.isArray(result) ? result : (result.registros || []);
+        renderTable();
+      } catch (err) {
+        console.error(err);
+        document.getElementById('registros-table').innerHTML = `
+          <tr><td colspan="7" class="px-5 py-8 text-center text-red-400">
+            <i class="bi bi-exclamation-circle text-3xl"></i>
+            <p class="mt-2">Erro: ${err.message}</p>
+          </td></tr>`;
+      }
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('registros-table');
+      document.getElementById('registros-count').textContent = allRegistros.length;
+
+      if (allRegistros.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="7" class="px-5 py-8 text-center text-gray-400">
+            <i class="bi bi-inbox text-3xl"></i>
+            <p class="mt-2">Nenhum registro encontrado</p>
+          </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = allRegistros.map(r => `
+        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+          <td class="px-5 py-3 font-medium">${r.funcionario_nome || r.nome || '-'}</td>
+          <td class="px-5 py-3">${formatDate(r.data)}</td>
+          <td class="px-5 py-3">${formatTime(r.entrada)}</td>
+          <td class="px-5 py-3">${formatTime(r.saida)}</td>
+          <td class="px-5 py-3">${getTipoBadge(r.tipo || r.origem)}</td>
+          <td class="px-5 py-3 text-gray-600 dark:text-gray-400 max-w-xs truncate">${r.observacao || '-'}</td>
+          <td class="px-5 py-3">
+            <div class="flex items-center gap-2">
+              <button onclick="editRegistro(${r.id})" class="gestor-only hidden p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400 transition-colors" title="Editar">
+                <i class="bi bi-pencil-square"></i>
+              </button>
+              <button onclick="deleteRegistro(${r.id})" class="admin-only hidden p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors" title="Excluir">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      // Re-apply role visibility after rendering
+      if (typeof applyRoleVisibility === 'function') applyRoleVisibility();
+    }
+
+    function openModal(registro) {
+      const modal = document.getElementById('modal-registro');
+      const title = document.getElementById('modal-registro-title');
+
+      document.getElementById('form-registro').reset();
+      document.getElementById('reg-id').value = '';
+
+      if (registro) {
+        title.textContent = 'Editar Registro';
+        document.getElementById('reg-id').value = registro.id;
+        document.getElementById('reg-funcionario').value = registro.funcionario_id || '';
+        document.getElementById('reg-data').value = registro.data || '';
+        document.getElementById('reg-entrada').value = (registro.entrada || '').substring(0, 5);
+        document.getElementById('reg-saida').value = (registro.saida || '').substring(0, 5);
+        document.getElementById('reg-observacao').value = registro.observacao || '';
+      } else {
+        title.textContent = 'Novo Registro';
+        document.getElementById('reg-data').value = document.getElementById('filter-data').value;
+      }
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('modal-registro');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function editRegistro(id) {
+      const reg = allRegistros.find(r => r.id === id);
+      if (reg) openModal(reg);
+    }
+
+    async function saveRegistro(e) {
+      e.preventDefault();
+      const id = document.getElementById('reg-id').value;
+      const body = {
+        funcionario_id: parseInt(document.getElementById('reg-funcionario').value),
+        data: document.getElementById('reg-data').value,
+        entrada: document.getElementById('reg-entrada').value,
+        saida: document.getElementById('reg-saida').value || null,
+        observacao: document.getElementById('reg-observacao').value || null,
+        tipo: 'manual'
+      };
+
+      try {
+        const url = id ? `/api/registros/${id}` : '/api/registros';
+        const method = id ? 'PUT' : 'POST';
+        const res = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Erro ao salvar');
+        }
+        closeModal();
+        if (typeof showToast === 'function') showToast(id ? 'Registro atualizado!' : 'Registro criado!', 'success');
+        loadRegistros();
+      } catch (err) {
+        if (typeof showToast === 'function') showToast(err.message, 'error');
+      }
+    }
+
+    async function deleteRegistro(id) {
+      if (!confirm('Deseja realmente excluir este registro?')) return;
+      try {
+        const res = await fetch(`/api/registros/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+        });
+        if (!res.ok) throw new Error('Erro ao excluir');
+        if (typeof showToast === 'function') showToast('Registro excluído!', 'success');
+        loadRegistros();
+      } catch (err) {
+        if (typeof showToast === 'function') showToast(err.message, 'error');
+      }
+    }
+
+    // Close modal on backdrop click
+    document.getElementById('modal-registro').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    window.onAuthReady = function() {
+      setDefaultDate();
+      loadFuncionariosList().then(() => loadRegistros());
+    };
+  </script>
+</body>
+</html>

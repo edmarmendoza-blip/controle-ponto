@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Altium Controle de Ponto</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Smooth transitions for theme toggle */
+    html.dark { color-scheme: dark; }
+    body { transition: background-color 0.3s ease, color 0.3s ease; }
+
+    /* Subtle floating animation for the icon */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+    }
+    .float-animation { animation: float 3s ease-in-out infinite; }
+
+    /* Gradient background animation */
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .animated-gradient {
+      background-size: 200% 200%;
+      animation: gradientShift 8s ease infinite;
+    }
+
+    /* Spinner for loading state */
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .spinner {
+      animation: spin 0.7s linear infinite;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Input focus ring */
+    input:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    }
+    html.dark input:focus {
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50 to-slate-200 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 transition-colors duration-300">
+
+  <!-- Theme Toggle Button -->
+  <button
+    id="themeToggle"
+    type="button"
+    class="fixed top-5 right-5 z-50 p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg border border-gray-200 dark:border-gray-700 hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer"
+    aria-label="Alternar tema"
+  >
+    <i class="bi bi-sun-fill text-xl text-amber-500 dark:hidden"></i>
+    <i class="bi bi-moon-stars-fill text-xl text-blue-300 hidden dark:inline-block"></i>
+  </button>
+
+  <!-- Background decorative elements -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+    <div class="absolute -top-40 -right-40 w-96 h-96 bg-primary-light/10 dark:bg-primary-light/5 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-primary/10 dark:bg-primary/5 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-200/20 dark:bg-blue-900/10 rounded-full blur-3xl"></div>
+  </div>
+
+  <!-- Login Card -->
+  <div class="relative w-full max-w-md mx-4">
+    <div class="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-2xl shadow-blue-900/10 dark:shadow-black/30 border border-white/50 dark:border-gray-700/50 p-8 sm:p-10">
+
+      <!-- Logo / Icon -->
+      <div class="flex flex-col items-center mb-8">
+        <div class="float-animation mb-5">
+          <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary-light animated-gradient flex items-center justify-center shadow-lg shadow-primary/30">
+            <i class="bi bi-clock-history text-white text-4xl"></i>
+          </div>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white tracking-tight text-center">
+          Altium - Controle de Ponto
+        </h1>
+        <p class="mt-2 text-sm font-medium text-primary-light dark:text-blue-400 tracking-wide uppercase">
+          Casa dos Bull
+        </p>
+      </div>
+
+      <!-- Error Message -->
+      <div
+        id="errorDiv"
+        class="hidden mb-5 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400 text-sm font-medium transition-all duration-300"
+        role="alert"
+      >
+        <div class="flex items-center gap-2">
+          <i class="bi bi-exclamation-triangle-fill text-base flex-shrink-0"></i>
+          <span id="errorMessage">Erro ao fazer login.</span>
+        </div>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" class="space-y-5" novalidate>
+        <!-- Email -->
+        <div>
+          <label for="email" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+            E-mail
+          </label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+              <i class="bi bi-envelope-fill text-gray-400 dark:text-gray-500"></i>
+            </span>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              autocomplete="email"
+              placeholder="seu@email.com"
+              class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 text-sm transition-all duration-200 hover:border-primary-light dark:hover:border-primary-light focus:border-primary-light dark:focus:border-primary-light"
+            />
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label for="password" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+            Senha
+          </label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+              <i class="bi bi-lock-fill text-gray-400 dark:text-gray-500"></i>
+            </span>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              autocomplete="current-password"
+              placeholder="Digite sua senha"
+              class="w-full pl-10 pr-12 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 text-sm transition-all duration-200 hover:border-primary-light dark:hover:border-primary-light focus:border-primary-light dark:focus:border-primary-light"
+            />
+            <button
+              type="button"
+              id="togglePassword"
+              class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 dark:text-gray-500 hover:text-primary-light dark:hover:text-primary-light transition-colors cursor-pointer"
+              aria-label="Mostrar senha"
+            >
+              <i class="bi bi-eye-fill text-lg" id="eyeIcon"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Login Button -->
+        <button
+          type="submit"
+          id="loginBtn"
+          class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-primary to-primary-light hover:from-primary-dark hover:to-primary text-white font-semibold text-sm tracking-wide shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none disabled:hover:shadow-lg"
+        >
+          <span id="btnText">Entrar</span>
+          <span id="btnSpinner" class="hidden">
+            <div class="spinner"></div>
+          </span>
+          <i class="bi bi-arrow-right-short text-xl" id="btnIcon"></i>
+        </button>
+      </form>
+
+      <!-- Footer -->
+      <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700/50 text-center">
+        <p class="text-xs text-gray-400 dark:text-gray-500">
+          <i class="bi bi-shield-lock-fill mr-1"></i>
+          Acesso restrito a colaboradores autorizados
+        </p>
+      </div>
+    </div>
+
+    <!-- Bottom branding -->
+    <p class="text-center mt-6 text-xs text-gray-400 dark:text-gray-600">
+      &copy; 2026 Altium &mdash; Todos os direitos reservados
+    </p>
+  </div>
+
+  <script>
+    // ==============================
+    // Theme Management
+    // ==============================
+    (function initTheme() {
+      const stored = localStorage.getItem('theme');
+      if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+
+    document.getElementById('themeToggle').addEventListener('click', function () {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+
+    // ==============================
+    // Check if already logged in
+    // ==============================
+    (async function checkAuth() {
+      const token = localStorage.getItem('ponto_token');
+      if (!token) return;
+
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (res.ok) {
+          window.location.href = '/dashboard.html';
+        } else {
+          // Token is invalid or expired, remove it
+          localStorage.removeItem('ponto_token');
+        }
+      } catch (e) {
+        // Network error — stay on login page
+      }
+    })();
+
+    // ==============================
+    // Toggle Password Visibility
+    // ==============================
+    const togglePasswordBtn = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('eyeIcon');
+
+    togglePasswordBtn.addEventListener('click', function () {
+      const isPassword = passwordInput.type === 'password';
+      passwordInput.type = isPassword ? 'text' : 'password';
+      eyeIcon.className = isPassword ? 'bi bi-eye-slash-fill text-lg' : 'bi bi-eye-fill text-lg';
+      this.setAttribute('aria-label', isPassword ? 'Ocultar senha' : 'Mostrar senha');
+    });
+
+    // ==============================
+    // Login Form Submission
+    // ==============================
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const btnIcon = document.getElementById('btnIcon');
+    const errorDiv = document.getElementById('errorDiv');
+    const errorMessage = document.getElementById('errorMessage');
+
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorDiv.classList.remove('hidden');
+      errorDiv.style.animation = 'none';
+      errorDiv.offsetHeight; // Trigger reflow
+      errorDiv.style.animation = null;
+    }
+
+    function hideError() {
+      errorDiv.classList.add('hidden');
+    }
+
+    function setLoading(loading) {
+      loginBtn.disabled = loading;
+      if (loading) {
+        btnText.textContent = 'Entrando...';
+        btnSpinner.classList.remove('hidden');
+        btnIcon.classList.add('hidden');
+      } else {
+        btnText.textContent = 'Entrar';
+        btnSpinner.classList.add('hidden');
+        btnIcon.classList.remove('hidden');
+      }
+    }
+
+    loginForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      hideError();
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      // Client-side validation
+      if (!email) {
+        showError('Por favor, informe seu e-mail.');
+        document.getElementById('email').focus();
+        return;
+      }
+
+      if (!password) {
+        showError('Por favor, informe sua senha.');
+        document.getElementById('password').focus();
+        return;
+      }
+
+      // Basic email format check
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        showError('Por favor, informe um e-mail valido.');
+        document.getElementById('email').focus();
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.token) {
+          localStorage.setItem('ponto_token', data.token);
+          localStorage.setItem('token', data.token);
+
+          // Success feedback before redirect
+          btnText.textContent = 'Sucesso!';
+          btnSpinner.classList.add('hidden');
+          btnIcon.className = 'bi bi-check-lg text-xl';
+          btnIcon.classList.remove('hidden');
+          loginBtn.classList.remove('from-primary', 'to-primary-light');
+          loginBtn.classList.add('from-green-500', 'to-green-600');
+
+          setTimeout(function () {
+            window.location.href = '/dashboard.html';
+          }, 500);
+        } else {
+          const message = data.message || data.error || 'E-mail ou senha incorretos.';
+          showError(message);
+          setLoading(false);
+          document.getElementById('password').focus();
+        }
+      } catch (err) {
+        showError('Erro de conexao. Verifique sua internet e tente novamente.');
+        setLoading(false);
+      }
+    });
+
+    // Hide error when user starts typing
+    document.getElementById('email').addEventListener('input', hideError);
+    document.getElementById('password').addEventListener('input', hideError);
+  </script>
+</body>
+</html>
