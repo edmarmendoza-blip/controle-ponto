@@ -111,4 +111,93 @@ router.get('/funcionario/:id', authenticateToken, [
   }
 });
 
+// GET /api/relatorios/comparativo
+router.get('/comparativo', authenticateToken, [
+  query('mes').isInt({ min: 1, max: 12 }).withMessage('Mês inválido'),
+  query('ano').isInt({ min: 2020, max: 2099 }).withMessage('Ano inválido'),
+  query('funcionarioId').optional().isInt().withMessage('ID funcionário inválido')
+], (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { mes, ano, funcionarioId } = req.query;
+    const registros = Registro.getMonthlyReport(parseInt(mes), parseInt(ano), funcionarioId);
+    const config = HorasExtrasService.getConfig();
+
+    // Hours per employee (bar chart data)
+    const employeeHours = {};
+    // Daily hours trend (line chart data)
+    const dailyHours = {};
+    // Overtime distribution (pie chart data)
+    let totalNormal = 0;
+    let totalOvertime = 0;
+    let totalHoliday = 0;
+
+    for (const reg of registros) {
+      const calc = HorasExtrasService.calcularRegistro(reg, config);
+
+      // Aggregate per employee
+      if (!employeeHours[reg.funcionario_id]) {
+        employeeHours[reg.funcionario_id] = {
+          nome: reg.funcionario_nome,
+          horasTrabalhadas: 0,
+          horasExtras: 0,
+          horasNormais: 0
+        };
+      }
+      employeeHours[reg.funcionario_id].horasTrabalhadas += calc.horasTrabalhadas;
+      employeeHours[reg.funcionario_id].horasExtras += calc.horasExtras;
+      employeeHours[reg.funcionario_id].horasNormais += calc.horasNormais;
+
+      // Aggregate per day
+      if (!dailyHours[reg.data]) {
+        dailyHours[reg.data] = { total: 0, normal: 0, extras: 0 };
+      }
+      dailyHours[reg.data].total += calc.horasTrabalhadas;
+      dailyHours[reg.data].normal += calc.horasNormais;
+      dailyHours[reg.data].extras += calc.horasExtras;
+
+      // Pie chart distribution
+      totalNormal += calc.horasNormais;
+      if (calc.tipoDia.tipo === 'feriado' || calc.tipoDia.tipo === 'domingo') {
+        totalHoliday += calc.horasExtras;
+      } else {
+        totalOvertime += calc.horasExtras;
+      }
+    }
+
+    // Round values
+    for (const emp of Object.values(employeeHours)) {
+      emp.horasTrabalhadas = Math.round(emp.horasTrabalhadas * 100) / 100;
+      emp.horasExtras = Math.round(emp.horasExtras * 100) / 100;
+      emp.horasNormais = Math.round(emp.horasNormais * 100) / 100;
+    }
+
+    // Sort daily data by date
+    const sortedDays = Object.keys(dailyHours).sort();
+    const dailyTrend = sortedDays.map(d => ({
+      data: d,
+      total: Math.round(dailyHours[d].total * 100) / 100,
+      normal: Math.round(dailyHours[d].normal * 100) / 100,
+      extras: Math.round(dailyHours[d].extras * 100) / 100
+    }));
+
+    res.json({
+      employeeHours: Object.values(employeeHours),
+      dailyTrend,
+      distribution: {
+        normal: Math.round(totalNormal * 100) / 100,
+        overtime: Math.round(totalOvertime * 100) / 100,
+        holiday: Math.round(totalHoliday * 100) / 100
+      }
+    });
+  } catch (err) {
+    console.error('Relatório comparativo error:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 module.exports = router;

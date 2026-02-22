@@ -34,4 +34,11 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-module.exports = { authenticateToken, requireAdmin };
+function requireGestor(req, res, next) {
+  if (req.user.role !== 'admin' && req.user.role !== 'gestor') {
+    return res.status(403).json({ error: 'Acesso restrito a administradores e gestores' });
+  }
+  next();
+}
+
+module.exports = { authenticateToken, requireAdmin, requireGestor };

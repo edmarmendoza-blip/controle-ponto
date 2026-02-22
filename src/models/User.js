@@ -40,6 +40,10 @@ class User {
     values.push(id);
     return db.prepare(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`).run(...values);
   }
+
+  static delete(id) {
+    return db.prepare('UPDATE users SET active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(id);
+  }
 }
 
 module.exports = User;

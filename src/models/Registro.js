@@ -42,7 +42,7 @@ class Registro {
     return db.prepare(query).all(...params);
   }
 
-  static create({ funcionario_id, data, entrada, saida, tipo = 'manual', observacao, created_by }) {
+  static create({ funcionario_id, data, entrada, saida, tipo = 'manual', observacao, created_by, latitude, longitude }) {
     // Check for duplicate
     const existing = db.prepare(
       'SELECT id FROM registros WHERE funcionario_id = ? AND data = ? AND entrada = ?'
@@ -53,15 +53,15 @@ class Registro {
     }
 
     const result = db.prepare(
-      'INSERT INTO registros (funcionario_id, data, entrada, saida, tipo, observacao, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    ).run(funcionario_id, data, entrada || null, saida || null, tipo, observacao || null, created_by);
+      'INSERT INTO registros (funcionario_id, data, entrada, saida, tipo, observacao, created_by, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(funcionario_id, data, entrada || null, saida || null, tipo, observacao || null, created_by, latitude || null, longitude || null);
     return result.lastInsertRowid;
   }
 
   static update(id, data, updatedBy) {
     const fields = [];
     const values = [];
-    const allowed = ['entrada', 'saida', 'observacao', 'data', 'funcionario_id'];
+    const allowed = ['entrada', 'saida', 'observacao', 'data', 'funcionario_id', 'latitude', 'longitude'];
     for (const [key, value] of Object.entries(data)) {
       if (allowed.includes(key)) {
         fields.push(`${key} = ?`);
