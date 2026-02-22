@@ -342,18 +342,20 @@
                 <th>Cargo</th>
                 <th>Salário/Hora</th>
                 <th>Telefone</th>
+                <th>Horário</th>
                 <th>Status</th>
                 ${canManage ? '<th>Ações</th>' : ''}
               </tr>
             </thead>
             <tbody>
-              ${funcionarios.length === 0 ? `<tr><td colspan="${canManage ? 6 : 5}" class="text-center text-muted py-4">Nenhum funcionário cadastrado</td></tr>` : ''}
+              ${funcionarios.length === 0 ? `<tr><td colspan="${canManage ? 7 : 6}" class="text-center text-muted py-4">Nenhum funcionário cadastrado</td></tr>` : ''}
               ${funcionarios.map(f => `
                 <tr>
                   <td><strong>${f.nome}</strong></td>
                   <td>${f.cargo}</td>
                   <td>${formatCurrency(f.salario_hora)}</td>
                   <td>${f.telefone || '-'}</td>
+                  <td>${f.horario_entrada || '08:00'}</td>
                   <td><span class="badge-status badge-${f.status}">${f.status === 'ativo' ? 'Ativo' : 'Inativo'}</span></td>
                   ${canManage ? `
                     <td class="text-nowrap">
@@ -403,6 +405,10 @@
           <label class="form-label">Telefone</label>
           <input type="text" class="form-control" id="func-telefone" placeholder="(11) 99999-0000">
         </div>
+        <div class="mb-3">
+          <label class="form-label">Horário de Entrada</label>
+          <input type="time" class="form-control" id="func-horario-entrada" value="08:00">
+        </div>
         ${isEdit ? `
           <div class="mb-3">
             <label class="form-label">Status</label>
@@ -425,6 +431,7 @@
         document.getElementById('func-cargo').value = f.cargo;
         document.getElementById('func-salario').value = f.salario_hora;
         document.getElementById('func-telefone').value = f.telefone || '';
+        document.getElementById('func-horario-entrada').value = f.horario_entrada || '08:00';
         document.getElementById('func-status').value = f.status;
       });
     }
@@ -435,7 +442,8 @@
       nome: document.getElementById('func-nome').value,
       cargo: document.getElementById('func-cargo').value,
       salario_hora: parseFloat(document.getElementById('func-salario').value),
-      telefone: document.getElementById('func-telefone').value || null
+      telefone: document.getElementById('func-telefone').value || null,
+      horario_entrada: document.getElementById('func-horario-entrada').value || '08:00'
     };
 
     if (!data.nome || !data.cargo || isNaN(data.salario_hora)) {
