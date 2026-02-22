@@ -69,6 +69,52 @@ function initializeDatabase() {
     if (ferCols.length > 0 && !ferCols.includes('recorrente')) {
       db.exec('ALTER TABLE feriados ADD COLUMN recorrente INTEGER DEFAULT 1');
     }
+
+    // Migrate status 'inativo' -> 'desligado' and update CHECK constraint
+    try {
+      db.exec("UPDATE funcionarios SET status = 'desligado' WHERE status = 'inativo'");
+    } catch (e) { /* ignore */ }
+
+    // Part 2: Add complete employee registration fields
+    const funcColsFull = db.prepare("PRAGMA table_info(funcionarios)").all().map(c => c.name);
+    if (funcColsFull.length > 0 && !funcColsFull.includes('classificacao')) {
+      const newCols = [
+        // Classificação e Status
+        "classificacao TEXT DEFAULT 'operacional'",
+        "email_pessoal TEXT",
+        "data_admissao DATE",
+        "data_desligamento DATE",
+        "motivo_desligamento TEXT",
+        // Benefícios
+        "contabiliza_hora_extra INTEGER DEFAULT 1",
+        "recebe_vt INTEGER DEFAULT 1",
+        "recebe_va INTEGER DEFAULT 1",
+        "contabiliza_feriado INTEGER DEFAULT 1",
+        // Jornada via IA
+        "jornada_texto TEXT",
+        "jornada_json TEXT",
+        // Vale-Transporte
+        "tipo_transporte TEXT DEFAULT 'diario'",
+        "valor_fixo_transporte REAL DEFAULT 0",
+        // Vale-Alimentação
+        "tem_vale_alimentacao INTEGER DEFAULT 0",
+        "valor_va_dia REAL DEFAULT 0",
+        // PIX
+        "pix_tipo TEXT",
+        "pix_chave TEXT",
+        "pix_banco TEXT",
+        // Férias
+        "ferias_inicio DATE",
+        "ferias_fim DATE",
+        "ferias_status TEXT DEFAULT 'sem_direito'",
+        // Comunicação
+        "notificacoes_ativas INTEGER DEFAULT 0",
+        "notificacoes_config TEXT"
+      ];
+      for (const col of newCols) {
+        try { db.exec(`ALTER TABLE funcionarios ADD COLUMN ${col}`); } catch (e) { /* column may already exist */ }
+      }
+    }
   } catch (migrationErr) {
     console.error('Migration warning:', migrationErr.message);
   }
@@ -89,17 +135,49 @@ function initializeDatabase() {
     CREATE TABLE IF NOT EXISTS funcionarios (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       nome TEXT NOT NULL,
-      cargo TEXT NOT NULL,
-      salario_hora REAL NOT NULL,
+      cargo TEXT,
+      salario_hora REAL DEFAULT 0,
       telefone TEXT,
       foto TEXT,
-      status TEXT DEFAULT 'ativo' CHECK(status IN ('ativo', 'inativo')),
+      status TEXT DEFAULT 'ativo' CHECK(status IN ('ativo', 'desligado')),
       horario_entrada TEXT DEFAULT '08:00',
       valor_hora_extra REAL DEFAULT 43.25,
       valor_dia_especial REAL DEFAULT 320.00,
       jornada_diaria REAL DEFAULT 9.8,
+      classificacao TEXT DEFAULT 'operacional',
+      email_pessoal TEXT,
+      data_admissao DATE,
+      data_desligamento DATE,
+      motivo_desligamento TEXT,
+      contabiliza_hora_extra INTEGER DEFAULT 1,
+      recebe_vt INTEGER DEFAULT 1,
+      recebe_va INTEGER DEFAULT 1,
+      contabiliza_feriado INTEGER DEFAULT 1,
+      jornada_texto TEXT,
+      jornada_json TEXT,
+      tipo_transporte TEXT DEFAULT 'diario',
+      valor_fixo_transporte REAL DEFAULT 0,
+      tem_vale_alimentacao INTEGER DEFAULT 0,
+      valor_va_dia REAL DEFAULT 0,
+      pix_tipo TEXT,
+      pix_chave TEXT,
+      pix_banco TEXT,
+      ferias_inicio DATE,
+      ferias_fim DATE,
+      ferias_status TEXT DEFAULT 'sem_direito',
+      notificacoes_ativas INTEGER DEFAULT 0,
+      notificacoes_config TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS funcionario_transportes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      funcionario_id INTEGER NOT NULL,
+      tipo TEXT NOT NULL,
+      nome_linha TEXT,
+      valor_trecho REAL NOT NULL DEFAULT 0,
+      FOREIGN KEY (funcionario_id) REFERENCES funcionarios(id) ON DELETE CASCADE
     );
 
     CREATE TABLE IF NOT EXISTS registros (

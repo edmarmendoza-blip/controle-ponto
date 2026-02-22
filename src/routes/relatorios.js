@@ -313,19 +313,19 @@ router.get('/vale-transporte', authenticateToken, [
       funcionarios = Funcionario.getAll();
     }
 
-    const resultados = funcionarios.map(func => {
+    const resultados = funcionarios.filter(f => f.recebe_vt).map(func => {
       const registros = Registro.getMonthlyReport(mesInt, anoInt, func.id);
       const diasTrabalhados = registros.filter(r => r.entrada && r.saida).length;
-      // VT placeholder: will be calculated from funcionario_transportes when that table exists
-      // For now, use a default daily transport cost
-      const valorDiarioVT = 0; // Will be calculated from sub-table
+      const totalVT = Funcionario.calcularVT(func.id, diasTrabalhados);
+      const transportes = Funcionario.getTransportes(func.id);
       return {
         funcionario_id: func.id,
         nome: func.nome,
         cargo: func.cargo,
+        tipo_transporte: func.tipo_transporte || 'diario',
         dias_trabalhados: diasTrabalhados,
-        valor_diario_vt: valorDiarioVT,
-        total_vt: Math.round(diasTrabalhados * valorDiarioVT * 100) / 100
+        transportes,
+        total_vt: totalVT
       };
     });
 
@@ -361,11 +361,10 @@ router.get('/vale-alimentacao', authenticateToken, [
       funcionarios = Funcionario.getAll();
     }
 
-    const resultados = funcionarios.map(func => {
+    const resultados = funcionarios.filter(f => f.tem_vale_alimentacao).map(func => {
       const registros = Registro.getMonthlyReport(mesInt, anoInt, func.id);
       const diasTrabalhados = registros.filter(r => r.entrada && r.saida).length;
-      // VA placeholder: will use valor_va_dia from funcionario when field exists
-      const valorDiarioVA = 0; // Will come from func.valor_va_dia
+      const valorDiarioVA = func.valor_va_dia || 0;
       return {
         funcionario_id: func.id,
         nome: func.nome,

@@ -136,16 +136,17 @@
               <tr class="bg-gray-50 dark:bg-gray-700/50">
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nome</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cargo</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Classificação</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Salário/Hora</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Telefone</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Horário</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Admissão</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
               </tr>
             </thead>
             <tbody id="funcionarios-table" class="divide-y divide-gray-100 dark:divide-gray-700">
               <tr>
-                <td colspan="7" class="px-5 py-8 text-center text-gray-400">
+                <td colspan="8" class="px-5 py-8 text-center text-gray-400">
                   <i class="bi bi-arrow-repeat animate-spin text-2xl"></i>
                   <p class="mt-2">Carregando...</p>
                 </td>
@@ -159,61 +160,244 @@
 
   <!-- Modal Create/Edit -->
   <div id="modal-funcionario" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
-        <h3 class="text-lg font-semibold" id="modal-title">Novo Funcionário</h3>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700 shrink-0">
+        <h3 class="text-lg font-semibold" id="modal-title">Novo Funcionario</h3>
         <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
           <i class="bi bi-x-lg text-xl"></i>
         </button>
       </div>
-      <form id="form-funcionario" onsubmit="saveFuncionario(event)" class="p-5 space-y-4">
+
+      <!-- Tab Navigation -->
+      <div class="border-b border-gray-100 dark:border-gray-700 shrink-0 overflow-x-auto">
+        <nav class="flex px-5 gap-1" id="modal-tabs">
+          <button type="button" onclick="switchTab('pessoais')" data-tab="pessoais" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-primary text-primary whitespace-nowrap">Dados Pessoais</button>
+          <button type="button" onclick="switchTab('classificacao')" data-tab="classificacao" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">Classificacao</button>
+          <button type="button" onclick="switchTab('jornada')" data-tab="jornada" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">Jornada</button>
+          <button type="button" onclick="switchTab('beneficios')" data-tab="beneficios" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">Beneficios</button>
+          <button type="button" onclick="switchTab('transporte')" data-tab="transporte" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">Vale-Transporte</button>
+          <button type="button" onclick="switchTab('alimentacao')" data-tab="alimentacao" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">Vale-Alimentacao</button>
+          <button type="button" onclick="switchTab('pix')" data-tab="pix" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">PIX</button>
+          <button type="button" onclick="switchTab('comunicacao')" data-tab="comunicacao" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">Comunicacao</button>
+        </nav>
+      </div>
+
+      <form id="form-funcionario" onsubmit="saveFuncionario(event)" class="flex-1 overflow-y-auto">
         <input type="hidden" id="func-id">
-        <div>
-          <label class="block text-sm font-medium mb-1">Nome *</label>
-          <input type="text" id="func-nome" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Cargo *</label>
-          <input type="text" id="func-cargo" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium mb-1">Salário/Hora (R$) *</label>
-            <input type="number" step="0.01" id="func-salario" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+        <div class="p-5">
+
+          <!-- Tab: Dados Pessoais -->
+          <div id="tab-pessoais" class="tab-content space-y-4">
+            <div>
+              <label class="block text-sm font-medium mb-1">Nome *</label>
+              <input type="text" id="func-nome" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Cargo</label>
+              <input type="text" id="func-cargo" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">Telefone</label>
+                <input type="text" id="func-telefone" placeholder="(11) 99999-0000" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">E-mail Pessoal</label>
+                <input type="email" id="func-email-pessoal" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Salario/Hora (R$)</label>
+              <input type="number" step="0.01" id="func-salario" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            </div>
           </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Telefone</label>
-            <input type="text" id="func-telefone" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+
+          <!-- Tab: Classificacao e Status -->
+          <div id="tab-classificacao" class="tab-content space-y-4 hidden">
+            <div>
+              <label class="block text-sm font-medium mb-1">Classificacao</label>
+              <select id="func-classificacao" onchange="onClassificacaoChange()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <option value="operacional">Operacional</option>
+                <option value="assistente_pessoal">Assistente Pessoal</option>
+                <option value="dono_casa">Dono de Casa</option>
+                <option value="outro">Outro</option>
+              </select>
+            </div>
+            <div id="status-field" class="hidden">
+              <label class="block text-sm font-medium mb-1">Status</label>
+              <select id="func-status" onchange="onStatusChange()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <option value="ativo">Ativo</option>
+                <option value="desligado">Desligado</option>
+              </select>
+            </div>
+            <div id="motivo-desligamento-field" class="hidden">
+              <label class="block text-sm font-medium mb-1">Motivo do Desligamento</label>
+              <input type="text" id="func-motivo-desligamento" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Data de Admissao</label>
+              <input type="date" id="func-data-admissao" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            </div>
           </div>
+
+          <!-- Tab: Jornada de Trabalho -->
+          <div id="tab-jornada" class="tab-content space-y-4 hidden">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">Horario de Entrada</label>
+                <input type="time" id="func-horario" value="08:00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Jornada Diaria (h)</label>
+                <input type="number" step="0.01" id="func-jornada" value="9.8" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">Valor Hora Extra (R$)</label>
+                <input type="number" step="0.01" id="func-hora-extra" value="43.25" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Valor Dia Especial (R$)</label>
+                <input type="number" step="0.01" id="func-dia-especial" value="320" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Descricao da Jornada</label>
+              <textarea id="func-jornada-texto" rows="3" placeholder="Ex: Segunda a sexta, das 08:00 as 17:00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"></textarea>
+            </div>
+          </div>
+
+          <!-- Tab: Beneficios -->
+          <div id="tab-beneficios" class="tab-content space-y-4 hidden">
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Selecione os beneficios aplicaveis ao funcionario.</p>
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition">
+              <input type="checkbox" id="func-contabiliza-hora-extra" checked class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+              <div>
+                <span class="text-sm font-medium">Contabiliza Hora Extra</span>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Horas extras serao calculadas automaticamente</p>
+              </div>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition">
+              <input type="checkbox" id="func-recebe-vt" checked class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+              <div>
+                <span class="text-sm font-medium">Recebe Vale-Transporte</span>
+                <p class="text-xs text-gray-500 dark:text-gray-400">VT sera incluido nos calculos</p>
+              </div>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition">
+              <input type="checkbox" id="func-recebe-va" checked class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+              <div>
+                <span class="text-sm font-medium">Recebe Vale-Alimentacao</span>
+                <p class="text-xs text-gray-500 dark:text-gray-400">VA sera incluido nos calculos</p>
+              </div>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition">
+              <input type="checkbox" id="func-contabiliza-feriado" checked class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+              <div>
+                <span class="text-sm font-medium">Contabiliza Feriado</span>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Feriados serao considerados como dia especial</p>
+              </div>
+            </label>
+          </div>
+
+          <!-- Tab: Vale-Transporte -->
+          <div id="tab-transporte" class="tab-content space-y-4 hidden">
+            <div>
+              <label class="block text-sm font-medium mb-1">Tipo de Transporte</label>
+              <select id="func-tipo-transporte" onchange="onTipoTransporteChange()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <option value="diario">Diario</option>
+                <option value="pernoite">Pernoite</option>
+                <option value="fixo">Fixo</option>
+              </select>
+            </div>
+            <div id="valor-fixo-transporte-field" class="hidden">
+              <label class="block text-sm font-medium mb-1">Valor Fixo Transporte (R$)</label>
+              <input type="number" step="0.01" id="func-valor-fixo-transporte" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Linhas de Transporte</label>
+              <div id="transportes-list" class="space-y-2"></div>
+              <button type="button" onclick="addTransporteRow()" class="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 hover:border-primary hover:text-primary text-sm text-gray-500 dark:text-gray-400 transition-colors w-full justify-center">
+                <i class="bi bi-plus-lg"></i>
+                <span>Adicionar transporte</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tab: Vale-Alimentacao -->
+          <div id="tab-alimentacao" class="tab-content space-y-4 hidden">
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition">
+              <input type="checkbox" id="func-tem-va" onchange="onTemVaChange()" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+              <div>
+                <span class="text-sm font-medium">Possui Vale-Alimentacao</span>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Ativar para configurar o valor diario do VA</p>
+              </div>
+            </label>
+            <div id="valor-va-dia-field" class="hidden">
+              <label class="block text-sm font-medium mb-1">Valor VA por Dia (R$)</label>
+              <input type="number" step="0.01" id="func-valor-va-dia" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            </div>
+          </div>
+
+          <!-- Tab: Chave PIX -->
+          <div id="tab-pix" class="tab-content space-y-4 hidden">
+            <div>
+              <label class="block text-sm font-medium mb-1">Tipo de Chave PIX</label>
+              <select id="func-pix-tipo" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <option value="cpf">CPF</option>
+                <option value="telefone">Telefone</option>
+                <option value="email">E-mail</option>
+                <option value="aleatoria">Chave Aleatoria</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Chave PIX</label>
+              <input type="text" id="func-pix-chave" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Banco (opcional)</label>
+              <input type="text" id="func-pix-banco" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            </div>
+          </div>
+
+          <!-- Tab: Comunicacao -->
+          <div id="tab-comunicacao" class="tab-content space-y-4 hidden">
+            <div id="comunicacao-aviso" class="p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-sm text-yellow-700 dark:text-yellow-400 hidden">
+              <i class="bi bi-exclamation-triangle mr-1"></i>
+              Preencha o e-mail pessoal na aba "Dados Pessoais" para ativar notificacoes.
+            </div>
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition">
+              <input type="checkbox" id="func-notificacoes-ativas" onchange="onNotificacoesChange()" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+              <div>
+                <span class="text-sm font-medium">Notificacoes Ativas</span>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Enviar notificacoes por e-mail ao funcionario</p>
+              </div>
+            </label>
+            <div id="sub-notificacoes" class="hidden ml-6 space-y-3">
+              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition">
+                <input type="checkbox" id="func-notif-resumo-semanal" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                <span class="text-sm">Resumo Semanal</span>
+              </label>
+              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition">
+                <input type="checkbox" id="func-notif-aviso-holerite" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                <span class="text-sm">Aviso de Holerite</span>
+              </label>
+              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition">
+                <input type="checkbox" id="func-notif-comprovante-pagamento" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                <span class="text-sm">Comprovante de Pagamento</span>
+              </label>
+              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition">
+                <input type="checkbox" id="func-notif-lembrete-ponto" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                <span class="text-sm">Lembrete de Ponto</span>
+              </label>
+            </div>
+          </div>
+
         </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium mb-1">Horário de Entrada</label>
-            <input type="time" id="func-horario" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Valor Hora Extra (R$)</label>
-            <input type="number" step="0.01" id="func-hora-extra" value="43.25" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium mb-1">Valor Dia Especial (R$)</label>
-            <input type="number" step="0.01" id="func-dia-especial" value="320" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Jornada Diária (h)</label>
-            <input type="number" step="0.01" id="func-jornada" value="9.8" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
-          </div>
-        </div>
-        <div id="status-field" class="hidden">
-          <label class="block text-sm font-medium mb-1">Status</label>
-          <select id="func-status" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
-            <option value="ativo">Ativo</option>
-            <option value="inativo">Inativo</option>
-          </select>
-        </div>
-        <div class="flex justify-end gap-3 pt-3">
+
+        <!-- Footer with buttons (always visible) -->
+        <div class="flex justify-end gap-3 p-5 border-t border-gray-100 dark:border-gray-700 shrink-0 bg-white dark:bg-gray-800 sticky bottom-0">
           <button type="button" onclick="closeModal()" class="px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
             Cancelar
           </button>
@@ -231,12 +415,163 @@
   <script src="/js/shared.js"></script>
   <script>
     let allFuncionarios = [];
+    let transporteRowIndex = 0;
 
     function formatCurrency(val) {
       if (val == null) return '-';
       return 'R$ ' + Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
+    function getClassificacaoBadge(classificacao) {
+      const map = {
+        operacional: { label: 'Operacional', bg: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+        assistente_pessoal: { label: 'Assistente', bg: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' },
+        dono_casa: { label: 'Dono de Casa', bg: 'bg-gray-100 text-gray-700 dark:bg-gray-600/30 dark:text-gray-400' },
+        outro: { label: 'Outro', bg: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' }
+      };
+      const info = map[classificacao] || map['operacional'];
+      return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${info.bg}">${info.label}</span>`;
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      try {
+        const d = new Date(dateStr + 'T00:00:00');
+        return d.toLocaleDateString('pt-BR');
+      } catch { return dateStr; }
+    }
+
+    // ===== Tab Navigation =====
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.modal-tab').forEach(el => {
+        el.classList.remove('border-primary', 'text-primary');
+        el.classList.add('border-transparent', 'text-gray-500');
+      });
+      const tabEl = document.getElementById('tab-' + tabName);
+      if (tabEl) tabEl.classList.remove('hidden');
+      const tabBtn = document.querySelector(`.modal-tab[data-tab="${tabName}"]`);
+      if (tabBtn) {
+        tabBtn.classList.remove('border-transparent', 'text-gray-500');
+        tabBtn.classList.add('border-primary', 'text-primary');
+      }
+      // Show comunicacao warning if no email
+      if (tabName === 'comunicacao') {
+        const email = document.getElementById('func-email-pessoal').value.trim();
+        const aviso = document.getElementById('comunicacao-aviso');
+        const notifCheck = document.getElementById('func-notificacoes-ativas');
+        if (!email) {
+          aviso.classList.remove('hidden');
+          notifCheck.disabled = true;
+          notifCheck.checked = false;
+          onNotificacoesChange();
+        } else {
+          aviso.classList.add('hidden');
+          notifCheck.disabled = false;
+        }
+      }
+    }
+
+    // ===== Classificacao Change Handler =====
+    function onClassificacaoChange() {
+      const val = document.getElementById('func-classificacao').value;
+      const allChecked = (val === 'operacional' || val === 'assistente_pessoal');
+      document.getElementById('func-contabiliza-hora-extra').checked = allChecked;
+      document.getElementById('func-recebe-vt').checked = allChecked;
+      document.getElementById('func-recebe-va').checked = allChecked;
+      document.getElementById('func-contabiliza-feriado').checked = allChecked;
+    }
+
+    // ===== Status Change Handler =====
+    function onStatusChange() {
+      const val = document.getElementById('func-status').value;
+      const motivoField = document.getElementById('motivo-desligamento-field');
+      if (val === 'desligado') {
+        motivoField.classList.remove('hidden');
+      } else {
+        motivoField.classList.add('hidden');
+        document.getElementById('func-motivo-desligamento').value = '';
+      }
+    }
+
+    // ===== Tipo Transporte Change =====
+    function onTipoTransporteChange() {
+      const val = document.getElementById('func-tipo-transporte').value;
+      const fixoField = document.getElementById('valor-fixo-transporte-field');
+      if (val === 'fixo') {
+        fixoField.classList.remove('hidden');
+      } else {
+        fixoField.classList.add('hidden');
+      }
+    }
+
+    // ===== Transporte Dynamic Rows =====
+    function addTransporteRow(data) {
+      const list = document.getElementById('transportes-list');
+      const idx = transporteRowIndex++;
+      const tipo = (data && data.tipo) || 'onibus';
+      const nome = (data && data.nome_linha) || '';
+      const valor = (data && data.valor_trecho) || '';
+      const row = document.createElement('div');
+      row.className = 'flex items-center gap-2 transporte-row';
+      row.id = 'transporte-row-' + idx;
+      row.innerHTML = `
+        <select data-field="tipo" class="flex-shrink-0 w-28 px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+          <option value="onibus" ${tipo === 'onibus' ? 'selected' : ''}>Onibus</option>
+          <option value="metro" ${tipo === 'metro' ? 'selected' : ''}>Metro</option>
+          <option value="trem" ${tipo === 'trem' ? 'selected' : ''}>Trem</option>
+          <option value="van" ${tipo === 'van' ? 'selected' : ''}>Van</option>
+          <option value="outro" ${tipo === 'outro' ? 'selected' : ''}>Outro</option>
+        </select>
+        <input type="text" data-field="nome_linha" value="${nome}" placeholder="Nome da linha" class="flex-1 px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+        <input type="number" step="0.01" data-field="valor_trecho" value="${valor}" placeholder="Valor (R$)" class="w-28 px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+        <button type="button" onclick="removeTransporteRow(${idx})" class="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 transition-colors flex-shrink-0" title="Remover">
+          <i class="bi bi-trash"></i>
+        </button>
+      `;
+      list.appendChild(row);
+    }
+
+    function removeTransporteRow(idx) {
+      const row = document.getElementById('transporte-row-' + idx);
+      if (row) row.remove();
+    }
+
+    function getTransportes() {
+      const rows = document.querySelectorAll('#transportes-list .transporte-row');
+      const transportes = [];
+      rows.forEach(row => {
+        const tipo = row.querySelector('[data-field="tipo"]').value;
+        const nome_linha = row.querySelector('[data-field="nome_linha"]').value;
+        const valor_trecho = parseFloat(row.querySelector('[data-field="valor_trecho"]').value) || 0;
+        transportes.push({ tipo, nome_linha, valor_trecho });
+      });
+      return transportes;
+    }
+
+    // ===== Vale-Alimentacao Toggle =====
+    function onTemVaChange() {
+      const checked = document.getElementById('func-tem-va').checked;
+      const field = document.getElementById('valor-va-dia-field');
+      if (checked) {
+        field.classList.remove('hidden');
+      } else {
+        field.classList.add('hidden');
+      }
+    }
+
+    // ===== Notificacoes Toggle =====
+    function onNotificacoesChange() {
+      const checked = document.getElementById('func-notificacoes-ativas').checked;
+      const sub = document.getElementById('sub-notificacoes');
+      if (checked) {
+        sub.classList.remove('hidden');
+      } else {
+        sub.classList.add('hidden');
+      }
+    }
+
+    // ===== Load Funcionarios =====
     async function loadFuncionarios() {
       try {
         const showInactive = document.getElementById('toggle-inativos').checked;
@@ -251,7 +586,7 @@
       } catch (err) {
         console.error(err);
         document.getElementById('funcionarios-table').innerHTML = `
-          <tr><td colspan="7" class="px-5 py-8 text-center text-red-400">
+          <tr><td colspan="8" class="px-5 py-8 text-center text-red-400">
             <i class="bi bi-exclamation-circle text-3xl"></i>
             <p class="mt-2">Erro: ${err.message}</p>
           </td></tr>`;
@@ -264,9 +599,9 @@
 
       if (allFuncionarios.length === 0) {
         tbody.innerHTML = `
-          <tr><td colspan="7" class="px-5 py-8 text-center text-gray-400">
+          <tr><td colspan="8" class="px-5 py-8 text-center text-gray-400">
             <i class="bi bi-inbox text-3xl"></i>
-            <p class="mt-2">Nenhum funcionário encontrado</p>
+            <p class="mt-2">Nenhum funcionario encontrado</p>
           </td></tr>`;
         return;
       }
@@ -275,13 +610,15 @@
         const statusBadge = f.status === 'ativo' || f.ativo !== false
           ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Ativo</span>'
           : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">Inativo</span>';
+        const classificacaoBadge = getClassificacaoBadge(f.classificacao);
         return `
           <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
             <td class="px-5 py-3 font-medium">${f.nome || '-'}</td>
             <td class="px-5 py-3 text-gray-600 dark:text-gray-400">${f.cargo || '-'}</td>
+            <td class="px-5 py-3">${classificacaoBadge}</td>
             <td class="px-5 py-3">${formatCurrency(f.salario_hora)}</td>
             <td class="px-5 py-3 text-gray-600 dark:text-gray-400">${f.telefone || '-'}</td>
-            <td class="px-5 py-3">${f.horario_entrada || '-'}</td>
+            <td class="px-5 py-3 text-gray-600 dark:text-gray-400">${formatDate(f.data_admissao)}</td>
             <td class="px-5 py-3">${statusBadge}</td>
             <td class="px-5 py-3">
               <div class="flex items-center gap-2">
@@ -297,32 +634,119 @@
       }).join('');
     }
 
+    // ===== Open Modal =====
     function openModal(func) {
       const modal = document.getElementById('modal-funcionario');
       const title = document.getElementById('modal-title');
       const statusField = document.getElementById('status-field');
 
+      // Reset form
       document.getElementById('form-funcionario').reset();
       document.getElementById('func-id').value = '';
+
+      // Reset defaults after form.reset()
       document.getElementById('func-hora-extra').value = '43.25';
       document.getElementById('func-dia-especial').value = '320';
       document.getElementById('func-jornada').value = '9.8';
+      document.getElementById('func-horario').value = '08:00';
+      document.getElementById('func-classificacao').value = 'operacional';
+      document.getElementById('func-tipo-transporte').value = 'diario';
+      document.getElementById('func-pix-tipo').value = 'cpf';
+
+      // Reset checkboxes to defaults
+      document.getElementById('func-contabiliza-hora-extra').checked = true;
+      document.getElementById('func-recebe-vt').checked = true;
+      document.getElementById('func-recebe-va').checked = true;
+      document.getElementById('func-contabiliza-feriado').checked = true;
+      document.getElementById('func-tem-va').checked = false;
+      document.getElementById('func-notificacoes-ativas').checked = false;
+      document.getElementById('func-notif-resumo-semanal').checked = false;
+      document.getElementById('func-notif-aviso-holerite').checked = false;
+      document.getElementById('func-notif-comprovante-pagamento').checked = false;
+      document.getElementById('func-notif-lembrete-ponto').checked = false;
+
+      // Reset conditional fields
+      document.getElementById('motivo-desligamento-field').classList.add('hidden');
+      document.getElementById('valor-fixo-transporte-field').classList.add('hidden');
+      document.getElementById('valor-va-dia-field').classList.add('hidden');
+      document.getElementById('sub-notificacoes').classList.add('hidden');
+      document.getElementById('comunicacao-aviso').classList.add('hidden');
+
+      // Clear transportes list
+      document.getElementById('transportes-list').innerHTML = '';
+      transporteRowIndex = 0;
+
+      // Switch to first tab
+      switchTab('pessoais');
 
       if (func) {
-        title.textContent = 'Editar Funcionário';
+        title.textContent = 'Editar Funcionario';
         statusField.classList.remove('hidden');
+
+        // Dados Pessoais
         document.getElementById('func-id').value = func.id;
         document.getElementById('func-nome').value = func.nome || '';
         document.getElementById('func-cargo').value = func.cargo || '';
-        document.getElementById('func-salario').value = func.salario_hora || '';
         document.getElementById('func-telefone').value = func.telefone || '';
-        document.getElementById('func-horario').value = func.horario_entrada || '';
-        document.getElementById('func-hora-extra').value = func.valor_hora_extra || '43.25';
-        document.getElementById('func-dia-especial').value = func.valor_dia_especial || '320';
-        document.getElementById('func-jornada').value = func.jornada_diaria || '9.8';
-        document.getElementById('func-status').value = func.status || (func.ativo !== false ? 'ativo' : 'inativo');
+        document.getElementById('func-email-pessoal').value = func.email_pessoal || '';
+        document.getElementById('func-salario').value = func.salario_hora || '';
+
+        // Classificacao e Status
+        document.getElementById('func-classificacao').value = func.classificacao || 'operacional';
+        document.getElementById('func-status').value = func.status || (func.ativo !== false ? 'ativo' : 'desligado');
+        document.getElementById('func-data-admissao').value = func.data_admissao || '';
+        if (func.status === 'desligado') {
+          document.getElementById('motivo-desligamento-field').classList.remove('hidden');
+          document.getElementById('func-motivo-desligamento').value = func.motivo_desligamento || '';
+        }
+
+        // Jornada
+        document.getElementById('func-horario').value = func.horario_entrada || '08:00';
+        document.getElementById('func-hora-extra').value = func.valor_hora_extra != null ? func.valor_hora_extra : '43.25';
+        document.getElementById('func-dia-especial').value = func.valor_dia_especial != null ? func.valor_dia_especial : '320';
+        document.getElementById('func-jornada').value = func.jornada_diaria != null ? func.jornada_diaria : '9.8';
+        document.getElementById('func-jornada-texto').value = func.jornada_texto || '';
+
+        // Beneficios
+        document.getElementById('func-contabiliza-hora-extra').checked = func.contabiliza_hora_extra !== false;
+        document.getElementById('func-recebe-vt').checked = func.recebe_vt !== false;
+        document.getElementById('func-recebe-va').checked = func.recebe_va !== false;
+        document.getElementById('func-contabiliza-feriado').checked = func.contabiliza_feriado !== false;
+
+        // Vale-Transporte
+        document.getElementById('func-tipo-transporte').value = func.tipo_transporte || 'diario';
+        onTipoTransporteChange();
+        if (func.tipo_transporte === 'fixo' && func.valor_fixo_transporte != null) {
+          document.getElementById('func-valor-fixo-transporte').value = func.valor_fixo_transporte;
+        }
+        if (func.transportes && Array.isArray(func.transportes)) {
+          func.transportes.forEach(t => addTransporteRow(t));
+        }
+
+        // Vale-Alimentacao
+        if (func.tem_vale_alimentacao) {
+          document.getElementById('func-tem-va').checked = true;
+          document.getElementById('valor-va-dia-field').classList.remove('hidden');
+          document.getElementById('func-valor-va-dia').value = func.valor_va_dia || '';
+        }
+
+        // PIX
+        document.getElementById('func-pix-tipo').value = func.pix_tipo || 'cpf';
+        document.getElementById('func-pix-chave').value = func.pix_chave || '';
+        document.getElementById('func-pix-banco').value = func.pix_banco || '';
+
+        // Comunicacao
+        if (func.notificacoes_ativas) {
+          document.getElementById('func-notificacoes-ativas').checked = true;
+          document.getElementById('sub-notificacoes').classList.remove('hidden');
+          const notifs = func.notificacoes || {};
+          document.getElementById('func-notif-resumo-semanal').checked = !!notifs.resumo_semanal;
+          document.getElementById('func-notif-aviso-holerite').checked = !!notifs.aviso_holerite;
+          document.getElementById('func-notif-comprovante-pagamento').checked = !!notifs.comprovante_pagamento;
+          document.getElementById('func-notif-lembrete-ponto').checked = !!notifs.lembrete_ponto;
+        }
       } else {
-        title.textContent = 'Novo Funcionário';
+        title.textContent = 'Novo Funcionario';
         statusField.classList.add('hidden');
       }
 
@@ -341,22 +765,69 @@
       if (func) openModal(func);
     }
 
+    // ===== Save Funcionario =====
     async function saveFuncionario(e) {
       e.preventDefault();
       const id = document.getElementById('func-id').value;
+
       const body = {
+        // Dados Pessoais
         nome: document.getElementById('func-nome').value,
         cargo: document.getElementById('func-cargo').value,
-        salario_hora: parseFloat(document.getElementById('func-salario').value),
         telefone: document.getElementById('func-telefone').value,
+        email_pessoal: document.getElementById('func-email-pessoal').value,
+        salario_hora: parseFloat(document.getElementById('func-salario').value) || 0,
+
+        // Classificacao
+        classificacao: document.getElementById('func-classificacao').value,
+        data_admissao: document.getElementById('func-data-admissao').value || null,
+
+        // Jornada
         horario_entrada: document.getElementById('func-horario').value,
-        valor_hora_extra: parseFloat(document.getElementById('func-hora-extra').value),
-        valor_dia_especial: parseFloat(document.getElementById('func-dia-especial').value),
-        jornada_diaria: parseFloat(document.getElementById('func-jornada').value)
+        valor_hora_extra: parseFloat(document.getElementById('func-hora-extra').value) || 43.25,
+        valor_dia_especial: parseFloat(document.getElementById('func-dia-especial').value) || 320,
+        jornada_diaria: parseFloat(document.getElementById('func-jornada').value) || 9.8,
+        jornada_texto: document.getElementById('func-jornada-texto').value,
+
+        // Beneficios
+        contabiliza_hora_extra: document.getElementById('func-contabiliza-hora-extra').checked,
+        recebe_vt: document.getElementById('func-recebe-vt').checked,
+        recebe_va: document.getElementById('func-recebe-va').checked,
+        contabiliza_feriado: document.getElementById('func-contabiliza-feriado').checked,
+
+        // Vale-Transporte
+        tipo_transporte: document.getElementById('func-tipo-transporte').value,
+        valor_fixo_transporte: document.getElementById('func-tipo-transporte').value === 'fixo'
+          ? (parseFloat(document.getElementById('func-valor-fixo-transporte').value) || 0)
+          : null,
+        transportes: getTransportes(),
+
+        // Vale-Alimentacao
+        tem_vale_alimentacao: document.getElementById('func-tem-va').checked,
+        valor_va_dia: document.getElementById('func-tem-va').checked
+          ? (parseFloat(document.getElementById('func-valor-va-dia').value) || 0)
+          : null,
+
+        // PIX
+        pix_tipo: document.getElementById('func-pix-tipo').value,
+        pix_chave: document.getElementById('func-pix-chave').value,
+        pix_banco: document.getElementById('func-pix-banco').value,
+
+        // Comunicacao
+        notificacoes_ativas: document.getElementById('func-notificacoes-ativas').checked,
+        notificacoes: {
+          resumo_semanal: document.getElementById('func-notif-resumo-semanal').checked,
+          aviso_holerite: document.getElementById('func-notif-aviso-holerite').checked,
+          comprovante_pagamento: document.getElementById('func-notif-comprovante-pagamento').checked,
+          lembrete_ponto: document.getElementById('func-notif-lembrete-ponto').checked
+        }
       };
 
       if (id) {
         body.status = document.getElementById('func-status').value;
+        if (body.status === 'desligado') {
+          body.motivo_desligamento = document.getElementById('func-motivo-desligamento').value;
+        }
       }
 
       try {
@@ -375,7 +846,7 @@
           throw new Error(err.error || 'Erro ao salvar');
         }
         closeModal();
-        if (typeof showToast === 'function') showToast(id ? 'Funcionário atualizado!' : 'Funcionário criado!', 'success');
+        if (typeof showToast === 'function') showToast(id ? 'Funcionario atualizado!' : 'Funcionario criado!', 'success');
         loadFuncionarios();
       } catch (err) {
         if (typeof showToast === 'function') showToast(err.message, 'error');
@@ -383,14 +854,14 @@
     }
 
     async function deleteFuncionario(id, nome) {
-      if (!confirm(`Deseja realmente desativar o funcionário "${nome}"?`)) return;
+      if (!confirm(`Deseja realmente desativar o funcionario "${nome}"?`)) return;
       try {
         const res = await fetch(`/api/funcionarios/${id}`, {
           method: 'DELETE',
           headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
         });
         if (!res.ok) throw new Error('Erro ao excluir');
-        if (typeof showToast === 'function') showToast('Funcionário desativado!', 'success');
+        if (typeof showToast === 'function') showToast('Funcionario desativado!', 'success');
         loadFuncionarios();
       } catch (err) {
         if (typeof showToast === 'function') showToast(err.message, 'error');
