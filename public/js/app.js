@@ -1341,6 +1341,326 @@
   }
 
   // ============================================================
+  // PRESENÇA
+  // ============================================================
+  async function renderPresenca() {
+    const content = document.getElementById('page-content');
+    const now = new Date();
+    const mesAtual = now.getMonth() + 1;
+    const anoAtual = now.getFullYear();
+
+    content.innerHTML = `
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0"><i class="bi bi-calendar-check me-2"></i>Dashboard de Presença</h4>
+      </div>
+
+      <!-- Cards resumo do dia -->
+      <div id="presenca-cards" class="row g-3 mb-4">
+        <div class="loading-spinner"><div class="spinner-border text-primary"></div></div>
+      </div>
+
+      <!-- Tabela do dia -->
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="bi bi-clock me-2"></i>Status de Hoje</h5>
+        </div>
+        <div class="card-body p-0">
+          <div id="presenca-tabela-hoje" class="table-responsive">
+            <div class="loading-spinner p-4"><div class="spinner-border text-primary"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filtros mensais -->
+      <div class="filter-bar mb-4">
+        <div>
+          <label class="form-label">Mês</label>
+          <select class="form-select" id="presenca-mes">
+            ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m => '<option value="' + m + '" ' + (m === mesAtual ? 'selected' : '') + '>' + monthName(m) + '</option>').join('')}
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Ano</label>
+          <input type="number" class="form-control" id="presenca-ano" value="${anoAtual}" min="2020" max="2099">
+        </div>
+        <div>
+          <button class="btn btn-primary" onclick="App.loadPresencaMensal()">
+            <i class="bi bi-search"></i> Atualizar
+          </button>
+        </div>
+      </div>
+
+      <!-- Gráfico de assiduidade + Ranking -->
+      <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+          <div class="chart-container">
+            <h5 class="mb-3"><i class="bi bi-bar-chart me-2"></i>Taxa de Assiduidade por Funcionário</h5>
+            <div class="chart-canvas-wrapper"><canvas id="chart-assiduidade"></canvas></div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card">
+            <div class="card-header"><h5 class="mb-0"><i class="bi bi-trophy me-2"></i>Ranking de Assiduidade</h5></div>
+            <div class="card-body p-0" id="presenca-ranking">
+              <div class="loading-spinner p-4"><div class="spinner-border text-primary"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Heatmap -->
+      <div class="card mb-4">
+        <div class="card-header"><h5 class="mb-0"><i class="bi bi-grid-3x3 me-2"></i>Calendário de Presença</h5></div>
+        <div class="card-body p-0">
+          <div id="presenca-heatmap" class="table-responsive">
+            <div class="loading-spinner p-4"><div class="spinner-border text-primary"></div></div>
+          </div>
+        </div>
+      </div>`;
+
+    loadPresencaHoje();
+    loadPresencaMensal();
+  }
+
+  async function loadPresencaHoje() {
+    try {
+      const data = await api('/api/dashboard/presenca/hoje');
+
+      document.getElementById('presenca-cards').innerHTML = `
+        <div class="col-6 col-lg-3">
+          <div class="stat-card">
+            <div class="stat-icon icon-blue"><i class="bi bi-people"></i></div>
+            <div class="stat-value">${data.resumo.total}</div>
+            <div class="stat-label">Total</div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="stat-card">
+            <div class="stat-icon icon-green"><i class="bi bi-check-circle"></i></div>
+            <div class="stat-value">${data.resumo.presentes + data.resumo.sairam}</div>
+            <div class="stat-label">Presentes</div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="stat-card">
+            <div class="stat-icon icon-red"><i class="bi bi-x-circle"></i></div>
+            <div class="stat-value">${data.resumo.ausentes}</div>
+            <div class="stat-label">Ausentes</div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="stat-card">
+            <div class="stat-icon icon-yellow"><i class="bi bi-exclamation-triangle"></i></div>
+            <div class="stat-value">${data.resumo.atrasados}</div>
+            <div class="stat-label">Atrasados</div>
+          </div>
+        </div>`;
+
+      const statusBadge = (status) => {
+        const map = {
+          presente: '<span class="badge bg-success">Presente</span>',
+          atrasado: '<span class="badge bg-warning text-dark">Atrasado</span>',
+          ausente: '<span class="badge bg-danger">Ausente</span>',
+          saiu: '<span class="badge bg-info">Saiu</span>'
+        };
+        return map[status] || status;
+      };
+
+      if (data.funcionarios.length === 0) {
+        document.getElementById('presenca-tabela-hoje').innerHTML = '<div class="empty-state"><i class="bi bi-people"></i><p>Nenhum funcionário ativo</p></div>';
+        return;
+      }
+
+      document.getElementById('presenca-tabela-hoje').innerHTML = `
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>Funcionário</th>
+              <th>Cargo</th>
+              <th>Horário Esperado</th>
+              <th>Entrada</th>
+              <th>Saída</th>
+              <th>Status</th>
+              <th>Atraso</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.funcionarios.map(f => `
+              <tr>
+                <td><strong>${f.nome}</strong></td>
+                <td>${f.cargo}</td>
+                <td>${f.horario_esperado}</td>
+                <td>${f.entrada || '-'}</td>
+                <td>${f.saida || '-'}</td>
+                <td>${statusBadge(f.status)}</td>
+                <td>${f.minutos_atraso > 0 ? f.minutos_atraso + ' min' : '-'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    } catch (err) {
+      document.getElementById('presenca-cards').innerHTML = '<div class="alert alert-danger">Erro: ' + err.message + '</div>';
+    }
+  }
+
+  async function loadPresencaMensal() {
+    const mes = document.getElementById('presenca-mes')?.value;
+    const ano = document.getElementById('presenca-ano')?.value;
+    if (!mes || !ano) return;
+
+    try {
+      const data = await api('/api/dashboard/presenca/mensal?mes=' + mes + '&ano=' + ano);
+
+      destroyCharts();
+
+      // Bar Chart: Assiduidade
+      const barCtx = document.getElementById('chart-assiduidade');
+      if (barCtx && data.funcionarios.length > 0) {
+        const colors = data.funcionarios.map(f =>
+          f.taxa_assiduidade >= 90 ? 'rgba(34, 197, 94, 0.7)' :
+          f.taxa_assiduidade >= 70 ? 'rgba(245, 158, 11, 0.7)' :
+          'rgba(239, 68, 68, 0.7)'
+        );
+        const borderColors = data.funcionarios.map(f =>
+          f.taxa_assiduidade >= 90 ? 'rgba(34, 197, 94, 1)' :
+          f.taxa_assiduidade >= 70 ? 'rgba(245, 158, 11, 1)' :
+          'rgba(239, 68, 68, 1)'
+        );
+
+        const chart = new Chart(barCtx, {
+          type: 'bar',
+          data: {
+            labels: data.funcionarios.map(f => f.nome),
+            datasets: [{
+              label: 'Taxa de Assiduidade (%)',
+              data: data.funcionarios.map(f => f.taxa_assiduidade),
+              backgroundColor: colors,
+              borderColor: borderColors,
+              borderWidth: 1
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { min: 0, max: 100, title: { display: true, text: '%' } }
+            }
+          }
+        });
+        chartInstances.push(chart);
+      }
+
+      // Ranking
+      if (data.ranking.length > 0) {
+        const medalha = (pos) => {
+          if (pos === 1) return '<span style="font-size:1.2em">&#129351;</span>';
+          if (pos === 2) return '<span style="font-size:1.2em">&#129352;</span>';
+          if (pos === 3) return '<span style="font-size:1.2em">&#129353;</span>';
+          return '<span class="badge bg-secondary">' + pos + '</span>';
+        };
+
+        const barColor = (taxa) =>
+          taxa >= 90 ? 'bg-success' : taxa >= 70 ? 'bg-warning' : 'bg-danger';
+
+        document.getElementById('presenca-ranking').innerHTML = `
+          <ul class="list-group list-group-flush">
+            ${data.ranking.map(r => `
+              <li class="list-group-item d-flex align-items-center gap-2">
+                ${medalha(r.posicao)}
+                <div class="flex-grow-1">
+                  <div class="fw-bold">${r.nome}</div>
+                  <div class="small text-muted">${r.cargo} &middot; ${r.dias_trabalhados}/${data.diasUteis} dias</div>
+                  <div class="progress mt-1" style="height: 6px;">
+                    <div class="progress-bar ${barColor(r.taxa_assiduidade)}" style="width: ${r.taxa_assiduidade}%"></div>
+                  </div>
+                </div>
+                <span class="fw-bold">${r.taxa_assiduidade}%</span>
+              </li>
+            `).join('')}
+          </ul>`;
+      } else {
+        document.getElementById('presenca-ranking').innerHTML = '<div class="p-3 text-muted text-center">Sem dados</div>';
+      }
+
+      // Heatmap as HTML table
+      if (data.heatmap.length > 0) {
+        const funcIds = [...new Set(data.heatmap.map(h => h.funcionario_id))];
+        const funcNames = {};
+        data.funcionarios.forEach(f => { funcNames[f.id] = f.nome; });
+
+        const daysInMonth = new Date(ano, mes, 0).getDate();
+        const days = Array.from({length: daysInMonth}, (_, i) => i + 1);
+
+        const heatmapMap = {};
+        data.heatmap.forEach(h => {
+          const day = parseInt(h.data.split('-')[2]);
+          heatmapMap[h.funcionario_id + '-' + day] = h.status;
+        });
+
+        const cellColor = (status) => {
+          const map = {
+            presente: 'background-color: rgba(34, 197, 94, 0.6)',
+            atrasado: 'background-color: rgba(245, 158, 11, 0.6)',
+            falta: 'background-color: rgba(239, 68, 68, 0.6)',
+            feriado: 'background-color: rgba(156, 163, 175, 0.3)',
+            domingo: 'background-color: rgba(156, 163, 175, 0.3)',
+            sabado: 'background-color: rgba(156, 163, 175, 0.3)',
+            futuro: 'background-color: rgba(229, 231, 235, 0.3)'
+          };
+          return map[status] || '';
+        };
+
+        const cellTitle = (status) => {
+          const map = {
+            presente: 'Presente',
+            atrasado: 'Atrasado',
+            falta: 'Falta',
+            feriado: 'Feriado',
+            domingo: 'Domingo',
+            sabado: 'Sábado',
+            futuro: '-'
+          };
+          return map[status] || '';
+        };
+
+        document.getElementById('presenca-heatmap').innerHTML = `
+          <table class="table table-sm table-bordered mb-0 text-center presenca-heatmap-table">
+            <thead>
+              <tr>
+                <th class="text-start" style="min-width:120px">Funcionário</th>
+                ${days.map(d => '<th style="padding:2px 4px">' + d + '</th>').join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${funcIds.map(fid => `
+                <tr>
+                  <td class="text-start text-nowrap"><strong>${funcNames[fid] || fid}</strong></td>
+                  ${days.map(d => {
+                    const status = heatmapMap[fid + '-' + d] || '';
+                    return '<td style="' + cellColor(status) + ';padding:2px 4px" title="' + cellTitle(status) + '">&nbsp;</td>';
+                  }).join('')}
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <div class="d-flex gap-3 p-2 small text-muted flex-wrap">
+            <span><span style="display:inline-block;width:12px;height:12px;background:rgba(34,197,94,0.6);border-radius:2px"></span> Presente</span>
+            <span><span style="display:inline-block;width:12px;height:12px;background:rgba(245,158,11,0.6);border-radius:2px"></span> Atrasado</span>
+            <span><span style="display:inline-block;width:12px;height:12px;background:rgba(239,68,68,0.6);border-radius:2px"></span> Falta</span>
+            <span><span style="display:inline-block;width:12px;height:12px;background:rgba(156,163,175,0.3);border-radius:2px"></span> Fim de semana/Feriado</span>
+          </div>`;
+      } else {
+        document.getElementById('presenca-heatmap').innerHTML = '<div class="empty-state"><i class="bi bi-grid-3x3"></i><p>Nenhum dado para o período</p></div>';
+      }
+
+    } catch (err) {
+      showToast('Erro ao carregar dados mensais: ' + err.message, 'danger');
+    }
+  }
+
+  // ============================================================
   // WHATSAPP
   // ============================================================
   async function renderWhatsApp() {
@@ -1792,7 +2112,8 @@
     loadAuditLog: loadAuditLog,
     showLocationMap: showLocationMap,
     syncFeriados: syncFeriados,
-    loadGraficos: loadGraficos
+    loadGraficos: loadGraficos,
+    loadPresencaMensal: loadPresencaMensal
   };
 
   // --- Init ---
