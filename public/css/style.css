@@ -508,3 +508,18 @@ body {
   .sidebar, .top-bar { display: none !important; }
   .main-content { margin-left: 0 !important; }
 }
+
+/* Presença heatmap */
+.presenca-heatmap-table {
+  font-size: 0.75rem;
+}
+
+.presenca-heatmap-table th,
+.presenca-heatmap-table td {
+  vertical-align: middle;
+}
+
+.presenca-heatmap-table td[title]:hover {
+  opacity: 0.8;
+  cursor: default;
+}
