@@ -4,6 +4,7 @@ const Registro = require('../models/Registro');
 const Funcionario = require('../models/Funcionario');
 const HorasExtrasService = require('../services/horasExtras');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const AuditLog = require('../services/auditLog');
 
 const router = express.Router();
 
@@ -89,7 +90,9 @@ router.post('/', authenticateToken, [
   body('data').isDate().withMessage('Data inválida'),
   body('entrada').optional({ nullable: true }).matches(/^([01]\d|2[0-3]):[0-5]\d$/).withMessage('Hora de entrada inválida (HH:MM)'),
   body('saida').optional({ nullable: true }).matches(/^([01]\d|2[0-3]):[0-5]\d$/).withMessage('Hora de saída inválida (HH:MM)'),
-  body('observacao').optional().trim()
+  body('observacao').optional().trim(),
+  body('latitude').optional({ nullable: true }).isFloat({ min: -90, max: 90 }).withMessage('Latitude inválida'),
+  body('longitude').optional({ nullable: true }).isFloat({ min: -180, max: 180 }).withMessage('Longitude inválida')
 ], (req, res) => {
   try {
     const errors = validationResult(req);
@@ -106,6 +109,7 @@ router.post('/', authenticateToken, [
       ...req.body,
       created_by: req.user.id
     });
+    AuditLog.log(req.user.id, 'create', 'registro', id, { funcionario_id: req.body.funcionario_id, data: req.body.data }, req.ip);
     res.status(201).json({ id, message: 'Registro criado com sucesso' });
   } catch (err) {
     if (err.message.includes('Já existe')) {
@@ -121,7 +125,9 @@ router.put('/:id', authenticateToken, [
   param('id').isInt().withMessage('ID inválido'),
   body('entrada').optional({ nullable: true }).matches(/^([01]\d|2[0-3]):[0-5]\d$/).withMessage('Hora de entrada inválida (HH:MM)'),
   body('saida').optional({ nullable: true }).matches(/^([01]\d|2[0-3]):[0-5]\d$/).withMessage('Hora de saída inválida (HH:MM)'),
-  body('observacao').optional().trim()
+  body('observacao').optional().trim(),
+  body('latitude').optional({ nullable: true }).isFloat({ min: -90, max: 90 }).withMessage('Latitude inválida'),
+  body('longitude').optional({ nullable: true }).isFloat({ min: -180, max: 180 }).withMessage('Longitude inválida')
 ], (req, res) => {
   try {
     const errors = validationResult(req);
@@ -135,6 +141,7 @@ router.put('/:id', authenticateToken, [
     }
 
     Registro.update(req.params.id, req.body, req.user.id);
+    AuditLog.log(req.user.id, 'update', 'registro', parseInt(req.params.id), req.body, req.ip);
     res.json({ message: 'Registro atualizado com sucesso' });
   } catch (err) {
     console.error('Update registro error:', err);
@@ -158,6 +165,7 @@ router.delete('/:id', authenticateToken, requireAdmin, [
     }
 
     Registro.delete(req.params.id);
+    AuditLog.log(req.user.id, 'delete', 'registro', parseInt(req.params.id), null, req.ip);
     res.json({ message: 'Registro excluído com sucesso' });
   } catch (err) {
     console.error('Delete registro error:', err);

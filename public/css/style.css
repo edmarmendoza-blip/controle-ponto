@@ -492,8 +492,34 @@ body {
   .filter-bar { flex-direction: column; }
 }
 
+/* Leaflet map in modal */
+.modal .leaflet-container { z-index: 1060; }
+.map-container { height: 250px; border-radius: 8px; margin-top: 8px; }
+.map-mini { height: 200px; border-radius: 8px; }
+.location-link { cursor: pointer; color: var(--primary); }
+.location-link:hover { color: var(--primary-dark); }
+
+/* Charts */
+.chart-container { position: relative; background: #fff; border: 1px solid #E2E8F0; border-radius: 12px; padding: 20px; }
+.chart-canvas-wrapper { position: relative; height: 300px; }
+
 /* Print */
 @media print {
   .sidebar, .top-bar { display: none !important; }
   .main-content { margin-left: 0 !important; }
+}
+
+/* Presença heatmap */
+.presenca-heatmap-table {
+  font-size: 0.75rem;
+}
+
+.presenca-heatmap-table th,
+.presenca-heatmap-table td {
+  vertical-align: middle;
+}
+
+.presenca-heatmap-table td[title]:hover {
+  opacity: 0.8;
+  cursor: default;
 }
