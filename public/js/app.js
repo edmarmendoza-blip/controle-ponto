@@ -183,6 +183,7 @@
       feriados: 'Feriados',
       whatsapp: 'WhatsApp',
       graficos: 'Gráficos Comparativos',
+      presenca: 'Dashboard de Presença',
       usuarios: 'Gerenciar Usuários',
       perfil: 'Meu Perfil',
       auditlog: 'Log de Auditoria'
@@ -222,6 +223,7 @@
       case 'feriados': renderFeriados(); break;
       case 'whatsapp': renderWhatsApp(); break;
       case 'graficos': renderGraficos(); break;
+      case 'presenca': renderPresenca(); break;
       case 'usuarios': renderUsuarios(); break;
       case 'perfil': renderPerfil(); break;
       case 'auditlog': renderAuditLog(); break;
