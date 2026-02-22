@@ -171,7 +171,8 @@
       funcionarios: 'Funcionários',
       registros: 'Registros de Ponto',
       relatorios: 'Relatórios',
-      feriados: 'Feriados'
+      feriados: 'Feriados',
+      whatsapp: 'WhatsApp'
     };
     document.getElementById('page-title').textContent = titles[page] || page;
     renderPage(page);
@@ -206,6 +207,7 @@
       case 'registros': renderRegistros(); break;
       case 'relatorios': renderRelatorios(); break;
       case 'feriados': renderFeriados(); break;
+      case 'whatsapp': renderWhatsApp(); break;
       default: content.innerHTML = '<p>Página não encontrada</p>';
     }
   }
@@ -292,16 +294,25 @@
   // ============================================================
   // FUNCIONÁRIOS
   // ============================================================
+  let showInactive = false;
+
   async function renderFuncionarios() {
     const content = document.getElementById('page-content');
     try {
-      const funcionarios = await api('/api/funcionarios?includeInactive=true');
+      const allFuncionarios = await api('/api/funcionarios?includeInactive=true');
+      const funcionarios = showInactive ? allFuncionarios : allFuncionarios.filter(f => f.status === 'ativo');
+      const inactiveCount = allFuncionarios.filter(f => f.status === 'inativo').length;
       const isAdmin = currentUser.role === 'admin';
 
       content.innerHTML = `
         <div class="page-header">
           <h3><i class="bi bi-people me-2"></i>${funcionarios.length} funcionário(s)</h3>
-          ${isAdmin ? '<button class="btn btn-primary btn-sm" onclick="App.openFuncionarioModal()"><i class="bi bi-plus-lg"></i> Novo Funcionário</button>' : ''}
+          <div class="d-flex gap-2 align-items-center">
+            ${inactiveCount > 0 ? `<button class="btn btn-sm ${showInactive ? 'btn-secondary' : 'btn-outline-secondary'}" id="btn-toggle-inactive">
+              <i class="bi bi-eye${showInactive ? '-slash' : ''}"></i> ${showInactive ? 'Ocultar' : 'Mostrar'} inativos (${inactiveCount})
+            </button>` : ''}
+            ${isAdmin ? '<button class="btn btn-primary btn-sm" onclick="App.openFuncionarioModal()"><i class="bi bi-plus-lg"></i> Novo Funcionário</button>' : ''}
+          </div>
         </div>
         <div class="data-table">
           <table class="table">
@@ -325,14 +336,26 @@
                   <td>${f.telefone || '-'}</td>
                   <td><span class="badge-status badge-${f.status}">${f.status === 'ativo' ? 'Ativo' : 'Inativo'}</span></td>
                   ${isAdmin ? `
-                    <td>
-                      <button class="btn btn-action btn-outline-primary" onclick="App.openFuncionarioModal(${f.id})" title="Editar"><i class="bi bi-pencil"></i></button>
-                      ${f.status === 'ativo' ? `<button class="btn btn-action btn-outline-danger ms-1" onclick="App.deleteFuncionario(${f.id}, '${f.nome.replace(/'/g, "\\'")}')" title="Desativar"><i class="bi bi-person-x"></i></button>` : ''}
+                    <td class="text-nowrap">
+                      <button class="btn btn-action btn-outline-primary btn-edit-func" data-id="${f.id}" title="Editar"><i class="bi bi-pencil"></i></button>
+                      ${f.status === 'ativo' ? `<button class="btn btn-action btn-outline-danger ms-1 btn-del-func" data-id="${f.id}" data-nome="${f.nome.replace(/"/g, '&quot;')}" title="Desativar"><i class="bi bi-person-x"></i></button>` : ''}
                     </td>` : ''}
                 </tr>`).join('')}
             </tbody>
           </table>
         </div>`;
+
+      // Attach event listeners
+      content.querySelectorAll('.btn-edit-func').forEach(btn => {
+        btn.addEventListener('click', () => openFuncionarioModal(parseInt(btn.dataset.id)));
+      });
+      content.querySelectorAll('.btn-del-func').forEach(btn => {
+        btn.addEventListener('click', () => deleteFuncionario(parseInt(btn.dataset.id), btn.dataset.nome));
+      });
+      const toggleBtn = document.getElementById('btn-toggle-inactive');
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => { showInactive = !showInactive; renderFuncionarios(); });
+      }
     } catch (err) {
       content.innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
     }
@@ -985,6 +1008,86 @@
   }
 
   // ============================================================
+  // WHATSAPP
+  // ============================================================
+  async function renderWhatsApp() {
+    const content = document.getElementById('page-content');
+    try {
+      const status = await api('/api/whatsapp/status');
+      const isConnected = status.status === 'connected';
+      const statusColor = isConnected ? 'success' : status.status === 'waiting_qr' ? 'warning' : 'danger';
+      const statusText = isConnected ? 'Conectado' : status.status === 'waiting_qr' ? 'Aguardando QR Code' : 'Desconectado';
+
+      content.innerHTML = `
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <div class="stat-card">
+              <div class="stat-icon icon-${isConnected ? 'green' : 'red'}"><i class="bi bi-whatsapp"></i></div>
+              <div class="stat-value"><span class="badge bg-${statusColor} fs-6">${statusText}</span></div>
+              <div class="stat-label">Status da Conexao</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="stat-card">
+              <div class="stat-icon icon-blue"><i class="bi bi-people"></i></div>
+              <div class="stat-value">${status.group ? 'Sim' : 'Nao'}</div>
+              <div class="stat-label">Grupo Encontrado</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-card mb-4">
+          <h5><i class="bi bi-qr-code me-2"></i>QR Code / Conexao</h5>
+          ${isConnected
+            ? '<div class="text-center py-4"><i class="bi bi-check-circle text-success" style="font-size:3rem;"></i><p class="mt-2 text-success fw-bold">WhatsApp conectado e monitorando o grupo!</p></div>'
+            : `<div class="text-center py-3">
+                <p>Escaneie o QR Code para conectar o WhatsApp ao sistema.</p>
+                <a href="/api/whatsapp/qr" target="_blank" class="btn btn-success">
+                  <i class="bi bi-qr-code me-1"></i> Abrir QR Code
+                </a>
+              </div>`
+          }
+        </div>
+
+        ${isConnected ? `
+        <div class="summary-card mb-4">
+          <h5><i class="bi bi-send me-2"></i>Enviar Mensagem de Teste</h5>
+          <div class="input-group">
+            <input type="text" class="form-control" id="wa-test-msg" placeholder="Digite uma mensagem..." value="Teste do bot de controle de ponto!">
+            <button class="btn btn-success" onclick="App.sendWhatsAppTest()">
+              <i class="bi bi-send"></i> Enviar
+            </button>
+          </div>
+        </div>` : ''}
+
+        <div class="summary-card">
+          <h5><i class="bi bi-info-circle me-2"></i>Como Funciona</h5>
+          <ul class="mb-0">
+            <li>Funcionarios enviam mensagens no grupo do WhatsApp</li>
+            <li><strong>Entrada:</strong> cheguei, bom dia, chegando, entrada, presente</li>
+            <li><strong>Saida:</strong> fui, saindo, tchau, indo embora, ate amanha</li>
+            <li>O bot identifica o funcionario pelo telefone ou nome</li>
+            <li>Se nao encontrar cadastro, cria automaticamente</li>
+            <li>Todas as mensagens do grupo sao armazenadas</li>
+          </ul>
+        </div>`;
+    } catch (err) {
+      content.innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
+    }
+  }
+
+  async function sendWhatsAppTest() {
+    const msg = document.getElementById('wa-test-msg').value;
+    if (!msg) { showToast('Digite uma mensagem', 'warning'); return; }
+    try {
+      await api('/api/whatsapp/test', { method: 'POST', body: JSON.stringify({ message: msg }) });
+      showToast('Mensagem enviada no grupo!');
+    } catch (err) {
+      showToast(err.message, 'danger');
+    }
+  }
+
+  // ============================================================
   // Public API (for onclick handlers in HTML)
   // ============================================================
   window.App = {
@@ -1001,7 +1104,8 @@
     loadFeriados: loadFeriados,
     openFeriadoModal: openFeriadoModal,
     saveFeriado: saveFeriado,
-    deleteFeriado: deleteFeriado
+    deleteFeriado: deleteFeriado,
+    sendWhatsAppTest: sendWhatsAppTest
   };
 
   // --- Init ---

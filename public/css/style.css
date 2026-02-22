@@ -250,7 +250,7 @@ body {
   background: #fff;
   border-radius: 12px;
   border: 1px solid #E2E8F0;
-  overflow: hidden;
+  overflow-x: auto;
 }
 
 .data-table .table {

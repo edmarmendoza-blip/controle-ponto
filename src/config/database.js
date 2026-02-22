@@ -75,10 +75,25 @@ function initializeDatabase() {
       valor TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS whatsapp_mensagens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      message_id TEXT UNIQUE,
+      sender_phone TEXT,
+      sender_name TEXT,
+      funcionario_id INTEGER,
+      message_text TEXT,
+      message_type TEXT DEFAULT 'other' CHECK(message_type IN ('entrada', 'saida', 'other')),
+      processed INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (funcionario_id) REFERENCES funcionarios(id)
+    );
+
     CREATE INDEX IF NOT EXISTS idx_registros_data ON registros(data);
     CREATE INDEX IF NOT EXISTS idx_registros_funcionario ON registros(funcionario_id);
     CREATE INDEX IF NOT EXISTS idx_feriados_data ON feriados(data);
     CREATE INDEX IF NOT EXISTS idx_audit_log_tabela ON audit_log(tabela, registro_id);
+    CREATE INDEX IF NOT EXISTS idx_whatsapp_mensagens_date ON whatsapp_mensagens(created_at);
+    CREATE INDEX IF NOT EXISTS idx_whatsapp_mensagens_funcionario ON whatsapp_mensagens(funcionario_id);
   `);
 
   // Default configs

@@ -8,6 +8,7 @@ const compression = require('compression');
 const morgan = require('morgan');
 const { initializeDatabase } = require('./src/config/database');
 const { apiLimiter } = require('./src/middleware/rateLimiter');
+const whatsappService = require('./src/services/whatsapp');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -51,6 +52,7 @@ app.use('/api/registros', require('./src/routes/registros'));
 app.use('/api/relatorios', require('./src/routes/relatorios'));
 app.use('/api/export', require('./src/routes/export'));
 app.use('/api/feriados', require('./src/routes/feriados'));
+app.use('/api/whatsapp', require('./src/routes/whatsapp'));
 
 // SPA fallback - serve index.html for all non-API routes
 app.get('*', (req, res) => {
@@ -66,4 +68,9 @@ app.use((err, req, res, next) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Controle de Ponto rodando na porta ${PORT}`);
   console.log(`Acesse: http://localhost:${PORT}`);
+
+  // Initialize WhatsApp in background (non-blocking)
+  whatsappService.initialize().catch(err => {
+    console.error('[WhatsApp] Startup error:', err.message);
+  });
 });

@@ -5,3 +5,6 @@ database.sqlite-shm
 database.sqlite-wal
 logs/
 *.log
+.wwebjs_auth/
+.wwebjs_cache/
+public/whatsapp-qr.png
