@@ -24,11 +24,11 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net", "https://unpkg.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-      imgSrc: ["'self'", "data:", "blob:"],
-      connectSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://unpkg.com"],
+      imgSrc: ["'self'", "data:", "blob:", "https://*.tile.openstreetmap.org"],
+      connectSrc: ["'self'", "https://calendar.google.com"],
       upgradeInsecureRequests: null
     }
   }
@@ -53,6 +53,7 @@ app.use('/api/relatorios', require('./src/routes/relatorios'));
 app.use('/api/export', require('./src/routes/export'));
 app.use('/api/feriados', require('./src/routes/feriados'));
 app.use('/api/whatsapp', require('./src/routes/whatsapp'));
+app.use('/api/dashboard/presenca', require('./src/routes/dashboardPresenca'));
 
 // SPA fallback - serve index.html for all non-API routes
 app.get('*', (req, res) => {
@@ -65,12 +66,35 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Erro interno do servidor' });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Controle de Ponto rodando na porta ${PORT}`);
-  console.log(`Acesse: http://localhost:${PORT}`);
+// Export app for testing (supertest)
+module.exports = app;
 
-  // Initialize WhatsApp in background (non-blocking)
-  whatsappService.initialize().catch(err => {
-    console.error('[WhatsApp] Startup error:', err.message);
+// Start server when run directly or via PM2
+if (require.main === module || process.env.NODE_ENV === 'production' || process.env.pm_id !== undefined) {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Controle de Ponto rodando na porta ${PORT}`);
+    console.log(`Acesse: http://localhost:${PORT}`);
+
+    // Initialize WhatsApp in background (non-blocking)
+    whatsappService.initialize().catch(err => {
+      console.error('[WhatsApp] Startup error:', err.message);
+    });
+
+    // Auto-sync holidays on startup and every 30 days
+    const GoogleCalendarService = require('./src/services/googleCalendar');
+    GoogleCalendarService.syncHolidays().then(result => {
+      console.log(`[Holiday Sync] ${result.added} added, ${result.updated} updated`);
+    }).catch(err => {
+      console.error('[Holiday Sync] Startup error:', err.message);
+    });
+
+    // Re-sync every 7 days (safe for 32-bit signed integer max ~24.8 days)
+    setInterval(() => {
+      GoogleCalendarService.syncHolidays().then(result => {
+        console.log(`[Holiday Sync] Periodic: ${result.added} added, ${result.updated} updated`);
+      }).catch(err => {
+        console.error('[Holiday Sync] Periodic error:', err.message);
+      });
+    }, 7 * 24 * 60 * 60 * 1000); // 7 days
   });
-});
+}
