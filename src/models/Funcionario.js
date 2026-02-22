@@ -10,17 +10,17 @@ class Funcionario {
     return db.prepare('SELECT * FROM funcionarios WHERE id = ?').get(id);
   }
 
-  static create({ nome, cargo, salario_hora, telefone, foto, status = 'ativo', horario_entrada = '08:00' }) {
+  static create({ nome, cargo, salario_hora, telefone, foto, status = 'ativo', horario_entrada = '08:00', valor_hora_extra = 43.25, valor_dia_especial = 320.00, jornada_diaria = 9.8 }) {
     const result = db.prepare(
-      'INSERT INTO funcionarios (nome, cargo, salario_hora, telefone, foto, status, horario_entrada) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    ).run(nome, cargo, salario_hora, telefone || null, foto || null, status, horario_entrada);
+      'INSERT INTO funcionarios (nome, cargo, salario_hora, telefone, foto, status, horario_entrada, valor_hora_extra, valor_dia_especial, jornada_diaria) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(nome, cargo, salario_hora, telefone || null, foto || null, status, horario_entrada, valor_hora_extra, valor_dia_especial, jornada_diaria);
     return result.lastInsertRowid;
   }
 
   static update(id, data) {
     const fields = [];
     const values = [];
-    const allowed = ['nome', 'cargo', 'salario_hora', 'telefone', 'foto', 'status', 'horario_entrada'];
+    const allowed = ['nome', 'cargo', 'salario_hora', 'telefone', 'foto', 'status', 'horario_entrada', 'valor_hora_extra', 'valor_dia_especial', 'jornada_diaria'];
     for (const [key, value] of Object.entries(data)) {
       if (allowed.includes(key)) {
         fields.push(`${key} = ?`);

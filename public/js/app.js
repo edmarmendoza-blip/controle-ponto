@@ -227,6 +227,7 @@
       case 'usuarios': renderUsuarios(); break;
       case 'perfil': renderPerfil(); break;
       case 'auditlog': renderAuditLog(); break;
+      case 'insights': renderInsightsIA(); break;
       default: content.innerHTML = '<p>Página não encontrada</p>';
     }
   }
@@ -409,6 +410,21 @@
           <label class="form-label">Horário de Entrada</label>
           <input type="time" class="form-control" id="func-horario-entrada" value="08:00">
         </div>
+        <hr><h6 class="text-muted">Folha de Pagamento</h6>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Valor Hora Extra (R$)</label>
+            <input type="number" class="form-control" id="func-valor-hora-extra" step="0.01" min="0" value="43.25">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Valor Dia Especial (R$)</label>
+            <input type="number" class="form-control" id="func-valor-dia-especial" step="0.01" min="0" value="320.00">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Jornada Diária (h)</label>
+            <input type="number" class="form-control" id="func-jornada-diaria" step="0.01" min="0" value="9.8">
+          </div>
+        </div>
         ${isEdit ? `
           <div class="mb-3">
             <label class="form-label">Status</label>
@@ -432,6 +448,9 @@
         document.getElementById('func-salario').value = f.salario_hora;
         document.getElementById('func-telefone').value = f.telefone || '';
         document.getElementById('func-horario-entrada').value = f.horario_entrada || '08:00';
+        document.getElementById('func-valor-hora-extra').value = f.valor_hora_extra ?? 43.25;
+        document.getElementById('func-valor-dia-especial').value = f.valor_dia_especial ?? 320.00;
+        document.getElementById('func-jornada-diaria').value = f.jornada_diaria ?? 9.8;
         document.getElementById('func-status').value = f.status;
       });
     }
@@ -443,7 +462,10 @@
       cargo: document.getElementById('func-cargo').value,
       salario_hora: parseFloat(document.getElementById('func-salario').value),
       telefone: document.getElementById('func-telefone').value || null,
-      horario_entrada: document.getElementById('func-horario-entrada').value || '08:00'
+      horario_entrada: document.getElementById('func-horario-entrada').value || '08:00',
+      valor_hora_extra: parseFloat(document.getElementById('func-valor-hora-extra').value) || 43.25,
+      valor_dia_especial: parseFloat(document.getElementById('func-valor-dia-especial').value) || 320.00,
+      jornada_diaria: parseFloat(document.getElementById('func-jornada-diaria').value) || 9.8
     };
 
     if (!data.nome || !data.cargo || isNaN(data.salario_hora)) {
@@ -764,6 +786,14 @@
       const funcionarios = await api('/api/funcionarios');
 
       content.innerHTML = `
+        <ul class="nav nav-tabs mb-3" id="rel-tabs">
+          <li class="nav-item">
+            <a class="nav-link active" href="#" data-tab="mensal">Relatório Mensal</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-tab="folha">Folha de Pagamento</a>
+          </li>
+        </ul>
         <div class="filter-bar">
           <div>
             <label class="form-label">Mês</label>
@@ -783,7 +813,7 @@
             </select>
           </div>
           <div>
-            <button class="btn btn-primary" onclick="App.loadRelatorio()">
+            <button class="btn btn-primary" id="btn-gerar-rel">
               <i class="bi bi-search"></i> Gerar
             </button>
           </div>
@@ -797,6 +827,30 @@
           </div>
         </div>
         <div id="relatorio-content"></div>`;
+
+      // Tab switching
+      let activeRelTab = 'mensal';
+      content.querySelectorAll('#rel-tabs .nav-link').forEach(tab => {
+        tab.addEventListener('click', (e) => {
+          e.preventDefault();
+          content.querySelectorAll('#rel-tabs .nav-link').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          activeRelTab = tab.dataset.tab;
+          if (activeRelTab === 'folha') {
+            loadFolha();
+          } else {
+            loadRelatorio();
+          }
+        });
+      });
+
+      document.getElementById('btn-gerar-rel').addEventListener('click', () => {
+        if (activeRelTab === 'folha') {
+          loadFolha();
+        } else {
+          loadRelatorio();
+        }
+      });
 
       loadRelatorio();
     } catch (err) {
@@ -900,6 +954,125 @@
                   <hr>
                   <div class="summary-item"><span class="label fw-bold">Total</span><span class="value text-primary fs-5">${formatCurrency(func.totalValor)}</span></div>
                 </div>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      container.innerHTML = html;
+    } catch (err) {
+      container.innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
+    }
+  }
+
+  async function loadFolha() {
+    const container = document.getElementById('relatorio-content');
+    const mes = document.getElementById('rel-mes').value;
+    const ano = document.getElementById('rel-ano').value;
+    const funcId = document.getElementById('rel-func').value;
+
+    container.innerHTML = '<div class="loading-spinner"><div class="spinner-border text-primary"></div></div>';
+
+    try {
+      let url = `/api/relatorios/folha?mes=${mes}&ano=${ano}`;
+      if (funcId) url += `&funcionarioId=${funcId}`;
+      const data = await api(url);
+
+      if (data.folhas.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="bi bi-clipboard-x"></i><p>Nenhum registro encontrado para o período</p></div>';
+        return;
+      }
+
+      const dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+      let html = '';
+
+      // Global totals
+      let grandTotalHoras = 0, grandTotalHE = 0, grandTotalPgtoHE = 0, grandTotalPgtoFDS = 0, grandTotalMensal = 0;
+
+      for (const folha of data.folhas) {
+        if (folha.registros.length === 0) continue;
+        const f = folha.funcionario;
+        const r = folha.resumo;
+
+        grandTotalHoras += r.totalHorasTrabalhadas;
+        grandTotalHE += r.totalHorasExtras;
+        grandTotalPgtoHE += r.totalPgtoHE;
+        grandTotalPgtoFDS += r.totalPgtoFDS;
+        grandTotalMensal += r.totalMensal;
+
+        html += `
+          <div class="summary-card mb-4">
+            <h5><i class="bi bi-person me-2"></i>${f.nome} - ${f.cargo}</h5>
+            <small class="text-muted">Jornada: ${f.jornada_diaria}h | Hora Extra: ${formatCurrency(f.valor_hora_extra)} | Dia Especial: ${formatCurrency(f.valor_dia_especial)}</small>
+            <div class="data-table mt-2">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Data</th><th>Dia</th><th>Entrada</th><th>Saída</th>
+                    <th>H. Trab.</th><th>H. Extra</th><th>Tipo Dia</th>
+                    <th>Pgto HE</th><th>Pgto FDS</th><th>Total Dia</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${folha.registros.map(reg => {
+                    const date = new Date(reg.data + 'T12:00:00');
+                    const isEspecial = reg.tipoDia.tipo === 'feriado' || reg.tipoDia.tipo === 'domingo' || reg.tipoDia.tipo === 'sabado';
+                    return `
+                      <tr class="${isEspecial ? 'table-warning' : ''}">
+                        <td>${formatDate(reg.data)}</td>
+                        <td>${dias[date.getDay()]}</td>
+                        <td>${reg.entrada || '-'}</td>
+                        <td>${reg.saida || '-'}</td>
+                        <td>${reg.horasTrabalhadas.toFixed(2)}</td>
+                        <td>${reg.horasExtras > 0 ? `<span class="text-warning fw-bold">${reg.horasExtras.toFixed(2)}</span>` : '0.00'}</td>
+                        <td><span class="badge bg-${isEspecial ? 'warning text-dark' : 'secondary'}">${reg.tipoDia.descricao}</span></td>
+                        <td>${reg.pgtoHoraExtra > 0 ? formatCurrency(reg.pgtoHoraExtra) : '-'}</td>
+                        <td>${reg.pgtoFDS > 0 ? formatCurrency(reg.pgtoFDS) : '-'}</td>
+                        <td class="fw-bold">${formatCurrency(reg.totalDia)}</td>
+                      </tr>`;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+            <div class="row mt-3">
+              <div class="col-md-6">
+                <div class="summary-card" style="background: #F8FAFC;">
+                  <h6>Resumo - ${f.nome}</h6>
+                  <div class="summary-item"><span class="label">Dias Trabalhados (úteis)</span><span class="value">${r.diasTrabalhadosUteis}</span></div>
+                  <div class="summary-item"><span class="label">Dias Trabalhados (FDS/feriado)</span><span class="value">${r.diasTrabalhadosEspeciais}</span></div>
+                  <div class="summary-item"><span class="label">Total Dias Trabalhados</span><span class="value">${r.diasTrabalhados}</span></div>
+                  <div class="summary-item"><span class="label">Total Horas Trabalhadas</span><span class="value">${r.totalHorasTrabalhadas.toFixed(2)}</span></div>
+                  <div class="summary-item"><span class="label">Total Horas Extras</span><span class="value text-warning">${r.totalHorasExtras.toFixed(2)}</span></div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="summary-card" style="background: #F8FAFC;">
+                  <h6>Pagamentos</h6>
+                  <div class="summary-item"><span class="label">Total Pago Horas Extras</span><span class="value">${formatCurrency(r.totalPgtoHE)}</span></div>
+                  <div class="summary-item"><span class="label">Total Pago FDS/Feriado</span><span class="value">${formatCurrency(r.totalPgtoFDS)}</span></div>
+                  <hr>
+                  <div class="summary-item"><span class="label fw-bold fs-6">TOTAL MENSAL</span><span class="value text-primary fs-5">${formatCurrency(r.totalMensal)}</span></div>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      // Grand total across all employees
+      if (data.folhas.length > 1) {
+        html += `
+          <div class="summary-card mb-4" style="background: #EEF2FF; border-left: 4px solid #4F46E5;">
+            <h5><i class="bi bi-calculator me-2"></i>Consolidado Geral - ${monthName(mes)}/${ano}</h5>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="summary-item"><span class="label">Total Horas Trabalhadas</span><span class="value">${grandTotalHoras.toFixed(2)}</span></div>
+                <div class="summary-item"><span class="label">Total Horas Extras</span><span class="value text-warning">${grandTotalHE.toFixed(2)}</span></div>
+              </div>
+              <div class="col-md-6">
+                <div class="summary-item"><span class="label">Total Pago HE</span><span class="value">${formatCurrency(grandTotalPgtoHE)}</span></div>
+                <div class="summary-item"><span class="label">Total Pago FDS/Feriado</span><span class="value">${formatCurrency(grandTotalPgtoFDS)}</span></div>
+                <hr>
+                <div class="summary-item"><span class="label fw-bold fs-5">TOTAL GERAL</span><span class="value text-primary fs-4">${formatCurrency(grandTotalMensal)}</span></div>
               </div>
             </div>
           </div>`;
@@ -2123,6 +2296,363 @@
   }
 
   // ============================================================
+  // INSIGHTS IA
+  // ============================================================
+  async function renderInsightsIA() {
+    const content = document.getElementById('page-content');
+    const today = new Date().toISOString().split('T')[0];
+
+    content.innerHTML = `
+      <div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
+        <input type="date" id="insights-date" class="form-control" style="max-width:200px" value="${today}">
+        <button class="btn btn-primary" id="btn-generate-insights">
+          <i class="bi bi-lightbulb"></i> Gerar Insights do Dia
+        </button>
+        <button class="btn btn-outline-secondary" id="btn-load-insights">
+          <i class="bi bi-arrow-clockwise"></i> Carregar
+        </button>
+        <span class="text-muted">|</span>
+        <button class="btn btn-success" id="btn-generate-period">
+          <i class="bi bi-calendar-range"></i> Últimos 30 dias
+        </button>
+      </div>
+      <div id="insights-container">
+        <div class="text-muted">Selecione uma data e clique em "Carregar" ou "Gerar Insights".</div>
+      </div>`;
+
+    const dateInput = document.getElementById('insights-date');
+    document.getElementById('btn-load-insights').addEventListener('click', () => loadInsights(dateInput.value));
+    document.getElementById('btn-generate-insights').addEventListener('click', () => generateInsights(dateInput.value));
+    document.getElementById('btn-generate-period').addEventListener('click', () => generatePeriodInsights());
+
+    // Auto-load for today
+    loadInsights(today);
+  }
+
+  async function loadInsights(date) {
+    const container = document.getElementById('insights-container');
+    container.innerHTML = '<div class="loading-spinner"><div class="spinner-border text-primary"></div></div>';
+    try {
+      const data = await api(`/api/insights/${date}`);
+      renderInsightsCards(data.insights, date, data.mensagens_analisadas);
+    } catch (err) {
+      if (err.message.includes('404') || err.message.includes('Nenhum')) {
+        container.innerHTML = `
+          <div class="alert alert-info d-flex align-items-center gap-3">
+            <i class="bi bi-info-circle fs-4"></i>
+            <div>
+              <strong>Nenhum insight encontrado para ${formatDate(date)}.</strong><br>
+              Clique em "Gerar Insights" para analisar as mensagens deste dia.
+            </div>
+          </div>`;
+      } else {
+        container.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+      }
+    }
+  }
+
+  async function generateInsights(date) {
+    const container = document.getElementById('insights-container');
+    const btn = document.getElementById('btn-generate-insights');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Gerando...';
+    container.innerHTML = `
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary mb-3" style="width:3rem;height:3rem"></div>
+        <p class="text-muted">Analisando mensagens com IA... Isso pode levar alguns segundos.</p>
+      </div>`;
+
+    try {
+      const result = await api('/api/insights/generate', {
+        method: 'POST',
+        body: JSON.stringify({ date }),
+      });
+      renderInsightsCards(result.insights, date, result.mensagens_analisadas);
+      showToast('Insights gerados com sucesso!');
+    } catch (err) {
+      container.innerHTML = `<div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> ${err.message}</div>`;
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-lightbulb"></i> Gerar Insights do Dia';
+    }
+  }
+
+  async function generatePeriodInsights() {
+    const container = document.getElementById('insights-container');
+    const btn = document.getElementById('btn-generate-period');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Gerando...';
+    container.innerHTML = `
+      <div class="text-center py-5">
+        <div class="spinner-border text-success mb-3" style="width:3rem;height:3rem"></div>
+        <p class="text-muted">Analisando últimos 30 dias com IA... Isso pode levar alguns segundos.</p>
+      </div>`;
+
+    try {
+      const result = await api('/api/insights/generate-period', {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+      renderPeriodCards(result.insights, result.periodo, result.mensagens_analisadas);
+      showToast('Insights do período gerados com sucesso!');
+    } catch (err) {
+      container.innerHTML = `<div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> ${err.message}</div>`;
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-calendar-range"></i> Últimos 30 dias';
+    }
+  }
+
+  function renderPeriodCards(insights, periodo, msgCount) {
+    const container = document.getElementById('insights-container');
+    if (!insights) {
+      container.innerHTML = '<div class="alert alert-warning">Dados de insights inválidos.</div>';
+      return;
+    }
+
+    const gravBadge = g => {
+      const cls = g === 'alta' ? 'danger' : g === 'media' ? 'warning' : 'info';
+      return `<span class="badge bg-${cls}">${g}</span>`;
+    };
+
+    container.innerHTML = `
+      <div class="mb-3">
+        <span class="badge bg-success fs-6"><i class="bi bi-calendar-range"></i> Período: ${formatDate(periodo.inicio)} a ${formatDate(periodo.fim)}</span>
+        <span class="badge bg-secondary fs-6 ms-2">${msgCount} mensagens analisadas</span>
+      </div>
+
+      <div class="card mb-3 border-success">
+        <div class="card-header bg-success text-white"><i class="bi bi-journal-text"></i> Resumo do Período</div>
+        <div class="card-body">${insights.resumo || 'Sem resumo.'}</div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header"><i class="bi bi-people"></i> Presença & Frequência</div>
+        <div class="card-body">
+          ${(insights.presenca && insights.presenca.ranking || []).length > 0 ? `
+            <div class="table-responsive">
+              <table class="table table-sm table-striped">
+                <thead><tr><th>Funcionário</th><th>Dias Presente</th><th>Chegada Média</th><th>Saída Média</th></tr></thead>
+                <tbody>
+                  ${insights.presenca.ranking.map(r => `
+                    <tr>
+                      <td><strong>${r.nome}</strong></td>
+                      <td><span class="badge bg-primary">${r.dias_presentes}</span></td>
+                      <td>${r.primeira_msg_media || '-'}</td>
+                      <td>${r.ultima_msg_media || '-'}</td>
+                    </tr>`).join('')}
+                </tbody>
+              </table>
+            </div>` : ''}
+          ${(insights.presenca && insights.presenca.ausencias_frequentes || []).length > 0 ? `
+            <div class="mt-2"><strong class="text-danger">Ausências frequentes:</strong> ${insights.presenca.ausencias_frequentes.join(', ')}</div>` : ''}
+          ${insights.presenca && insights.presenca.observacoes ? `<div class="mt-2 text-muted"><em>${insights.presenca.observacoes}</em></div>` : ''}
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-header"><i class="bi bi-exclamation-triangle text-danger"></i> Problemas Recorrentes</div>
+            <div class="card-body">
+              ${(insights.problemas_recorrentes || []).length > 0
+                ? insights.problemas_recorrentes.map(p => `
+                  <div class="border-bottom pb-2 mb-2">
+                    <div>${gravBadge(p.gravidade)} ${p.descricao} <small class="text-muted">(${p.frequencia})</small></div>
+                    ${p.sugestao ? `<small class="text-success"><i class="bi bi-lightbulb"></i> ${p.sugestao}</small>` : ''}
+                  </div>`).join('')
+                : '<span class="text-muted">Nenhum problema recorrente.</span>'}
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-header"><i class="bi bi-star text-warning"></i> Destaques</div>
+            <div class="card-body">
+              ${(insights.destaques || []).length > 0
+                ? insights.destaques.map(d => `
+                  <div class="border-bottom pb-2 mb-2">
+                    <div>${d.descricao}</div>
+                    ${d.responsavel ? `<small class="text-muted">Responsável: ${d.responsavel}</small>` : ''}
+                  </div>`).join('')
+                : '<span class="text-muted">Nenhum destaque.</span>'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-1">
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-header"><i class="bi bi-arrow-repeat text-info"></i> Padrões Observados</div>
+            <div class="card-body">
+              ${(insights.padroes || []).length > 0
+                ? insights.padroes.map(p => {
+                    const cls = p.tipo === 'positivo' ? 'success' : p.tipo === 'negativo' ? 'danger' : 'secondary';
+                    return `<div class="border-bottom pb-2 mb-2"><span class="badge bg-${cls}">${p.tipo}</span> ${p.descricao}</div>`;
+                  }).join('')
+                : '<span class="text-muted">Nenhum padrão identificado.</span>'}
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-header"><i class="bi bi-lightbulb text-success"></i> Sugestões</div>
+            <div class="card-body">
+              ${(insights.sugestoes || []).length > 0
+                ? insights.sugestoes.map(s => `
+                  <div class="border-bottom pb-2 mb-2">
+                    <div>${gravBadge(s.prioridade)} <strong>${s.titulo}</strong></div>
+                    <small>${s.descricao}</small>
+                  </div>`).join('')
+                : '<span class="text-muted">Nenhuma sugestão.</span>'}
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function renderInsightsCards(insights, date, msgCount) {
+    const container = document.getElementById('insights-container');
+    if (!insights) {
+      container.innerHTML = '<div class="alert alert-warning">Dados de insights inválidos.</div>';
+      return;
+    }
+
+    const gravityBadge = (g) => {
+      const colors = { alta: 'danger', media: 'warning', baixa: 'info' };
+      return `<span class="badge bg-${colors[g] || 'secondary'}">${g}</span>`;
+    };
+
+    const statusBadge = (s) => {
+      const colors = { concluida: 'success', em_andamento: 'primary', pendente: 'warning' };
+      return `<span class="badge bg-${colors[s] || 'secondary'}">${s}</span>`;
+    };
+
+    const prioBadge = (p) => {
+      const colors = { alta: 'danger', media: 'warning', baixa: 'info' };
+      return `<span class="badge bg-${colors[p] || 'secondary'}">${p}</span>`;
+    };
+
+    container.innerHTML = `
+      <div class="mb-3 text-muted small">
+        <i class="bi bi-calendar3"></i> ${formatDate(date)} &middot;
+        <i class="bi bi-chat-dots"></i> ${msgCount || 0} mensagens analisadas
+      </div>
+
+      <!-- Resumo -->
+      <div class="card border-primary mb-3">
+        <div class="card-header bg-primary text-white">
+          <i class="bi bi-file-text"></i> Resumo do Dia
+        </div>
+        <div class="card-body">${insights.resumo || 'Sem resumo disponível.'}</div>
+      </div>
+
+      <!-- Presença -->
+      <div class="card border-success mb-3">
+        <div class="card-header bg-success text-white">
+          <i class="bi bi-people"></i> Presença
+        </div>
+        <div class="card-body">
+          ${insights.presenca ? `
+            <div class="row">
+              <div class="col-md-6">
+                <h6 class="text-success"><i class="bi bi-check-circle"></i> Presentes (${(insights.presenca.presentes || []).length})</h6>
+                ${(insights.presenca.presentes || []).length > 0
+                  ? `<ul class="list-unstyled">${insights.presenca.presentes.map(n => `<li><i class="bi bi-person-check text-success"></i> ${n}</li>`).join('')}</ul>`
+                  : '<p class="text-muted">Nenhum</p>'}
+              </div>
+              <div class="col-md-6">
+                <h6 class="text-danger"><i class="bi bi-x-circle"></i> Ausentes (${(insights.presenca.ausentes || []).length})</h6>
+                ${(insights.presenca.ausentes || []).length > 0
+                  ? `<ul class="list-unstyled">${insights.presenca.ausentes.map(n => `<li><i class="bi bi-person-x text-danger"></i> ${n}</li>`).join('')}</ul>`
+                  : '<p class="text-muted">Nenhum</p>'}
+              </div>
+            </div>
+            ${insights.presenca.observacoes ? `<div class="mt-2 text-muted"><em>${insights.presenca.observacoes}</em></div>` : ''}
+          ` : '<p class="text-muted">Sem dados de presença.</p>'}
+        </div>
+      </div>
+
+      <!-- Problemas -->
+      <div class="card border-danger mb-3">
+        <div class="card-header bg-danger text-white">
+          <i class="bi bi-exclamation-triangle"></i> Problemas Relatados
+        </div>
+        <div class="card-body">
+          ${(insights.problemas || []).length > 0
+            ? insights.problemas.map(p => `
+              <div class="d-flex justify-content-between align-items-start mb-2 p-2 bg-light rounded">
+                <div>
+                  <strong>${p.descricao}</strong>
+                  ${p.sugestao ? `<br><small class="text-muted"><i class="bi bi-lightbulb"></i> ${p.sugestao}</small>` : ''}
+                </div>
+                ${gravityBadge(p.gravidade)}
+              </div>`).join('')
+            : '<p class="text-muted">Nenhum problema relatado.</p>'}
+        </div>
+      </div>
+
+      <!-- Entregas -->
+      <div class="card border-warning mb-3">
+        <div class="card-header bg-warning text-dark">
+          <i class="bi bi-box-seam"></i> Entregas
+        </div>
+        <div class="card-body">
+          ${(insights.entregas || []).length > 0
+            ? insights.entregas.map(e => `
+              <div class="mb-2 p-2 bg-light rounded">
+                <strong>${e.descricao}</strong>
+                <br><small class="text-muted">Responsável: ${e.responsavel || 'N/A'}
+                ${e.tem_foto ? ' <i class="bi bi-camera text-primary"></i> Com foto' : ''}</small>
+              </div>`).join('')
+            : '<p class="text-muted">Nenhuma entrega registrada.</p>'}
+        </div>
+      </div>
+
+      <!-- Tarefas -->
+      <div class="card mb-3" style="border-color:#6f42c1">
+        <div class="card-header text-white" style="background:#6f42c1">
+          <i class="bi bi-list-task"></i> Tarefas
+        </div>
+        <div class="card-body">
+          ${(insights.tarefas || []).length > 0
+            ? `<table class="table table-sm mb-0">
+                <thead><tr><th>Tarefa</th><th>Responsável</th><th>Status</th></tr></thead>
+                <tbody>
+                  ${insights.tarefas.map(t => `
+                    <tr>
+                      <td>${t.descricao}</td>
+                      <td>${t.responsavel || 'N/A'}</td>
+                      <td>${statusBadge(t.status)}</td>
+                    </tr>`).join('')}
+                </tbody>
+              </table>`
+            : '<p class="text-muted">Nenhuma tarefa identificada.</p>'}
+        </div>
+      </div>
+
+      <!-- Sugestões -->
+      <div class="card mb-3" style="border-color:#0dcaf0">
+        <div class="card-header text-white" style="background:#0dcaf0">
+          <i class="bi bi-magic"></i> Sugestões de Melhoria
+        </div>
+        <div class="card-body">
+          ${(insights.sugestoes || []).length > 0
+            ? insights.sugestoes.map(s => `
+              <div class="d-flex justify-content-between align-items-start mb-2 p-2 bg-light rounded">
+                <div>
+                  <strong>${s.titulo}</strong>
+                  <br><small class="text-muted">${s.descricao}</small>
+                </div>
+                ${prioBadge(s.prioridade)}
+              </div>`).join('')
+            : '<p class="text-muted">Nenhuma sugestão.</p>'}
+        </div>
+      </div>`;
+  }
+
+  // ============================================================
   // Public API (for onclick handlers in HTML)
   // ============================================================
   window.App = {
@@ -2134,6 +2664,7 @@
     deleteRegistro: deleteRegistro,
     filterRegistros: filterRegistros,
     loadRelatorio: loadRelatorio,
+    loadFolha: loadFolha,
     exportExcel: exportExcel,
     exportPDF: exportPDF,
     loadFeriados: loadFeriados,
@@ -2149,7 +2680,9 @@
     showLocationMap: showLocationMap,
     syncFeriados: syncFeriados,
     loadGraficos: loadGraficos,
-    loadPresencaMensal: loadPresencaMensal
+    loadPresencaMensal: loadPresencaMensal,
+    loadInsights: loadInsights,
+    generateInsights: generateInsights
   };
 
   // --- Init ---

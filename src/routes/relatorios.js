@@ -111,6 +111,50 @@ router.get('/funcionario/:id', authenticateToken, [
   }
 });
 
+// GET /api/relatorios/folha
+router.get('/folha', authenticateToken, [
+  query('mes').isInt({ min: 1, max: 12 }).withMessage('Mês inválido (1-12)'),
+  query('ano').isInt({ min: 2020, max: 2099 }).withMessage('Ano inválido'),
+  query('funcionarioId').optional().isInt().withMessage('ID funcionário inválido')
+], (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { mes, ano, funcionarioId } = req.query;
+    const mesInt = parseInt(mes);
+    const anoInt = parseInt(ano);
+
+    // Get all active employees or specific one
+    let funcionarios;
+    if (funcionarioId) {
+      const func = Funcionario.findById(parseInt(funcionarioId));
+      if (!func) return res.status(404).json({ error: 'Funcionário não encontrado' });
+      funcionarios = [func];
+    } else {
+      funcionarios = Funcionario.getAll();
+    }
+
+    const resultados = [];
+    for (const func of funcionarios) {
+      const registros = Registro.getMonthlyReport(mesInt, anoInt, func.id);
+      const folha = HorasExtrasService.calcularFolha(registros, func);
+      resultados.push(folha);
+    }
+
+    res.json({
+      mes: mesInt,
+      ano: anoInt,
+      folhas: resultados
+    });
+  } catch (err) {
+    console.error('Relatório folha error:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // GET /api/relatorios/comparativo
 router.get('/comparativo', authenticateToken, [
   query('mes').isInt({ min: 1, max: 12 }).withMessage('Mês inválido'),

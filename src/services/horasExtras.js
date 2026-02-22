@@ -66,6 +66,116 @@ class HorasExtrasService {
     };
   }
 
+  static calcularFolhaRegistro(registro, funcionario) {
+    const entrada = registro.entrada;
+    const saida = registro.saida;
+
+    // If entrada/saida empty or both 00:00 → everything zero
+    if (!entrada || !saida || (entrada === '00:00' && saida === '00:00')) {
+      return {
+        horasTrabalhadas: 0,
+        horasExtras: 0,
+        tipoDia: FeriadosService.getDayType(registro.data),
+        pgtoHoraExtra: 0,
+        pgtoFDS: 0,
+        totalDia: 0
+      };
+    }
+
+    // Calculate hours worked, handling midnight crossing
+    const [eh, em] = entrada.split(':').map(Number);
+    const [sh, sm] = saida.split(':').map(Number);
+    let totalMinutos = (sh * 60 + sm) - (eh * 60 + em);
+    if (totalMinutos < 0) totalMinutos += 24 * 60; // midnight crossing
+    const horasTrabalhadas = totalMinutos / 60;
+
+    const dayType = FeriadosService.getDayType(registro.data);
+    const jornada = funcionario.jornada_diaria || 9.8;
+    const valorHoraExtra = funcionario.valor_hora_extra || 43.25;
+    const valorDiaEspecial = funcionario.valor_dia_especial || 320.00;
+
+    let horasExtras = 0;
+    let pgtoHoraExtra = 0;
+    let pgtoFDS = 0;
+
+    if (dayType.tipo === 'feriado' || dayType.tipo === 'domingo' || dayType.tipo === 'sabado') {
+      // Weekend/holiday: fixed payment per day if worked
+      pgtoFDS = valorDiaEspecial;
+      horasExtras = 0;
+    } else {
+      // Weekday: overtime = max(hours_worked - jornada, 0)
+      horasExtras = Math.max(horasTrabalhadas - jornada, 0);
+      pgtoHoraExtra = horasExtras * valorHoraExtra;
+    }
+
+    return {
+      horasTrabalhadas: Math.round(horasTrabalhadas * 100) / 100,
+      horasExtras: Math.round(horasExtras * 100) / 100,
+      tipoDia: dayType,
+      pgtoHoraExtra: Math.round(pgtoHoraExtra * 100) / 100,
+      pgtoFDS: Math.round(pgtoFDS * 100) / 100,
+      totalDia: Math.round((pgtoHoraExtra + pgtoFDS) * 100) / 100
+    };
+  }
+
+  static calcularFolha(registros, funcionario) {
+    let totalHorasTrabalhadas = 0;
+    let totalHorasExtras = 0;
+    let totalPgtoHE = 0;
+    let totalPgtoFDS = 0;
+    let diasTrabalhadosUteis = 0;
+    let diasTrabalhadosEspeciais = 0;
+    const detalhes = [];
+
+    for (const registro of registros) {
+      const calc = this.calcularFolhaRegistro(registro, funcionario);
+      totalHorasTrabalhadas += calc.horasTrabalhadas;
+      totalHorasExtras += calc.horasExtras;
+      totalPgtoHE += calc.pgtoHoraExtra;
+      totalPgtoFDS += calc.pgtoFDS;
+
+      if (calc.horasTrabalhadas > 0) {
+        const isEspecial = calc.tipoDia.tipo === 'feriado' || calc.tipoDia.tipo === 'domingo' || calc.tipoDia.tipo === 'sabado';
+        if (isEspecial) {
+          diasTrabalhadosEspeciais++;
+        } else {
+          diasTrabalhadosUteis++;
+        }
+      }
+
+      detalhes.push({
+        data: registro.data,
+        entrada: registro.entrada,
+        saida: registro.saida,
+        ...calc
+      });
+    }
+
+    const totalMensal = totalPgtoHE + totalPgtoFDS;
+
+    return {
+      funcionario: {
+        id: funcionario.id,
+        nome: funcionario.nome,
+        cargo: funcionario.cargo,
+        valor_hora_extra: funcionario.valor_hora_extra || 43.25,
+        valor_dia_especial: funcionario.valor_dia_especial || 320.00,
+        jornada_diaria: funcionario.jornada_diaria || 9.8
+      },
+      registros: detalhes,
+      resumo: {
+        totalHorasTrabalhadas: Math.round(totalHorasTrabalhadas * 100) / 100,
+        totalHorasExtras: Math.round(totalHorasExtras * 100) / 100,
+        totalPgtoHE: Math.round(totalPgtoHE * 100) / 100,
+        totalPgtoFDS: Math.round(totalPgtoFDS * 100) / 100,
+        totalMensal: Math.round(totalMensal * 100) / 100,
+        diasTrabalhadosUteis,
+        diasTrabalhadosEspeciais,
+        diasTrabalhados: diasTrabalhadosUteis + diasTrabalhadosEspeciais
+      }
+    };
+  }
+
   static calcularResumoMensal(registros) {
     const config = this.getConfig();
     const resumoPorFuncionario = {};

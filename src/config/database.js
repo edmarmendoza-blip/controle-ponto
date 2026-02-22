@@ -48,6 +48,21 @@ function initializeDatabase() {
     if (funcCols.length > 0 && !funcCols.includes('horario_entrada')) {
       db.exec("ALTER TABLE funcionarios ADD COLUMN horario_entrada TEXT DEFAULT '08:00'");
     }
+
+    // Add media columns to whatsapp_mensagens
+    const wmCols = db.prepare("PRAGMA table_info(whatsapp_mensagens)").all().map(c => c.name);
+    if (wmCols.length > 0 && !wmCols.includes('media_type')) {
+      db.exec('ALTER TABLE whatsapp_mensagens ADD COLUMN media_type TEXT DEFAULT NULL');
+      db.exec('ALTER TABLE whatsapp_mensagens ADD COLUMN media_path TEXT DEFAULT NULL');
+    }
+
+    // Add payroll columns to funcionarios
+    const funcColsPayroll = db.prepare("PRAGMA table_info(funcionarios)").all().map(c => c.name);
+    if (funcColsPayroll.length > 0 && !funcColsPayroll.includes('valor_hora_extra')) {
+      db.exec('ALTER TABLE funcionarios ADD COLUMN valor_hora_extra REAL DEFAULT 43.25');
+      db.exec('ALTER TABLE funcionarios ADD COLUMN valor_dia_especial REAL DEFAULT 320.00');
+      db.exec('ALTER TABLE funcionarios ADD COLUMN jornada_diaria REAL DEFAULT 9.8');
+    }
   } catch (migrationErr) {
     console.error('Migration warning:', migrationErr.message);
   }
@@ -74,6 +89,9 @@ function initializeDatabase() {
       foto TEXT,
       status TEXT DEFAULT 'ativo' CHECK(status IN ('ativo', 'inativo')),
       horario_entrada TEXT DEFAULT '08:00',
+      valor_hora_extra REAL DEFAULT 43.25,
+      valor_dia_especial REAL DEFAULT 320.00,
+      jornada_diaria REAL DEFAULT 9.8,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
@@ -142,8 +160,18 @@ function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS idx_audit_log_entity ON audit_log(entity_type, entity_id);
     CREATE INDEX IF NOT EXISTS idx_audit_log_user ON audit_log(user_id);
     CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at);
+    CREATE TABLE IF NOT EXISTS insights_ia (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      data DATE NOT NULL UNIQUE,
+      insights_json TEXT NOT NULL,
+      mensagens_analisadas INTEGER DEFAULT 0,
+      modelo TEXT DEFAULT 'claude-sonnet-4-6',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE INDEX IF NOT EXISTS idx_whatsapp_mensagens_date ON whatsapp_mensagens(created_at);
     CREATE INDEX IF NOT EXISTS idx_whatsapp_mensagens_funcionario ON whatsapp_mensagens(funcionario_id);
+    CREATE INDEX IF NOT EXISTS idx_insights_ia_data ON insights_ia(data);
   `);
 
   // Default configs
