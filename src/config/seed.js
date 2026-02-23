@@ -11,8 +11,8 @@ async function seed() {
   const insertUser = db.prepare(`
     INSERT OR IGNORE INTO users (email, password, name, role) VALUES (?, ?, ?, ?)
   `);
-  insertUser.run('admin@casadosbull.com', hashedPassword, 'Administrador', 'admin');
-  console.log('Admin user created: admin@casadosbull.com');
+  insertUser.run('edmarmbull@gmail.com', hashedPassword, 'Administrador', 'admin');
+  console.log('Admin user created: edmarmbull@gmail.com');
 
   // Feriados de São Paulo 2026
   const feriados2026 = [

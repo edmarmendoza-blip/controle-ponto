@@ -1,7 +1,7 @@
 {
-  "name": "controle-ponto-casa-dos-bull",
+  "name": "lar-digital",
   "version": "1.0.0",
-  "description": "Sistema de Controle de Ponto - Casa dos Bull",
+  "description": "Lar Digital - Gestão da Casa",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -11,6 +11,7 @@
     "test": "jest --coverage --runInBand --forceExit"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^11.7.0",
     "compression": "^1.7.4",
@@ -27,6 +28,7 @@
     "pdfkit": "^0.16.0",
     "qrcode": "^1.5.4",
     "qrcode-terminal": "^0.12.0",
+    "speakeasy": "^2.0.0",
     "whatsapp-web.js": "^1.26.0"
   },
   "devDependencies": {

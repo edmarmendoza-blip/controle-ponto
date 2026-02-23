@@ -1,5 +1,5 @@
 // ============================================================
-// Controle de Ponto - Casa dos Bull - SPA Frontend
+// Lar Digital - Gestão da Casa - SPA Frontend
 // ============================================================
 
 (function () {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gerenciamento de Usuários - Altium Controle de Ponto</title>
+  <title>Gerenciamento de Usuários - Lar Digital</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -19,9 +19,9 @@
     <div class="p-4 border-b border-blue-700">
       <div class="flex items-center gap-2">
         <i class="bi bi-clock-history text-2xl"></i>
-        <span class="text-xl font-bold">Altium</span>
+        <span class="text-xl font-bold">Lar Digital</span>
       </div>
-      <p class="text-blue-200 text-xs mt-1">Controle de Ponto</p>
+      <p class="text-blue-200 text-xs mt-1">Gestão da Casa</p>
     </div>
     <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-180px)]">
       <a href="/dashboard.html" data-page="dashboard" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
@@ -102,13 +102,14 @@
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">E-mail</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Função</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">2FA</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Criado em</th>
                 <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
               </tr>
             </thead>
             <tbody id="users-table" class="divide-y divide-gray-100 dark:divide-gray-700">
               <tr>
-                <td colspan="6" class="px-5 py-8 text-center text-gray-400">
+                <td colspan="7" class="px-5 py-8 text-center text-gray-400">
                   <i class="bi bi-arrow-repeat animate-spin text-2xl"></i>
                   <p class="mt-2">Carregando usuários...</p>
                 </td>
@@ -149,7 +150,7 @@
           </div>
 
           <div id="password-field">
-            <label class="block text-sm font-medium mb-1" for="field-password">Senha</label>
+            <label class="block text-sm font-medium mb-1" for="field-password">Senha <span id="password-hint" class="text-xs text-gray-400 font-normal"></span></label>
             <input type="password" id="field-password"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors"
               placeholder="Mínimo 6 caracteres" minlength="6">
@@ -269,7 +270,7 @@
       if (users.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="6" class="px-5 py-8 text-center text-gray-400">
+            <td colspan="7" class="px-5 py-8 text-center text-gray-400">
               <i class="bi bi-people text-3xl"></i>
               <p class="mt-2">Nenhum usuário cadastrado</p>
             </td>
@@ -289,6 +290,7 @@
           <td class="px-5 py-3 text-gray-600 dark:text-gray-400">${u.email || '-'}</td>
           <td class="px-5 py-3">${roleBadge(u.role)}</td>
           <td class="px-5 py-3">${statusBadge(u.active)}</td>
+          <td class="px-5 py-3">${u.totp_enabled ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"><i class="bi bi-shield-lock-fill mr-1"></i>Ativo</span>' : '<span class="text-xs text-gray-400">-</span>'}</td>
           <td class="px-5 py-3 text-gray-600 dark:text-gray-400">${formatCreatedAt(u.created_at || u.createdAt)}</td>
           <td class="px-5 py-3">
             <div class="flex items-center justify-center gap-2">
@@ -317,6 +319,7 @@
       document.getElementById('field-active').checked = true;
       document.getElementById('password-field').classList.remove('hidden');
       document.getElementById('field-password').required = true;
+      document.getElementById('password-hint').textContent = '';
       document.getElementById('active-field').classList.add('hidden');
       document.getElementById('user-modal').classList.remove('hidden');
     }
@@ -332,8 +335,9 @@
       document.getElementById('field-password').value = '';
       document.getElementById('field-role').value = user.role || 'viewer';
       document.getElementById('field-active').checked = user.active !== false;
-      document.getElementById('password-field').classList.add('hidden');
+      document.getElementById('password-field').classList.remove('hidden');
       document.getElementById('field-password').required = false;
+      document.getElementById('password-hint').textContent = '(deixe vazio para manter a atual)';
       document.getElementById('active-field').classList.remove('hidden');
       document.getElementById('user-modal').classList.remove('hidden');
     }
@@ -356,7 +360,9 @@
       };
 
       if (isEdit) {
-        payload.active = document.getElementById('field-active').checked;
+        payload.active = document.getElementById('field-active').checked ? 1 : 0;
+        const pwd = document.getElementById('field-password').value;
+        if (pwd) payload.password = pwd;
       } else {
         payload.password = document.getElementById('field-password').value;
       }

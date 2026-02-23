@@ -115,6 +115,12 @@ function initializeDatabase() {
         try { db.exec(`ALTER TABLE funcionarios ADD COLUMN ${col}`); } catch (e) { /* column may already exist */ }
       }
     }
+    // Add 2FA columns to users
+    const userCols2FA = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
+    if (userCols2FA.length > 0 && !userCols2FA.includes('totp_secret')) {
+      try { db.exec('ALTER TABLE users ADD COLUMN totp_secret TEXT DEFAULT NULL'); } catch (e) { /* ignore */ }
+      try { db.exec('ALTER TABLE users ADD COLUMN totp_enabled INTEGER DEFAULT 0'); } catch (e) { /* ignore */ }
+    }
   } catch (migrationErr) {
     console.error('Migration warning:', migrationErr.message);
   }
@@ -128,6 +134,8 @@ function initializeDatabase() {
       name TEXT NOT NULL,
       role TEXT DEFAULT 'viewer' CHECK(role IN ('admin', 'gestor', 'viewer')),
       active INTEGER DEFAULT 1,
+      totp_secret TEXT DEFAULT NULL,
+      totp_enabled INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
@@ -235,6 +243,8 @@ function initializeDatabase() {
       message_text TEXT,
       message_type TEXT DEFAULT 'other' CHECK(message_type IN ('entrada', 'saida', 'other')),
       processed INTEGER DEFAULT 0,
+      media_type TEXT DEFAULT NULL,
+      media_path TEXT DEFAULT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (funcionario_id) REFERENCES funcionarios(id)
     );

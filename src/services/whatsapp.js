@@ -2,6 +2,7 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const QRCode = require('qrcode');
 const path = require('path');
+const fs = require('fs');
 const { db } = require('../config/database');
 const Registro = require('../models/Registro');
 const Funcionario = require('../models/Funcionario');
@@ -236,19 +237,42 @@ class WhatsAppService {
     // Ignore messages from the bot itself
     if (msg.fromMe) return;
 
-    // Only process text messages
-    if (!msg.body || msg.body.trim().length === 0) return;
-
     const contact = await msg.getContact();
     const senderPhone = contact.number || '';
     const senderName = contact.pushname || contact.name || '';
-    const text = msg.body.trim();
+    const text = (msg.body || '').trim();
+
+    // Download media if present
+    let mediaType = null;
+    let mediaPath = null;
+    if (msg.hasMedia) {
+      try {
+        const media = await msg.downloadMedia();
+        if (media) {
+          mediaType = media.mimetype.split('/')[0]; // image, video, audio, etc.
+          const today = new Date().toISOString().split('T')[0];
+          const uploadDir = path.join(__dirname, '..', '..', 'public', 'uploads', 'whatsapp', today);
+          fs.mkdirSync(uploadDir, { recursive: true });
+          const ext = media.mimetype.split('/')[1]?.split(';')[0] || 'bin';
+          const filename = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+          const filePath = path.join(uploadDir, filename);
+          fs.writeFileSync(filePath, Buffer.from(media.data, 'base64'));
+          mediaPath = `/uploads/whatsapp/${today}/${filename}`;
+          console.log(`[WhatsApp] Media saved: ${mediaPath} (${mediaType})`);
+        }
+      } catch (err) {
+        console.error('[WhatsApp] Error downloading media:', err.message);
+      }
+    }
+
+    // Skip messages with no text and no media
+    if (!text && !mediaType) return;
 
     // Match employee
     let funcionario = this.matchEmployee(senderPhone, senderName);
 
-    // Detect intent
-    const intent = this.parseIntent(text);
+    // Detect intent (only from text)
+    const intent = text ? this.parseIntent(text) : null;
 
     // Auto-create employee if not found and has a clock intent
     if (!funcionario && intent && senderName) {
@@ -256,7 +280,7 @@ class WhatsAppService {
     }
 
     // Store the message
-    this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, text, intent || 'other');
+    this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, text, intent || 'other', mediaType, mediaPath);
 
     // If clock-in/out intent detected and employee found, register the punch
     if (intent && funcionario) {
@@ -366,13 +390,13 @@ class WhatsAppService {
       .trim();
   }
 
-  storeMessage(messageId, senderPhone, senderName, funcionarioId, text, messageType) {
+  storeMessage(messageId, senderPhone, senderName, funcionarioId, text, messageType, mediaType = null, mediaPath = null) {
     try {
       db.prepare(`
         INSERT OR IGNORE INTO whatsapp_mensagens
-          (message_id, sender_phone, sender_name, funcionario_id, message_text, message_type, processed)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).run(messageId, senderPhone, senderName, funcionarioId, text, messageType, messageType !== 'other' ? 1 : 0);
+          (message_id, sender_phone, sender_name, funcionario_id, message_text, message_type, processed, media_type, media_path)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(messageId, senderPhone, senderName, funcionarioId, text, messageType, messageType !== 'other' ? 1 : 0, mediaType, mediaPath);
     } catch (err) {
       console.error('[WhatsApp] Error storing message:', err.message);
     }

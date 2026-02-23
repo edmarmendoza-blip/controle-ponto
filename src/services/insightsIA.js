@@ -1,0 +1,305 @@
+const Anthropic = require('@anthropic-ai/sdk');
+const { db } = require('../config/database');
+const Funcionario = require('../models/Funcionario');
+
+class InsightsIA {
+  static getClient() {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      throw new Error('ANTHROPIC_API_KEY não configurada no .env');
+    }
+    return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  }
+
+  static getMessagesByDate(date) {
+    return db.prepare(`
+      SELECT wm.*, f.nome as funcionario_nome
+      FROM whatsapp_mensagens wm
+      LEFT JOIN funcionarios f ON wm.funcionario_id = f.id
+      WHERE DATE(wm.created_at) = ?
+      ORDER BY wm.created_at ASC
+    `).all(date);
+  }
+
+  static getRegistrosByDate(date) {
+    return db.prepare(`
+      SELECT r.*, f.nome as funcionario_nome
+      FROM registros r
+      JOIN funcionarios f ON r.funcionario_id = f.id
+      WHERE r.data = ?
+      ORDER BY r.entrada ASC
+    `).all(date);
+  }
+
+  static buildPrompt(messages, registros, employees) {
+    const messageList = messages.map(m => {
+      let line = `[${m.created_at}] ${m.sender_name}: ${m.message_text || '(sem texto)'}`;
+      if (m.media_type) line += ` [MÍDIA: ${m.media_type}${m.media_path ? ' - ' + m.media_path : ''}]`;
+      return line;
+    }).join('\n');
+
+    const registroList = registros.map(r =>
+      `${r.funcionario_nome}: entrada=${r.entrada || 'N/A'}, saida=${r.saida || 'N/A'}, tipo=${r.tipo}`
+    ).join('\n');
+
+    const employeeList = employees.map(e =>
+      `${e.nome} (${e.cargo}, ${e.status})`
+    ).join(', ');
+
+    return `Você é um analista operacional da residência "Lar Digital" (Casa dos Bull).
+Analise as mensagens do grupo WhatsApp e registros de ponto do dia e gere insights operacionais.
+
+FUNCIONÁRIOS CADASTRADOS:
+${employeeList || 'Nenhum cadastrado'}
+
+REGISTROS DE PONTO DO DIA:
+${registroList || 'Nenhum registro'}
+
+MENSAGENS DO GRUPO (${messages.length} mensagens):
+${messageList || 'Nenhuma mensagem'}
+
+Analise e retorne APENAS um JSON válido (sem markdown, sem backticks) com esta estrutura:
+{
+  "resumo": "Resumo geral do dia em 2-3 frases",
+  "presenca": {
+    "presentes": ["nomes dos que registraram ponto ou mandaram mensagem"],
+    "ausentes": ["nomes dos cadastrados que não apareceram"],
+    "observacoes": "observações sobre pontualidade, atrasos, etc"
+  },
+  "problemas": [
+    { "descricao": "descrição do problema", "gravidade": "alta|media|baixa", "sugestao": "sugestão de resolução" }
+  ],
+  "entregas": [
+    { "descricao": "descrição da entrega/trabalho", "responsavel": "nome", "tem_foto": false }
+  ],
+  "tarefas": [
+    { "descricao": "tarefa mencionada", "responsavel": "nome ou N/A", "status": "pendente|concluida|em_andamento" }
+  ],
+  "sugestoes": [
+    { "titulo": "título curto", "descricao": "descrição detalhada", "prioridade": "alta|media|baixa" }
+  ]
+}
+
+Se não houver informação suficiente para uma seção, retorne array vazio ou string vazia.
+IMPORTANTE: Seja conciso. Máximo 3 itens por array. Descrições curtas (1-2 frases).
+Responda SOMENTE com o JSON, sem texto adicional, sem markdown.`;
+  }
+
+  static async generateDailyInsights(date) {
+    const messages = this.getMessagesByDate(date);
+    const registros = this.getRegistrosByDate(date);
+    const employees = Funcionario.getAll();
+
+    if (messages.length === 0 && registros.length === 0) {
+      return { success: false, message: 'Sem mensagens ou registros para esta data' };
+    }
+
+    const prompt = this.buildPrompt(messages, registros, employees);
+    const client = this.getClient();
+
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 4096,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const content = response.content[0].text.trim();
+
+    let insights;
+    // Strip markdown fences if present
+    let cleaned = content.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+    try {
+      insights = JSON.parse(cleaned);
+    } catch (e) {
+      // Try to extract JSON object from the response
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          insights = JSON.parse(jsonMatch[0]);
+        } catch (e2) {
+          // Last resort: fix common issues (trailing commas, unescaped quotes in strings)
+          let fixed = jsonMatch[0]
+            .replace(/,\s*([\]}])/g, '$1')  // trailing commas
+            .replace(/[\x00-\x1f]/g, ' ');  // control chars
+          insights = JSON.parse(fixed);
+        }
+      } else {
+        throw new Error('Resposta da IA não é um JSON válido');
+      }
+    }
+
+    this.saveInsight(date, JSON.stringify(insights), messages.length, 'claude-sonnet-4-6');
+
+    return {
+      success: true,
+      data: date,
+      insights,
+      mensagens_analisadas: messages.length,
+    };
+  }
+
+  static saveInsight(data, insightsJson, count, model) {
+    db.prepare(`
+      INSERT OR REPLACE INTO insights_ia (data, insights_json, mensagens_analisadas, modelo, created_at)
+      VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+    `).run(data, insightsJson, count, model);
+  }
+
+  static getByDate(date) {
+    const row = db.prepare('SELECT * FROM insights_ia WHERE data = ?').get(date);
+    if (row) {
+      row.insights = JSON.parse(row.insights_json);
+    }
+    return row;
+  }
+
+  static getMessagesByRange(startDate, endDate) {
+    return db.prepare(`
+      SELECT wm.*, f.nome as funcionario_nome
+      FROM whatsapp_mensagens wm
+      LEFT JOIN funcionarios f ON wm.funcionario_id = f.id
+      WHERE DATE(wm.created_at) BETWEEN ? AND ?
+      ORDER BY wm.created_at ASC
+    `).all(startDate, endDate);
+  }
+
+  static getRegistrosByRange(startDate, endDate) {
+    return db.prepare(`
+      SELECT r.*, f.nome as funcionario_nome
+      FROM registros r
+      JOIN funcionarios f ON r.funcionario_id = f.id
+      WHERE r.data BETWEEN ? AND ?
+      ORDER BY r.data ASC, r.entrada ASC
+    `).all(startDate, endDate);
+  }
+
+  static buildPeriodPrompt(messages, registros, employees, startDate, endDate) {
+    // Group messages by day with summary
+    const byDay = {};
+    for (const m of messages) {
+      const day = m.created_at.split(' ')[0];
+      if (!byDay[day]) byDay[day] = { msgs: [], senders: new Set(), entradas: 0, saidas: 0 };
+      byDay[day].msgs.push(m);
+      byDay[day].senders.add(m.funcionario_nome || m.sender_name);
+      if (m.message_type === 'entrada') byDay[day].entradas++;
+      if (m.message_type === 'saida') byDay[day].saidas++;
+    }
+
+    const dailySummary = Object.entries(byDay).sort().map(([day, data]) => {
+      const senders = [...data.senders].filter(Boolean).join(', ');
+      // Include up to 5 key messages (entradas, saidas, tasks)
+      const keyMsgs = data.msgs
+        .filter(m => m.message_type !== 'other' || /tarefa|problema|compra|mercado|escola|dentista|finaliz/i.test(m.message_text || ''))
+        .slice(0, 5)
+        .map(m => `  ${m.sender_name}: ${(m.message_text || '').slice(0, 80)}`)
+        .join('\n');
+      return `${day} | ${data.msgs.length} msgs | Presentes: ${senders} | Entradas: ${data.entradas}, Saídas: ${data.saidas}\n${keyMsgs}`;
+    }).join('\n\n');
+
+    // Registros summary
+    const regSummary = registros.map(r =>
+      `${r.data} ${r.funcionario_nome}: entrada=${r.entrada || 'N/A'}, saida=${r.saida || 'N/A'}`
+    ).join('\n');
+
+    const employeeList = employees.map(e => `${e.nome} (${e.cargo})`).join(', ');
+
+    return `Você é um analista operacional da residência "Lar Digital" (Casa dos Bull).
+Analise o PERÍODO de ${startDate} a ${endDate} (${Object.keys(byDay).length} dias com atividade, ${messages.length} mensagens totais).
+
+FUNCIONÁRIOS CADASTRADOS:
+${employeeList || 'Nenhum'}
+
+REGISTROS DE PONTO DO PERÍODO:
+${regSummary || 'Nenhum'}
+
+RESUMO DIÁRIO DAS MENSAGENS:
+${dailySummary || 'Nenhuma mensagem'}
+
+Gere uma análise do PERÍODO COMPLETO. Retorne APENAS JSON válido (sem markdown):
+{
+  "resumo": "Resumo geral do período em 3-4 frases, com visão macro da operação",
+  "presenca": {
+    "ranking": [{"nome": "nome", "dias_presentes": 0, "primeira_msg_media": "HH:MM", "ultima_msg_media": "HH:MM"}],
+    "ausencias_frequentes": ["nomes com muitas faltas"],
+    "observacoes": "padrões de pontualidade, quem chega cedo/tarde"
+  },
+  "problemas_recorrentes": [
+    {"descricao": "problema que se repetiu", "frequencia": "X vezes", "gravidade": "alta|media|baixa", "sugestao": "solução"}
+  ],
+  "destaques": [
+    {"descricao": "destaque positivo ou negativo do período", "responsavel": "nome"}
+  ],
+  "padroes": [
+    {"descricao": "padrão observado nas rotinas/comunicação", "tipo": "positivo|negativo|neutro"}
+  ],
+  "sugestoes": [
+    {"titulo": "título", "descricao": "descrição", "prioridade": "alta|media|baixa"}
+  ]
+}
+
+Seja conciso. Máximo 5 itens por array. Foque em padrões e tendências, não em eventos isolados.
+Responda SOMENTE com JSON, sem texto adicional.`;
+  }
+
+  static async generatePeriodInsights(startDate, endDate) {
+    const messages = this.getMessagesByRange(startDate, endDate);
+    const registros = this.getRegistrosByRange(startDate, endDate);
+    const employees = Funcionario.getAll();
+
+    if (messages.length === 0 && registros.length === 0) {
+      return { success: false, message: 'Sem mensagens ou registros para este período' };
+    }
+
+    const prompt = this.buildPeriodPrompt(messages, registros, employees, startDate, endDate);
+    const client = this.getClient();
+
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 4096,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const content = response.content[0].text.trim();
+
+    let insights;
+    let cleaned = content.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+    try {
+      insights = JSON.parse(cleaned);
+    } catch (e) {
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          insights = JSON.parse(jsonMatch[0]);
+        } catch (e2) {
+          let fixed = jsonMatch[0]
+            .replace(/,\s*([\]}])/g, '$1')
+            .replace(/[\x00-\x1f]/g, ' ');
+          insights = JSON.parse(fixed);
+        }
+      } else {
+        throw new Error('Resposta da IA não é um JSON válido');
+      }
+    }
+
+    // Save with key "period_START_END"
+    const key = `period_${startDate}_${endDate}`;
+    this.saveInsight(key, JSON.stringify(insights), messages.length, 'claude-sonnet-4-6');
+
+    return {
+      success: true,
+      tipo: 'periodo',
+      periodo: { inicio: startDate, fim: endDate },
+      insights,
+      mensagens_analisadas: messages.length,
+    };
+  }
+
+  static getAll(page = 1, limit = 10) {
+    const offset = (page - 1) * limit;
+    const total = db.prepare('SELECT COUNT(*) as count FROM insights_ia').get().count;
+    const rows = db.prepare('SELECT * FROM insights_ia ORDER BY data DESC LIMIT ? OFFSET ?').all(limit, offset);
+    rows.forEach(r => { r.insights = JSON.parse(r.insights_json); });
+    return { data: rows, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+}
+
+module.exports = InsightsIA;

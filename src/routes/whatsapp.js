@@ -1,6 +1,7 @@
 const express = require('express');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const whatsappService = require('../services/whatsapp');
+const { db } = require('../config/database');
 
 const router = express.Router();
 
@@ -77,6 +78,54 @@ router.post('/test', authenticateToken, requireAdmin, async (req, res) => {
     res.json({ success: true, message: 'Mensagem enviada!' });
   } else {
     res.status(500).json({ success: false, error: 'Falha ao enviar. Bot nao conectado ou grupo nao encontrado.' });
+  }
+});
+
+// GET /api/whatsapp/messages - List messages with filtering
+router.get('/messages', authenticateToken, (req, res) => {
+  try {
+    const { date, funcionario_id, media_only, media_type, page, limit: lim } = req.query;
+    const limit = parseInt(lim) || 100;
+    const offset = ((parseInt(page) || 1) - 1) * limit;
+
+    let where = [];
+    let params = [];
+
+    if (date) {
+      where.push('DATE(wm.created_at) = ?');
+      params.push(date);
+    }
+    if (funcionario_id) {
+      where.push('wm.funcionario_id = ?');
+      params.push(parseInt(funcionario_id));
+    }
+    if (media_only === 'true') {
+      where.push('wm.media_type IS NOT NULL');
+    }
+    if (media_type) {
+      where.push('wm.media_type = ?');
+      params.push(media_type);
+    }
+
+    const whereClause = where.length > 0 ? 'WHERE ' + where.join(' AND ') : '';
+
+    const messages = db.prepare(`
+      SELECT wm.*, f.nome as funcionario_nome
+      FROM whatsapp_mensagens wm
+      LEFT JOIN funcionarios f ON wm.funcionario_id = f.id
+      ${whereClause}
+      ORDER BY wm.created_at DESC
+      LIMIT ? OFFSET ?
+    `).all(...params, limit, offset);
+
+    const total = db.prepare(`
+      SELECT COUNT(*) as count FROM whatsapp_mensagens wm ${whereClause}
+    `).get(...params).count;
+
+    res.json({ messages, total, page: parseInt(page) || 1, limit });
+  } catch (err) {
+    console.error('[WhatsApp] Messages list error:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar mensagens' });
   }
 });
 

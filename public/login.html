@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Altium Controle de Ponto</title>
+  <title>Login - Lar Digital</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <script>
@@ -96,10 +96,10 @@
           </div>
         </div>
         <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white tracking-tight text-center">
-          Altium - Controle de Ponto
+          Lar Digital
         </h1>
         <p class="mt-2 text-sm font-medium text-primary-light dark:text-blue-400 tracking-wide uppercase">
-          Casa dos Bull
+          Gestão da Casa
         </p>
       </div>
 
@@ -167,6 +167,33 @@
           </div>
         </div>
 
+        <!-- 2FA Token (hidden by default) -->
+        <div id="totpField" class="hidden">
+          <label for="totpToken" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+            Codigo 2FA
+          </label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+              <i class="bi bi-shield-lock-fill text-gray-400 dark:text-gray-500"></i>
+            </span>
+            <input
+              type="text"
+              id="totpToken"
+              name="totpToken"
+              maxlength="6"
+              pattern="[0-9]{6}"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              placeholder="000000"
+              class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 text-sm text-center tracking-[0.5em] font-mono text-lg transition-all duration-200 hover:border-primary-light dark:hover:border-primary-light focus:border-primary-light dark:focus:border-primary-light"
+            />
+          </div>
+          <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+            <i class="bi bi-info-circle mr-1"></i>
+            Digite o codigo do seu aplicativo autenticador
+          </p>
+        </div>
+
         <!-- Login Button -->
         <button
           type="submit"
@@ -192,7 +219,7 @@
 
     <!-- Bottom branding -->
     <p class="text-center mt-6 text-xs text-gray-400 dark:text-gray-600">
-      &copy; 2026 Altium &mdash; Todos os direitos reservados
+      &copy; 2026 Lar Digital &mdash; Todos os direitos reservados
     </p>
   </div>
 
@@ -317,13 +344,47 @@
       setLoading(true);
 
       try {
+        const body = { email, password };
+
+        // Include TOTP token if 2FA field is visible
+        const totpField = document.getElementById('totpField');
+        const totpInput = document.getElementById('totpToken');
+        if (!totpField.classList.contains('hidden')) {
+          const totpToken = totpInput.value.trim();
+          if (!totpToken || totpToken.length !== 6) {
+            showError('Digite o código de 6 dígitos do seu autenticador.');
+            totpInput.focus();
+            setLoading(false);
+            return;
+          }
+          body.totpToken = totpToken;
+        }
+
         const res = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify(body)
         });
 
         const data = await res.json();
+
+        // Handle 2FA required response
+        if (res.ok && data.requires2FA) {
+          setLoading(false);
+          totpField.classList.remove('hidden');
+          totpInput.focus();
+          showError('');
+          errorDiv.classList.add('hidden');
+          // Show info message instead of error
+          const infoDiv = document.createElement('div');
+          infoDiv.id = 'info-2fa';
+          infoDiv.className = 'mb-5 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 text-blue-700 dark:text-blue-400 text-sm font-medium';
+          infoDiv.innerHTML = '<div class="flex items-center gap-2"><i class="bi bi-shield-lock-fill text-base flex-shrink-0"></i><span>Autenticação em dois fatores ativada. Digite o código do seu aplicativo.</span></div>';
+          const existing = document.getElementById('info-2fa');
+          if (existing) existing.remove();
+          totpField.parentElement.insertBefore(infoDiv, totpField);
+          return;
+        }
 
         if (res.ok && data.token) {
           localStorage.setItem('ponto_token', data.token);
@@ -344,7 +405,11 @@
           const message = data.message || data.error || 'E-mail ou senha incorretos.';
           showError(message);
           setLoading(false);
-          document.getElementById('password').focus();
+          if (!totpField.classList.contains('hidden')) {
+            totpInput.focus();
+          } else {
+            document.getElementById('password').focus();
+          }
         }
       } catch (err) {
         showError('Erro de conexao. Verifique sua internet e tente novamente.');
@@ -355,6 +420,7 @@
     // Hide error when user starts typing
     document.getElementById('email').addEventListener('input', hideError);
     document.getElementById('password').addEventListener('input', hideError);
+    document.getElementById('totpToken').addEventListener('input', hideError);
   </script>
 </body>
 </html>

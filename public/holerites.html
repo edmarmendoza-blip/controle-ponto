@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestão de Holerites - Altium Controle de Ponto</title>
+  <title>Holerites - Lar Digital</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -12,6 +12,14 @@
     }
   </script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    @media print {
+      #sidebar, #sidebar-overlay, header, .no-print, #toast-container { display: none !important; }
+      main { margin-left: 0 !important; }
+      .print-break { page-break-after: always; }
+      body { background: white !important; color: black !important; }
+    }
+  </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
   <!-- Sidebar -->
@@ -19,9 +27,9 @@
     <div class="p-4 border-b border-blue-700">
       <div class="flex items-center gap-2">
         <i class="bi bi-clock-history text-2xl"></i>
-        <span class="text-xl font-bold">Altium</span>
+        <span class="text-xl font-bold">Lar Digital</span>
       </div>
-      <p class="text-blue-200 text-xs mt-1">Controle de Ponto</p>
+      <p class="text-blue-200 text-xs mt-1">Gestão da Casa</p>
     </div>
     <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-180px)]">
       <a href="/dashboard.html" data-page="dashboard" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
@@ -42,7 +50,7 @@
       <a href="/entregas.html" data-page="entregas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-box-seam"></i><span>Entregas</span>
       </a>
-      <a href="/holerites.html" data-page="holerites" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+      <a href="/holerites.html" data-page="holerites" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-blue-700 text-white admin-only hidden">
         <i class="bi bi-receipt"></i><span>Holerites</span>
       </a>
       <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
@@ -75,33 +83,19 @@
     <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
       <div class="flex items-center gap-3">
         <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300"><i class="bi bi-list text-xl"></i></button>
-        <h1 class="text-xl font-semibold">Gestão de Holerites</h1>
+        <h1 class="text-xl font-semibold">Holerites</h1>
       </div>
       <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
     </header>
     <div class="p-4 md:p-6" id="page-content">
 
-      <!-- Info Card -->
-      <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6">
-        <div class="flex items-start gap-3">
-          <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900/40 rounded-lg flex items-center justify-center flex-shrink-0">
-            <i class="bi bi-envelope-paper-fill text-amber-600 dark:text-amber-400 text-lg"></i>
-          </div>
-          <div>
-            <h3 class="font-medium text-amber-800 dark:text-amber-300">Importação por e-mail</h3>
-            <p class="text-sm text-amber-600 dark:text-amber-400 mt-1">Os holerites são importados automaticamente por e-mail. Configure o IMAP no .env para ativar.</p>
-          </div>
-        </div>
-      </div>
-
       <!-- Filters -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-6">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-6 no-print">
         <div class="flex flex-wrap items-end gap-4">
           <div>
             <label class="block text-sm font-medium mb-1" for="filter-month">Mês</label>
             <select id="filter-month"
               class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors text-sm">
-              <option value="">Todos</option>
               <option value="01">Janeiro</option>
               <option value="02">Fevereiro</option>
               <option value="03">Março</option>
@@ -129,57 +123,62 @@
               <option value="">Todos</option>
             </select>
           </div>
-          <div>
-            <label class="block text-sm font-medium mb-1" for="filter-status">Status</label>
-            <select id="filter-status"
-              class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors text-sm">
-              <option value="">Todos</option>
-              <option value="pendente">Pendente</option>
-              <option value="pago">Pago</option>
-            </select>
-          </div>
           <button onclick="loadHolerites()" class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm">
-            <i class="bi bi-search"></i>
-            <span>Filtrar</span>
+            <i class="bi bi-calculator"></i>
+            <span>Gerar Holerites</span>
           </button>
-          <button onclick="checkEmail()" class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm ml-auto">
-            <i class="bi bi-envelope-arrow-down"></i>
-            <span>Verificar E-mail</span>
+          <button onclick="window.print()" class="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors text-sm ml-auto">
+            <i class="bi bi-printer"></i>
+            <span>Imprimir</span>
           </button>
         </div>
       </div>
 
-      <!-- Holerites Table -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-        <div class="p-5 border-b border-gray-100 dark:border-gray-700">
-          <h2 class="text-lg font-semibold">Holerites</h2>
+      <!-- Stats -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 no-print" id="stats-row" style="display:none">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Total Funcionários</p>
+              <p class="text-3xl font-bold mt-1" id="stat-count">0</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+              <i class="bi bi-people-fill text-xl text-blue-600 dark:text-blue-400"></i>
+            </div>
+          </div>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead>
-              <tr class="bg-gray-50 dark:bg-gray-700/50">
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Funcionário</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Mês Ref.</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Valor Líquido</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">PDF</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="holerites-table" class="divide-y divide-gray-100 dark:divide-gray-700">
-              <tr>
-                <td colspan="6" class="px-5 py-12 text-center text-gray-400">
-                  <div class="flex flex-col items-center">
-                    <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
-                      <i class="bi bi-receipt text-3xl text-gray-400 dark:text-gray-500"></i>
-                    </div>
-                    <p class="text-lg font-medium text-gray-500 dark:text-gray-400">Nenhum holerite encontrado</p>
-                    <p class="text-sm mt-1">Configure o IMAP no .env e clique em "Verificar E-mail" para importar holerites.</p>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Total a Pagar</p>
+              <p class="text-3xl font-bold mt-1 text-green-600 dark:text-green-400" id="stat-total">R$ 0</p>
+            </div>
+            <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+              <i class="bi bi-currency-dollar text-xl text-green-600 dark:text-green-400"></i>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Total Horas Extras</p>
+              <p class="text-3xl font-bold mt-1 text-purple-600 dark:text-purple-400" id="stat-extras">0h</p>
+            </div>
+            <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
+              <i class="bi bi-clock-history text-xl text-purple-600 dark:text-purple-400"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Holerites Container -->
+      <div id="holerites-container">
+        <div class="text-center py-12 text-gray-400">
+          <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="bi bi-receipt text-3xl text-gray-400 dark:text-gray-500"></i>
+          </div>
+          <p class="text-lg font-medium text-gray-500 dark:text-gray-400">Selecione mês/ano e clique em "Gerar Holerites"</p>
+          <p class="text-sm mt-1">Os holerites são calculados a partir dos registros de ponto.</p>
         </div>
       </div>
     </div>
@@ -188,6 +187,9 @@
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
   <script src="/js/shared.js"></script>
   <script>
+    const MONTHS = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
     // Populate year filter
     (function populateYears() {
       const select = document.getElementById('filter-year');
@@ -200,10 +202,8 @@
       }
     })();
 
-    // Set current month
     document.getElementById('filter-month').value = String(new Date().getMonth() + 1).padStart(2, '0');
 
-    // Load employees for filter
     async function loadEmployees() {
       try {
         const data = await Shared.api('/api/funcionarios');
@@ -220,40 +220,176 @@
       }
     }
 
-    // Placeholder: load holerites
-    function loadHolerites() {
-      Shared.showToast('Funcionalidade em desenvolvimento', 'info');
+    function fmt(v) {
+      return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
     }
 
-    // Placeholder: check email
-    async function checkEmail() {
-      const btn = event.target.closest('button');
-      const originalHTML = btn.innerHTML;
-      btn.disabled = true;
-      btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> <span>Verificando...</span>';
+    function fmtH(v) {
+      return Number(v || 0).toFixed(1).replace('.', ',') + 'h';
+    }
+
+    async function loadHolerites() {
+      const mes = parseInt(document.getElementById('filter-month').value);
+      const ano = parseInt(document.getElementById('filter-year').value);
+      const funcId = document.getElementById('filter-employee').value;
+      const container = document.getElementById('holerites-container');
+
+      container.innerHTML = `
+        <div class="text-center py-12 text-gray-400">
+          <i class="bi bi-arrow-repeat animate-spin text-3xl"></i>
+          <p class="mt-2">Calculando holerites...</p>
+        </div>`;
 
       try {
-        await Shared.api('/api/holerites/check-email', { method: 'POST' });
-        Shared.showToast('Verificação de e-mail concluída!', 'success');
+        let url = `/api/relatorios/folha?mes=${mes}&ano=${ano}`;
+        if (funcId) url += `&funcionarioId=${funcId}`;
+        const data = await Shared.api(url);
+        const folhas = data.folhas || [];
+
+        if (folhas.length === 0) {
+          container.innerHTML = `
+            <div class="text-center py-12 text-gray-400">
+              <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="bi bi-receipt text-3xl text-gray-400 dark:text-gray-500"></i>
+              </div>
+              <p class="text-lg font-medium text-gray-500 dark:text-gray-400">Nenhum dado encontrado</p>
+              <p class="text-sm mt-1">Não há registros de ponto para ${MONTHS[mes]}/${ano}.</p>
+            </div>`;
+          document.getElementById('stats-row').style.display = 'none';
+          return;
+        }
+
+        // Update stats
+        let totalPagar = 0;
+        let totalExtras = 0;
+        folhas.forEach(f => {
+          totalPagar += f.totalGeral || f.totalValor || 0;
+          totalExtras += f.totalHorasExtras || 0;
+        });
+
+        document.getElementById('stats-row').style.display = '';
+        document.getElementById('stat-count').textContent = folhas.length;
+        document.getElementById('stat-total').textContent = fmt(totalPagar);
+        document.getElementById('stat-extras').textContent = fmtH(totalExtras);
+
+        // Render individual payslips
+        container.innerHTML = folhas.map((f, i) => {
+          const diasTrab = f.diasTrabalhados || 0;
+          const horasNormais = f.totalHorasNormais || 0;
+          const horasExtras = f.totalHorasExtras || 0;
+          const valorNormal = f.totalValorNormal || 0;
+          const valorExtras = f.totalHorasExtraValor || 0;
+          const valorFeriados = f.totalValorFeriados || 0;
+          const valorVT = f.totalVT || 0;
+          const valorVA = f.totalVA || 0;
+          const totalGeral = f.totalGeral || f.totalValor || 0;
+
+          return `
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 mb-6 overflow-hidden ${i < folhas.length - 1 ? 'print-break' : ''}">
+              <!-- Header -->
+              <div class="bg-blue-800 text-white p-5">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h3 class="text-lg font-bold">${f.nome || 'Funcionário'}</h3>
+                    <p class="text-blue-200 text-sm">${f.cargo || '-'}</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-sm text-blue-200">Referência</p>
+                    <p class="text-lg font-bold">${MONTHS[mes]} ${ano}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Body -->
+              <div class="p-5">
+                <!-- Summary Row -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
+                  <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3 text-center">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Dias Trabalhados</p>
+                    <p class="text-xl font-bold mt-1">${diasTrab}</p>
+                  </div>
+                  <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3 text-center">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Horas Normais</p>
+                    <p class="text-xl font-bold mt-1">${fmtH(horasNormais)}</p>
+                  </div>
+                  <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3 text-center">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Horas Extras</p>
+                    <p class="text-xl font-bold mt-1 text-purple-600 dark:text-purple-400">${fmtH(horasExtras)}</p>
+                  </div>
+                  <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 text-center">
+                    <p class="text-xs text-green-600 dark:text-green-400 uppercase font-semibold">Total</p>
+                    <p class="text-xl font-bold mt-1 text-green-700 dark:text-green-400">${fmt(totalGeral)}</p>
+                  </div>
+                </div>
+
+                <!-- Detailed Breakdown -->
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="border-b border-gray-200 dark:border-gray-700">
+                      <th class="py-2 text-left text-gray-500 dark:text-gray-400 font-medium">Descrição</th>
+                      <th class="py-2 text-right text-gray-500 dark:text-gray-400 font-medium">Qtd</th>
+                      <th class="py-2 text-right text-gray-500 dark:text-gray-400 font-medium">Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    <tr>
+                      <td class="py-2">Horas Normais</td>
+                      <td class="py-2 text-right">${fmtH(horasNormais)}</td>
+                      <td class="py-2 text-right">${fmt(valorNormal)}</td>
+                    </tr>
+                    ${horasExtras > 0 ? `
+                    <tr>
+                      <td class="py-2">Horas Extras</td>
+                      <td class="py-2 text-right">${fmtH(horasExtras)}</td>
+                      <td class="py-2 text-right text-purple-600 dark:text-purple-400">${fmt(valorExtras)}</td>
+                    </tr>` : ''}
+                    ${valorFeriados > 0 ? `
+                    <tr>
+                      <td class="py-2">Feriados / Domingos Trabalhados</td>
+                      <td class="py-2 text-right">-</td>
+                      <td class="py-2 text-right text-orange-600 dark:text-orange-400">${fmt(valorFeriados)}</td>
+                    </tr>` : ''}
+                    ${valorVT > 0 ? `
+                    <tr>
+                      <td class="py-2">Vale-Transporte</td>
+                      <td class="py-2 text-right">${diasTrab} dias</td>
+                      <td class="py-2 text-right">${fmt(valorVT)}</td>
+                    </tr>` : ''}
+                    ${valorVA > 0 ? `
+                    <tr>
+                      <td class="py-2">Vale-Alimentação</td>
+                      <td class="py-2 text-right">${diasTrab} dias</td>
+                      <td class="py-2 text-right">${fmt(valorVA)}</td>
+                    </tr>` : ''}
+                  </tbody>
+                  <tfoot>
+                    <tr class="border-t-2 border-gray-300 dark:border-gray-600">
+                      <td class="py-3 font-bold text-base" colspan="2">TOTAL A PAGAR</td>
+                      <td class="py-3 text-right font-bold text-base text-green-700 dark:text-green-400">${fmt(totalGeral)}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+
+                ${f.pix_tipo && f.pix_chave ? `
+                <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg text-sm">
+                  <span class="text-gray-500 dark:text-gray-400"><i class="bi bi-credit-card mr-1"></i>PIX:</span>
+                  <span class="font-medium ml-1">${f.pix_chave}</span>
+                  <span class="text-gray-400 ml-1">(${f.pix_tipo}${f.pix_banco ? ' - ' + f.pix_banco : ''})</span>
+                </div>` : ''}
+              </div>
+            </div>`;
+        }).join('');
+
+        showToast(`${folhas.length} holerite${folhas.length > 1 ? 's' : ''} gerado${folhas.length > 1 ? 's' : ''}.`);
       } catch (err) {
-        Shared.showToast(err.message || 'Funcionalidade não configurada. Configure o IMAP no .env.', 'warning');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalHTML;
+        container.innerHTML = `
+          <div class="text-center py-12 text-red-400">
+            <i class="bi bi-exclamation-circle text-3xl"></i>
+            <p class="mt-2">Erro ao gerar holerites: ${err.message}</p>
+          </div>`;
       }
     }
 
-    // Status badge helper
-    function statusBadge(status) {
-      const map = {
-        pendente: { label: 'Pendente', cls: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' },
-        pago: { label: 'Pago', cls: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' }
-      };
-      const s = map[status] || map.pendente;
-      return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${s.cls}">${s.label}</span>`;
-    }
-
-    // Init
     window.onAuthReady = function(user) {
       if (user.role !== 'admin') {
         window.location.href = '/dashboard.html';

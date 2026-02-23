@@ -31,6 +31,24 @@ router.post('/login', loginLimiter, [
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
+    // Check 2FA if enabled
+    if (user.totp_enabled) {
+      const { totpToken } = req.body;
+      if (!totpToken) {
+        return res.status(200).json({ requires2FA: true, message: 'Token 2FA necessário' });
+      }
+      const speakeasy = require('speakeasy');
+      const totpValid = speakeasy.totp.verify({
+        secret: user.totp_secret,
+        encoding: 'base32',
+        token: totpToken,
+        window: 1
+      });
+      if (!totpValid) {
+        return res.status(401).json({ error: 'Token 2FA inválido' });
+      }
+    }
+
     const token = jwt.sign(
       { userId: user.id, role: user.role },
       process.env.JWT_SECRET,
@@ -188,6 +206,96 @@ router.delete('/users/:id', authenticateToken, requireAdmin, [
   } catch (err) {
     console.error('Delete user error:', err);
     res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// POST /api/auth/2fa/setup - Generate TOTP secret and QR code
+router.post('/2fa/setup', authenticateToken, async (req, res) => {
+  try {
+    const speakeasy = require('speakeasy');
+    const QRCode = require('qrcode');
+
+    const secret = speakeasy.generateSecret({
+      name: `LarDigital:${req.user.email}`,
+      issuer: 'Lar Digital'
+    });
+
+    // Store secret temporarily (not enabled yet until verified)
+    const { db } = require('../config/database');
+    db.prepare('UPDATE users SET totp_secret = ? WHERE id = ?').run(secret.base32, req.user.id);
+
+    const qrDataUrl = await QRCode.toDataURL(secret.otpauth_url);
+
+    res.json({
+      secret: secret.base32,
+      qrCode: qrDataUrl
+    });
+  } catch (err) {
+    console.error('2FA setup error:', err);
+    res.status(500).json({ error: 'Erro ao configurar 2FA' });
+  }
+});
+
+// POST /api/auth/2fa/verify - Verify TOTP token and enable 2FA
+router.post('/2fa/verify', authenticateToken, [
+  body('token').notEmpty().withMessage('Token TOTP obrigatório')
+], (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const speakeasy = require('speakeasy');
+    const { db } = require('../config/database');
+
+    const user = db.prepare('SELECT totp_secret FROM users WHERE id = ?').get(req.user.id);
+    if (!user || !user.totp_secret) {
+      return res.status(400).json({ error: 'Execute o setup do 2FA primeiro' });
+    }
+
+    const verified = speakeasy.totp.verify({
+      secret: user.totp_secret,
+      encoding: 'base32',
+      token: req.body.token,
+      window: 1
+    });
+
+    if (!verified) {
+      return res.status(400).json({ error: 'Token inválido' });
+    }
+
+    db.prepare('UPDATE users SET totp_enabled = 1 WHERE id = ?').run(req.user.id);
+    AuditLog.log(req.user.id, '2fa_enabled', 'user', req.user.id, null, req.ip);
+
+    res.json({ message: '2FA ativado com sucesso' });
+  } catch (err) {
+    console.error('2FA verify error:', err);
+    res.status(500).json({ error: 'Erro ao verificar 2FA' });
+  }
+});
+
+// DELETE /api/auth/2fa - Disable 2FA
+router.delete('/2fa', authenticateToken, (req, res) => {
+  try {
+    const { db } = require('../config/database');
+    db.prepare('UPDATE users SET totp_enabled = 0, totp_secret = NULL WHERE id = ?').run(req.user.id);
+    AuditLog.log(req.user.id, '2fa_disabled', 'user', req.user.id, null, req.ip);
+    res.json({ message: '2FA desativado com sucesso' });
+  } catch (err) {
+    console.error('2FA disable error:', err);
+    res.status(500).json({ error: 'Erro ao desativar 2FA' });
+  }
+});
+
+// GET /api/auth/2fa/status - Check if 2FA is enabled for current user
+router.get('/2fa/status', authenticateToken, (req, res) => {
+  try {
+    const { db } = require('../config/database');
+    const user = db.prepare('SELECT totp_enabled FROM users WHERE id = ?').get(req.user.id);
+    res.json({ enabled: !!(user && user.totp_enabled) });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao verificar status 2FA' });
   }
 });
 

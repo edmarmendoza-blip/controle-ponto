@@ -141,7 +141,30 @@ router.get('/folha', authenticateToken, [
     for (const func of funcionarios) {
       const registros = Registro.getMonthlyReport(mesInt, anoInt, func.id);
       const folha = HorasExtrasService.calcularFolha(registros, func);
-      resultados.push(folha);
+
+      // Calculate VT/VA
+      const diasTrab = folha.resumo.diasTrabalhados;
+      const totalVT = func.recebe_vt ? Funcionario.calcularVT(func.id, diasTrab) : 0;
+      const totalVA = func.tem_vale_alimentacao ? Math.round((func.valor_va_dia || 0) * diasTrab * 100) / 100 : 0;
+      const totalGeral = Math.round((folha.resumo.totalMensal + totalVT + totalVA) * 100) / 100;
+
+      resultados.push({
+        nome: func.nome,
+        cargo: func.cargo,
+        pix_tipo: func.pix_tipo,
+        pix_chave: func.pix_chave,
+        pix_banco: func.pix_banco,
+        diasTrabalhados: diasTrab,
+        totalHorasNormais: folha.resumo.totalHorasTrabalhadas - folha.resumo.totalHorasExtras,
+        totalHorasExtras: folha.resumo.totalHorasExtras,
+        totalValorNormal: folha.resumo.totalPgtoHE > 0 ? folha.resumo.totalMensal - folha.resumo.totalPgtoHE - folha.resumo.totalPgtoFDS : 0,
+        totalHorasExtraValor: folha.resumo.totalPgtoHE,
+        totalValorFeriados: folha.resumo.totalPgtoFDS,
+        totalVT,
+        totalVA,
+        totalGeral,
+        registros: folha.registros
+      });
     }
 
     res.json({

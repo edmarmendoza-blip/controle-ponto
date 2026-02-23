@@ -55,6 +55,7 @@ app.use('/api/export', require('./src/routes/export'));
 app.use('/api/feriados', require('./src/routes/feriados'));
 app.use('/api/whatsapp', require('./src/routes/whatsapp'));
 app.use('/api/dashboard/presenca', require('./src/routes/dashboardPresenca'));
+app.use('/api/insights', require('./src/routes/insights'));
 
 // SPA fallback - serve index.html for all non-API routes
 app.get('*', (req, res) => {
@@ -73,7 +74,7 @@ module.exports = app;
 // Start server when run directly or via PM2
 if (require.main === module || process.env.NODE_ENV === 'production' || process.env.pm_id !== undefined) {
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Controle de Ponto rodando na porta ${PORT}`);
+    console.log(`Lar Digital rodando na porta ${PORT}`);
     console.log(`Acesse: http://localhost:${PORT}`);
 
     // Initialize WhatsApp in background (non-blocking)
@@ -97,5 +98,28 @@ if (require.main === module || process.env.NODE_ENV === 'production' || process.
         console.error('[Holiday Sync] Periodic error:', err.message);
       });
     }, 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    // Daily insights generation at 00:05
+    function scheduleMidnightInsights() {
+      const now = new Date();
+      const midnight = new Date(now);
+      midnight.setDate(midnight.getDate() + 1);
+      midnight.setHours(0, 5, 0, 0);
+      const msUntilMidnight = midnight - now;
+
+      setTimeout(() => {
+        const InsightsIA = require('./src/services/insightsIA');
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const dateStr = yesterday.toISOString().split('T')[0];
+        InsightsIA.generateDailyInsights(dateStr).then(r => {
+          console.log(`[Insights IA] Daily: generated for ${dateStr}`);
+        }).catch(err => {
+          console.error('[Insights IA] Daily error:', err.message);
+        });
+        scheduleMidnightInsights();
+      }, msUntilMidnight);
+    }
+    scheduleMidnightInsights();
   });
 }

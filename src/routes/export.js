@@ -29,7 +29,7 @@ router.get('/excel', authenticateToken, [
       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'][parseInt(mes)];
 
     const workbook = new ExcelJS.Workbook();
-    workbook.creator = 'Controle de Ponto - Casa dos Bull';
+    workbook.creator = 'Lar Digital - Gestão da Casa';
     workbook.created = new Date();
 
     for (const func of Object.values(resumo)) {
@@ -155,7 +155,7 @@ router.get('/pdf', authenticateToken, [
       if (idx > 0) doc.addPage();
 
       // Header
-      doc.fontSize(16).text('Controle de Ponto - Casa dos Bull', { align: 'center' });
+      doc.fontSize(16).text('Lar Digital - Gestão da Casa', { align: 'center' });
       doc.moveDown(0.3);
       doc.fontSize(12).text(`${func.nome} - ${func.cargo}`, { align: 'center' });
       doc.fontSize(10).text(`${mesNome} ${ano} | Salário/hora: R$ ${func.salario_hora.toFixed(2)}`, { align: 'center' });

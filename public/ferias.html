@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestão de Férias - Altium Controle de Ponto</title>
+  <title>Gestão de Férias - Lar Digital</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -19,9 +19,9 @@
     <div class="p-4 border-b border-blue-700">
       <div class="flex items-center gap-2">
         <i class="bi bi-clock-history text-2xl"></i>
-        <span class="text-xl font-bold">Altium</span>
+        <span class="text-xl font-bold">Lar Digital</span>
       </div>
-      <p class="text-blue-200 text-xs mt-1">Controle de Ponto</p>
+      <p class="text-blue-200 text-xs mt-1">Gestão da Casa</p>
     </div>
     <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-180px)]">
       <a href="/dashboard.html" data-page="dashboard" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
@@ -45,7 +45,7 @@
       <a href="/holerites.html" data-page="holerites" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-receipt"></i><span>Holerites</span>
       </a>
-      <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+      <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-blue-700 text-white admin-only hidden">
         <i class="bi bi-calendar-heart"></i><span>Férias</span>
       </a>
       <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
@@ -137,7 +137,7 @@
           </div>
           <div>
             <h3 class="font-medium text-green-800 dark:text-green-300">Cálculo automático</h3>
-            <p class="text-sm text-green-600 dark:text-green-400 mt-1">O sistema calcula automaticamente o período aquisitivo baseado na data de admissão.</p>
+            <p class="text-sm text-green-600 dark:text-green-400 mt-1">O sistema calcula automaticamente o período aquisitivo baseado na data de admissão. Após 12 meses, o funcionário adquire direito a férias.</p>
           </div>
         </div>
       </div>
@@ -173,12 +173,64 @@
     </div>
   </main>
 
+  <!-- Schedule Vacation Modal -->
+  <div id="ferias-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md">
+      <div class="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
+        <h3 class="text-lg font-semibold" id="ferias-modal-title">Agendar Férias</h3>
+        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="p-5 space-y-4">
+        <input type="hidden" id="ferias-func-id">
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Funcionário</label>
+          <input type="text" id="ferias-func-name" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 cursor-not-allowed" readonly>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1" for="ferias-inicio">Início</label>
+            <input type="date" id="ferias-inicio" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1" for="ferias-fim">Fim</label>
+            <input type="date" id="ferias-fim" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none">
+          </div>
+        </div>
+
+        <div id="ferias-dias-info" class="hidden text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+          <i class="bi bi-info-circle mr-1"></i>
+          <span id="ferias-dias-count"></span>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1" for="ferias-status-select">Status</label>
+          <select id="ferias-status-select" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none">
+            <option value="agendada">Agendada</option>
+            <option value="em_ferias">Em Férias</option>
+            <option value="gozada">Gozada (concluída)</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 p-5 border-t border-gray-200 dark:border-gray-700">
+        <button onclick="closeModal()" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors">
+          Cancelar
+        </button>
+        <button onclick="saveFerias()" id="btn-save-ferias" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+          Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
   <script src="/js/shared.js"></script>
   <script>
     let funcionarios = [];
 
-    // Status badge helper
     function feriasStatusBadge(status) {
       const map = {
         sem_direito: { label: 'Sem Direito', cls: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400' },
@@ -191,37 +243,54 @@
       return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${s.cls}">${s.label}</span>`;
     }
 
-    // Calculate vacation status from hire date
-    function calcVacationInfo(dataAdmissao) {
-      if (!dataAdmissao) return { status: 'sem_direito', periodoAquisitivo: '-', periodoFerias: '-' };
+    function calcVacationInfo(f) {
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
 
-      const admissao = new Date(dataAdmissao + 'T00:00:00');
-      const hoje = new Date();
-      const diffMs = hoje - admissao;
-      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-      const diffMonths = Math.floor(diffDays / 30.44);
-
-      // Período aquisitivo: 12 months from hire date
-      const inicioAquisitivo = new Date(admissao);
-      const yearsWorked = Math.floor(diffDays / 365.25);
-      if (yearsWorked > 0) {
-        inicioAquisitivo.setFullYear(admissao.getFullYear() + yearsWorked);
-      }
-      const fimAquisitivo = new Date(inicioAquisitivo);
-      fimAquisitivo.setFullYear(fimAquisitivo.getFullYear() + 1);
-
-      const formatDt = (d) => d.toLocaleDateString('pt-BR');
-      const periodoAquisitivo = `${formatDt(inicioAquisitivo)} - ${formatDt(fimAquisitivo)}`;
-
-      let status = 'sem_direito';
-      if (diffMonths >= 12) {
-        status = 'direito_adquirido';
+      // If vacation dates are set, use stored status
+      if (f.ferias_inicio && f.ferias_fim) {
+        let status = f.ferias_status || 'agendada';
+        // Auto-detect if currently on vacation
+        if (f.ferias_inicio <= todayStr && f.ferias_fim >= todayStr && status === 'agendada') {
+          status = 'em_ferias';
+        }
+        // Auto-detect if vacation is finished
+        if (f.ferias_fim < todayStr && status !== 'gozada') {
+          status = 'gozada';
+        }
+        const inicio = Shared.formatDate(f.ferias_inicio);
+        const fim = Shared.formatDate(f.ferias_fim);
+        return { status, periodoFerias: `${inicio} - ${fim}` };
       }
 
-      return { status, periodoAquisitivo, periodoFerias: '-' };
+      // No vacation set - calc from hire date
+      if (!f.data_admissao) return { status: 'sem_direito', periodoFerias: '-' };
+
+      const admissao = new Date(f.data_admissao + 'T00:00:00');
+      const diffMs = today - admissao;
+      const diffMonths = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30.44));
+
+      return {
+        status: diffMonths >= 12 ? 'direito_adquirido' : 'sem_direito',
+        periodoFerias: '-'
+      };
     }
 
-    // Load funcionários and show vacation info
+    function calcPeriodoAquisitivo(dataAdmissao) {
+      if (!dataAdmissao) return '-';
+      const admissao = new Date(dataAdmissao + 'T00:00:00');
+      const hoje = new Date();
+      const diffDays = Math.floor((hoje - admissao) / (1000 * 60 * 60 * 24));
+      const yearsWorked = Math.floor(diffDays / 365.25);
+
+      const inicio = new Date(admissao);
+      if (yearsWorked > 0) inicio.setFullYear(admissao.getFullYear() + yearsWorked);
+      const fim = new Date(inicio);
+      fim.setFullYear(fim.getFullYear() + 1);
+
+      return `${inicio.toLocaleDateString('pt-BR')} - ${fim.toLocaleDateString('pt-BR')}`;
+    }
+
     async function loadFerias() {
       try {
         const data = await Shared.api('/api/funcionarios');
@@ -239,7 +308,6 @@
       }
     }
 
-    // Render table
     function renderTable() {
       const tbody = document.getElementById('ferias-table');
       if (funcionarios.length === 0) {
@@ -259,8 +327,10 @@
       }
 
       tbody.innerHTML = funcionarios.map(f => {
-        const vacInfo = calcVacationInfo(f.data_admissao);
+        const vacInfo = calcVacationInfo(f);
         const admissaoFormatted = f.data_admissao ? Shared.formatDate(f.data_admissao) : '-';
+        const periodoAquisitivo = calcPeriodoAquisitivo(f.data_admissao);
+        const canSchedule = vacInfo.status === 'direito_adquirido' || vacInfo.status === 'agendada' || vacInfo.status === 'em_ferias' || vacInfo.status === 'gozada';
 
         return `
           <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
@@ -276,31 +346,31 @@
               </div>
             </td>
             <td class="px-5 py-3 text-gray-600 dark:text-gray-400">${admissaoFormatted}</td>
-            <td class="px-5 py-3 text-gray-600 dark:text-gray-400 text-sm">${vacInfo.periodoAquisitivo}</td>
+            <td class="px-5 py-3 text-gray-600 dark:text-gray-400 text-sm">${periodoAquisitivo}</td>
             <td class="px-5 py-3">${feriasStatusBadge(vacInfo.status)}</td>
             <td class="px-5 py-3 text-gray-600 dark:text-gray-400">${vacInfo.periodoFerias}</td>
             <td class="px-5 py-3">
               <div class="flex items-center justify-center gap-2">
-                <button title="Agendar Férias" disabled
-                  class="p-1.5 text-blue-400 cursor-not-allowed rounded-lg transition-colors">
+                <button title="Agendar Férias" onclick="openFeriasModal(${f.id})"
+                  class="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors ${canSchedule ? '' : 'opacity-40 cursor-not-allowed'}"
+                  ${canSchedule ? '' : 'disabled'}>
                   <i class="bi bi-calendar-plus"></i>
                 </button>
-                <button title="Histórico" disabled
-                  class="p-1.5 text-gray-400 cursor-not-allowed rounded-lg transition-colors">
-                  <i class="bi bi-clock-history"></i>
-                </button>
+                ${vacInfo.status === 'agendada' || vacInfo.status === 'em_ferias' ? `
+                  <button title="Cancelar Férias" onclick="cancelFerias(${f.id}, '${f.nome}')"
+                    class="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
+                    <i class="bi bi-calendar-x"></i>
+                  </button>` : ''}
               </div>
             </td>
           </tr>`;
       }).join('');
     }
 
-    // Update stats cards
     function updateStats() {
       let semDireito = 0, direitoAdquirido = 0, agendadas = 0, emFerias = 0;
-
       funcionarios.forEach(f => {
-        const vacInfo = calcVacationInfo(f.data_admissao);
+        const vacInfo = calcVacationInfo(f);
         switch (vacInfo.status) {
           case 'sem_direito': semDireito++; break;
           case 'direito_adquirido': direitoAdquirido++; break;
@@ -308,14 +378,119 @@
           case 'em_ferias': emFerias++; break;
         }
       });
-
       document.getElementById('stat-sem-direito').textContent = semDireito;
       document.getElementById('stat-direito').textContent = direitoAdquirido;
       document.getElementById('stat-agendadas').textContent = agendadas;
       document.getElementById('stat-em-ferias').textContent = emFerias;
     }
 
-    // Init
+    function openFeriasModal(funcId) {
+      const f = funcionarios.find(x => x.id === funcId);
+      if (!f) return;
+
+      document.getElementById('ferias-func-id').value = f.id;
+      document.getElementById('ferias-func-name').value = f.nome;
+      document.getElementById('ferias-inicio').value = f.ferias_inicio || '';
+      document.getElementById('ferias-fim').value = f.ferias_fim || '';
+      document.getElementById('ferias-status-select').value = f.ferias_status || 'agendada';
+      updateDiasInfo();
+      document.getElementById('ferias-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('ferias-modal').classList.add('hidden');
+    }
+
+    function updateDiasInfo() {
+      const inicio = document.getElementById('ferias-inicio').value;
+      const fim = document.getElementById('ferias-fim').value;
+      const infoDiv = document.getElementById('ferias-dias-info');
+      const countSpan = document.getElementById('ferias-dias-count');
+
+      if (inicio && fim) {
+        const d1 = new Date(inicio + 'T00:00:00');
+        const d2 = new Date(fim + 'T00:00:00');
+        const diffDays = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+        if (diffDays > 0) {
+          countSpan.textContent = `Período de ${diffDays} dia${diffDays > 1 ? 's' : ''} (${Shared.formatDate(inicio)} a ${Shared.formatDate(fim)})`;
+          infoDiv.classList.remove('hidden');
+        } else {
+          infoDiv.classList.add('hidden');
+        }
+      } else {
+        infoDiv.classList.add('hidden');
+      }
+    }
+
+    document.getElementById('ferias-inicio').addEventListener('change', function () {
+      // Auto-set end date to 30 days later if empty
+      if (this.value && !document.getElementById('ferias-fim').value) {
+        const d = new Date(this.value + 'T00:00:00');
+        d.setDate(d.getDate() + 29);
+        document.getElementById('ferias-fim').value = d.toISOString().split('T')[0];
+      }
+      updateDiasInfo();
+    });
+    document.getElementById('ferias-fim').addEventListener('change', updateDiasInfo);
+
+    async function saveFerias() {
+      const funcId = document.getElementById('ferias-func-id').value;
+      const inicio = document.getElementById('ferias-inicio').value;
+      const fim = document.getElementById('ferias-fim').value;
+      const status = document.getElementById('ferias-status-select').value;
+
+      if (!inicio || !fim) {
+        showToast('Preencha as datas de início e fim.', 'warning');
+        return;
+      }
+      if (inicio > fim) {
+        showToast('A data de início deve ser anterior à data de fim.', 'warning');
+        return;
+      }
+
+      const btn = document.getElementById('btn-save-ferias');
+      btn.disabled = true;
+      btn.textContent = 'Salvando...';
+
+      try {
+        await Shared.api(`/api/funcionarios/${funcId}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            ferias_inicio: inicio,
+            ferias_fim: fim,
+            ferias_status: status
+          })
+        });
+        showToast('Férias salvas com sucesso!');
+        closeModal();
+        await loadFerias();
+      } catch (err) {
+        showToast('Erro ao salvar férias: ' + err.message, 'danger');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Salvar';
+      }
+    }
+
+    async function cancelFerias(funcId, nome) {
+      if (!confirm(`Cancelar as férias de ${nome}?`)) return;
+
+      try {
+        await Shared.api(`/api/funcionarios/${funcId}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            ferias_inicio: '',
+            ferias_fim: '',
+            ferias_status: 'sem_direito'
+          })
+        });
+        showToast('Férias canceladas.');
+        await loadFerias();
+      } catch (err) {
+        showToast('Erro ao cancelar férias: ' + err.message, 'danger');
+      }
+    }
+
     window.onAuthReady = function(user) {
       if (user.role !== 'admin') {
         window.location.href = '/dashboard.html';

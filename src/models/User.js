@@ -23,7 +23,7 @@ class User {
   }
 
   static getAll() {
-    return db.prepare('SELECT id, email, name, role, active, created_at FROM users ORDER BY name').all();
+    return db.prepare('SELECT id, email, name, role, active, totp_enabled, created_at FROM users ORDER BY name').all();
   }
 
   static update(id, data) {
