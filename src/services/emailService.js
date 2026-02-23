@@ -33,7 +33,7 @@ class EmailService {
       return null;
     }
 
-    const from = `"${process.env.APP_NAME || 'Lar Digital'}" <${process.env.SMTP_USER}>`;
+    const from = `"${process.env.APP_NAME || 'Lar Digital'}" <${process.env.SMTP_FROM || process.env.ALERT_EMAIL_TO || process.env.SMTP_USER}>`;
     const result = await transporter.sendMail({ from, to, subject, html, text });
     console.log(`[Email] Enviado: ${subject} -> ${to}`);
     return result;
