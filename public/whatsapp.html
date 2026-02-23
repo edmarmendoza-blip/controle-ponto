@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp - Lar Digital</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+    }
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-[#1e40af] text-white z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col">
+    <div class="p-5 border-b border-white/20">
+      <a href="/dashboard.html" class="flex items-center gap-3 text-xl font-bold">
+        <i class="bi bi-clock-history text-2xl"></i>
+        <span>Lar Digital</span>
+      </a>
+    </div>
+    <nav class="flex-1 overflow-y-auto py-4">
+      <ul class="space-y-1 px-3">
+        <li>
+          <a href="/dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="/funcionarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-people"></i><span>Funcionarios</span>
+          </a>
+        </li>
+        <li>
+          <a href="/registros.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-clock"></i><span>Registros</span>
+          </a>
+        </li>
+        <li>
+          <a href="/relatorios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-file-earmark-text"></i><span>Relatorios</span>
+          </a>
+        </li>
+        <li>
+          <a href="/relatorios-graficos.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-bar-chart-line"></i><span>Graficos</span>
+          </a>
+        </li>
+        <li>
+          <a href="/presenca.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-calendar-check"></i><span>Presenca</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/entregas.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-box-seam"></i><span>Entregas</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/holerites.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-receipt"></i><span>Holerites</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/ferias.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-calendar-heart"></i><span>Ferias</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/usuarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-shield-lock"></i><span>Usuarios</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/feriados.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-calendar-event"></i><span>Feriados</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/insights.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-stars"></i><span>Insights IA</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/whatsapp.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/20 font-medium">
+            <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/audit-log.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-journal-text"></i><span>Audit Log</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="p-4 border-t border-white/20">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+          <i class="bi bi-person-fill"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium truncate" id="user-name">Carregando...</div>
+          <div class="text-xs text-white/70" id="user-role">-</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="theme-toggle" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-sm">
+          <i class="bi bi-moon-fill" id="theme-icon"></i>
+          <span>Tema</span>
+        </button>
+        <button id="logout-btn" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-500/80 hover:bg-red-500 transition-colors text-sm">
+          <i class="bi bi-box-arrow-left"></i>
+          <span>Sair</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Sidebar Overlay -->
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+
+  <!-- Main Content -->
+  <main class="md:ml-64 min-h-screen">
+    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+      <div class="flex items-center gap-3">
+        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300">
+          <i class="bi bi-list text-xl"></i>
+        </button>
+        <h1 class="text-xl font-semibold">WhatsApp</h1>
+      </div>
+      <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
+    </header>
+
+    <div class="p-4 md:p-6" id="page-content">
+      <!-- Connection Status Card -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 mb-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-xl flex items-center justify-center" id="status-icon-wrapper">
+              <i class="bi bi-whatsapp text-3xl" id="status-icon"></i>
+            </div>
+            <div>
+              <h2 class="text-lg font-semibold">Status da Conexao</h2>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="w-2.5 h-2.5 rounded-full" id="status-dot"></span>
+                <span class="text-sm font-medium" id="status-text">Verificando...</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="checkStatus()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium">
+              <i class="bi bi-arrow-clockwise mr-1"></i> Atualizar
+            </button>
+            <button onclick="reconnect()" id="btn-reconnect" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium">
+              <i class="bi bi-plug mr-1"></i> Reconectar
+            </button>
+          </div>
+        </div>
+
+        <!-- QR Code area (hidden by default) -->
+        <div id="qr-section" class="hidden mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+          <div class="text-center">
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Escaneie o QR Code abaixo com o WhatsApp do celular:</p>
+            <div class="inline-block p-4 bg-white rounded-xl shadow-sm border border-gray-200">
+              <img id="qr-image" src="" alt="QR Code WhatsApp" class="w-64 h-64">
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">O QR Code expira em alguns segundos. Clique em "Atualizar" se necessario.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Messages Filter -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 mb-6">
+        <div class="flex flex-wrap items-end gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">De</label>
+            <input type="date" id="filter-start" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ate</label>
+            <input type="date" id="filter-end" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+          </div>
+          <button onclick="loadMessages()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
+            <i class="bi bi-search mr-1"></i> Buscar
+          </button>
+        </div>
+      </div>
+
+      <!-- Recent Messages Table -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <div class="p-5 border-b border-gray-100 dark:border-gray-700">
+          <h2 class="text-lg font-semibold">Mensagens Recentes</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="bg-gray-50 dark:bg-gray-700/50">
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data/Hora</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Remetente</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Mensagem</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tipo</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Funcionario</th>
+              </tr>
+            </thead>
+            <tbody id="messages-table" class="divide-y divide-gray-100 dark:divide-gray-700">
+              <tr>
+                <td colspan="5" class="px-5 py-8 text-center text-gray-400">
+                  <i class="bi bi-arrow-repeat animate-spin text-2xl"></i>
+                  <p class="mt-2">Carregando mensagens...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+  <script src="/js/shared.js"></script>
+  <script>
+    let statusInterval = null;
+
+    function setDefaultDates() {
+      const now = new Date();
+      const end = now.toISOString().split('T')[0];
+      const start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      document.getElementById('filter-start').value = start;
+      document.getElementById('filter-end').value = end;
+    }
+
+    function updateStatusUI(status) {
+      const dot = document.getElementById('status-dot');
+      const text = document.getElementById('status-text');
+      const wrapper = document.getElementById('status-icon-wrapper');
+      const qrSection = document.getElementById('qr-section');
+
+      const state = (status.status || status.state || 'disconnected').toLowerCase();
+
+      if (state === 'connected' || state === 'ready') {
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-green-500';
+        text.textContent = 'Conectado';
+        text.className = 'text-sm font-medium text-green-600 dark:text-green-400';
+        wrapper.className = 'w-14 h-14 rounded-xl flex items-center justify-center bg-green-100 dark:bg-green-900/30';
+        document.getElementById('status-icon').className = 'bi bi-whatsapp text-3xl text-green-600 dark:text-green-400';
+        qrSection.classList.add('hidden');
+        if (statusInterval) { clearInterval(statusInterval); statusInterval = null; }
+      } else if (state === 'waiting_qr' || state === 'qr') {
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-yellow-500 animate-pulse';
+        text.textContent = 'Aguardando QR Code';
+        text.className = 'text-sm font-medium text-yellow-600 dark:text-yellow-400';
+        wrapper.className = 'w-14 h-14 rounded-xl flex items-center justify-center bg-yellow-100 dark:bg-yellow-900/30';
+        document.getElementById('status-icon').className = 'bi bi-qr-code text-3xl text-yellow-600 dark:text-yellow-400';
+        qrSection.classList.remove('hidden');
+        const token = localStorage.getItem('ponto_token') || localStorage.getItem('token');
+        document.getElementById('qr-image').src = '/api/whatsapp/qr?t=' + Date.now() + '&token=' + token;
+        // Auto-refresh QR
+        if (!statusInterval) {
+          statusInterval = setInterval(checkStatus, 10000);
+        }
+      } else {
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-red-500';
+        text.textContent = 'Desconectado';
+        text.className = 'text-sm font-medium text-red-600 dark:text-red-400';
+        wrapper.className = 'w-14 h-14 rounded-xl flex items-center justify-center bg-red-100 dark:bg-red-900/30';
+        document.getElementById('status-icon').className = 'bi bi-whatsapp text-3xl text-red-600 dark:text-red-400';
+        qrSection.classList.add('hidden');
+        if (statusInterval) { clearInterval(statusInterval); statusInterval = null; }
+      }
+    }
+
+    async function checkStatus() {
+      try {
+        const data = await Shared.api('/api/whatsapp/status');
+        updateStatusUI(data);
+      } catch (err) {
+        updateStatusUI({ status: 'disconnected' });
+      }
+    }
+
+    async function reconnect() {
+      const btn = document.getElementById('btn-reconnect');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin mr-1"></i> Reconectando...';
+
+      try {
+        await Shared.api('/api/whatsapp/reconnect', { method: 'POST' });
+        showToast('Reconexao iniciada. Aguarde...');
+        setTimeout(checkStatus, 3000);
+      } catch (err) {
+        showToast('Erro: ' + err.message, 'danger');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-plug mr-1"></i> Reconectar';
+      }
+    }
+
+    async function loadMessages() {
+      const startDate = document.getElementById('filter-start').value;
+      const endDate = document.getElementById('filter-end').value;
+      const tbody = document.getElementById('messages-table');
+      tbody.innerHTML = `<tr><td colspan="5" class="px-5 py-8 text-center text-gray-400"><i class="bi bi-arrow-repeat animate-spin text-2xl"></i><p class="mt-2">Carregando mensagens...</p></td></tr>`;
+
+      try {
+        let url = '/api/whatsapp/messages?limit=100';
+        if (startDate) url += '&startDate=' + startDate;
+        if (endDate) url += '&endDate=' + endDate;
+
+        const data = await Shared.api(url);
+        const messages = Array.isArray(data) ? data : (data.messages || data.mensagens || []);
+
+        if (messages.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" class="px-5 py-8 text-center text-gray-400">
+                <i class="bi bi-chat-square text-3xl"></i>
+                <p class="mt-2">Nenhuma mensagem encontrada no periodo</p>
+              </td>
+            </tr>`;
+          return;
+        }
+
+        tbody.innerHTML = messages.map(m => {
+          const dt = m.created_at || m.data_hora || m.timestamp;
+          const dateStr = dt ? new Date(dt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-';
+
+          const tipoMap = {
+            entrada: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+            saida: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+            texto: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400',
+            midia: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+          };
+          const tipo = m.tipo || m.type || 'texto';
+          const tipoCls = tipoMap[tipo] || tipoMap.texto;
+
+          const msgText = (m.mensagem || m.message || m.body || '-').substring(0, 80);
+
+          return `
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+              <td class="px-5 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">${dateStr}</td>
+              <td class="px-5 py-3 text-sm font-medium">${m.remetente || m.sender || m.from || '-'}</td>
+              <td class="px-5 py-3 text-sm max-w-xs truncate">${escapeHtml(msgText)}</td>
+              <td class="px-5 py-3">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${tipoCls}">${tipo}</span>
+              </td>
+              <td class="px-5 py-3 text-sm">${m.funcionario_nome || m.funcionario || '-'}</td>
+            </tr>`;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="px-5 py-8 text-center text-red-400">
+              <i class="bi bi-exclamation-circle text-3xl"></i>
+              <p class="mt-2">Erro: ${err.message}</p>
+            </td>
+          </tr>`;
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    window.onAuthReady = function(user) {
+      if (user.role !== 'admin') {
+        window.location.href = '/dashboard.html';
+        return;
+      }
+      setDefaultDates();
+      checkStatus();
+      loadMessages();
+    };
+  </script>
+</body>
+</html>

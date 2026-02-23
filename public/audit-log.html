@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audit Log - Lar Digital</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+    }
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-[#1e40af] text-white z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col">
+    <div class="p-5 border-b border-white/20">
+      <a href="/dashboard.html" class="flex items-center gap-3 text-xl font-bold">
+        <i class="bi bi-clock-history text-2xl"></i>
+        <span>Lar Digital</span>
+      </a>
+    </div>
+    <nav class="flex-1 overflow-y-auto py-4">
+      <ul class="space-y-1 px-3">
+        <li>
+          <a href="/dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="/funcionarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-people"></i><span>Funcionarios</span>
+          </a>
+        </li>
+        <li>
+          <a href="/registros.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-clock"></i><span>Registros</span>
+          </a>
+        </li>
+        <li>
+          <a href="/relatorios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-file-earmark-text"></i><span>Relatorios</span>
+          </a>
+        </li>
+        <li>
+          <a href="/relatorios-graficos.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-bar-chart-line"></i><span>Graficos</span>
+          </a>
+        </li>
+        <li>
+          <a href="/presenca.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-calendar-check"></i><span>Presenca</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/entregas.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-box-seam"></i><span>Entregas</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/holerites.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-receipt"></i><span>Holerites</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/ferias.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-calendar-heart"></i><span>Ferias</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/usuarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-shield-lock"></i><span>Usuarios</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/feriados.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-calendar-event"></i><span>Feriados</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/insights.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-stars"></i><span>Insights IA</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/whatsapp.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/audit-log.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/20 font-medium">
+            <i class="bi bi-journal-text"></i><span>Audit Log</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="p-4 border-t border-white/20">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+          <i class="bi bi-person-fill"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium truncate" id="user-name">Carregando...</div>
+          <div class="text-xs text-white/70" id="user-role">-</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="theme-toggle" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-sm">
+          <i class="bi bi-moon-fill" id="theme-icon"></i>
+          <span>Tema</span>
+        </button>
+        <button id="logout-btn" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-500/80 hover:bg-red-500 transition-colors text-sm">
+          <i class="bi bi-box-arrow-left"></i>
+          <span>Sair</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Sidebar Overlay -->
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+
+  <!-- Main Content -->
+  <main class="md:ml-64 min-h-screen">
+    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+      <div class="flex items-center gap-3">
+        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300">
+          <i class="bi bi-list text-xl"></i>
+        </button>
+        <h1 class="text-xl font-semibold">Audit Log</h1>
+      </div>
+      <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
+    </header>
+
+    <div class="p-4 md:p-6" id="page-content">
+      <!-- Filters -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data Inicio</label>
+            <input type="date" id="filter-start" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data Fim</label>
+            <input type="date" id="filter-end" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Usuario</label>
+            <select id="filter-user" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Acao</label>
+            <select id="filter-action" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+              <option value="">Todas</option>
+              <option value="login">Login</option>
+              <option value="create">Criar</option>
+              <option value="update">Atualizar</option>
+              <option value="delete">Excluir</option>
+              <option value="password_change">Alterar Senha</option>
+              <option value="2fa_enable">Ativar 2FA</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Entidade</label>
+            <select id="filter-entity" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+              <option value="">Todas</option>
+              <option value="user">Usuario</option>
+              <option value="funcionario">Funcionario</option>
+              <option value="registro">Registro</option>
+              <option value="feriado">Feriado</option>
+            </select>
+          </div>
+          <div class="flex items-end">
+            <button onclick="loadAuditLog(1)" class="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
+              <i class="bi bi-search mr-1"></i> Filtrar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audit Log Table -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+          <h2 class="text-lg font-semibold">Registros de Auditoria</h2>
+          <span class="text-sm text-gray-500 dark:text-gray-400" id="total-records">-</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="bg-gray-50 dark:bg-gray-700/50">
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data/Hora</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Usuario</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acao</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Entidade</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">ID</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Detalhes</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">IP</th>
+              </tr>
+            </thead>
+            <tbody id="audit-table" class="divide-y divide-gray-100 dark:divide-gray-700">
+              <tr>
+                <td colspan="7" class="px-5 py-8 text-center text-gray-400">
+                  <i class="bi bi-arrow-repeat animate-spin text-2xl"></i>
+                  <p class="mt-2">Carregando registros...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="p-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+          <span class="text-sm text-gray-500 dark:text-gray-400" id="page-info">-</span>
+          <div class="flex gap-2">
+            <button onclick="prevPage()" id="btn-prev" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+              <i class="bi bi-chevron-left mr-1"></i> Anterior
+            </button>
+            <button onclick="nextPage()" id="btn-next" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+              Proximo <i class="bi bi-chevron-right ml-1"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+  <script src="/js/shared.js"></script>
+  <script>
+    let currentPage = 1;
+    let totalPages = 1;
+
+    function setDefaultDates() {
+      const now = new Date();
+      const end = now.toISOString().split('T')[0];
+      const start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      document.getElementById('filter-start').value = start;
+      document.getElementById('filter-end').value = end;
+    }
+
+    async function loadUsers() {
+      try {
+        const data = await Shared.api('/api/auth/users');
+        const users = Array.isArray(data) ? data : (data.users || []);
+        const select = document.getElementById('filter-user');
+        users.forEach(u => {
+          const opt = document.createElement('option');
+          opt.value = u.id;
+          opt.textContent = u.name || u.email;
+          select.appendChild(opt);
+        });
+      } catch (err) {
+        console.error('Erro ao carregar usuarios:', err);
+      }
+    }
+
+    function getActionBadge(action) {
+      const map = {
+        login:           { label: 'Login',          cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+        create:          { label: 'Criar',           cls: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+        update:          { label: 'Atualizar',       cls: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' },
+        delete:          { label: 'Excluir',         cls: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
+        password_change: { label: 'Alterar Senha',   cls: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' },
+        '2fa_enable':    { label: '2FA Ativado',     cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' }
+      };
+      const a = map[action] || { label: action || '-', cls: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400' };
+      return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${a.cls}">${a.label}</span>`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatDetails(details) {
+      if (!details) return '-';
+      if (typeof details === 'string') {
+        try { details = JSON.parse(details); } catch (e) { return escapeHtml(details.substring(0, 60)); }
+      }
+      if (typeof details === 'object') {
+        const keys = Object.keys(details);
+        if (keys.length === 0) return '-';
+        return escapeHtml(keys.map(k => `${k}: ${details[k]}`).join(', ').substring(0, 80));
+      }
+      return escapeHtml(String(details).substring(0, 60));
+    }
+
+    async function loadAuditLog(page) {
+      currentPage = page || 1;
+      const tbody = document.getElementById('audit-table');
+      tbody.innerHTML = `<tr><td colspan="7" class="px-5 py-8 text-center text-gray-400"><i class="bi bi-arrow-repeat animate-spin text-2xl"></i><p class="mt-2">Carregando registros...</p></td></tr>`;
+
+      const params = new URLSearchParams();
+      params.set('page', currentPage);
+
+      const startDate = document.getElementById('filter-start').value;
+      const endDate = document.getElementById('filter-end').value;
+      const userId = document.getElementById('filter-user').value;
+      const action = document.getElementById('filter-action').value;
+      const entityType = document.getElementById('filter-entity').value;
+
+      if (startDate) params.set('startDate', startDate);
+      if (endDate) params.set('endDate', endDate);
+      if (userId) params.set('userId', userId);
+      if (action) params.set('action', action);
+      if (entityType) params.set('entityType', entityType);
+
+      try {
+        const data = await Shared.api(`/api/auth/audit-log?${params.toString()}`);
+        const logs = data.logs || data.auditLog || data.records || [];
+        const total = data.total || logs.length;
+        totalPages = data.pages || data.totalPages || Math.ceil(total / 20) || 1;
+
+        document.getElementById('total-records').textContent = `${total} registro(s)`;
+        document.getElementById('page-info').textContent = `Pagina ${currentPage} de ${totalPages}`;
+        document.getElementById('btn-prev').disabled = currentPage <= 1;
+        document.getElementById('btn-next').disabled = currentPage >= totalPages;
+
+        if (logs.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="7" class="px-5 py-8 text-center text-gray-400">
+                <i class="bi bi-journal text-3xl"></i>
+                <p class="mt-2">Nenhum registro encontrado</p>
+              </td>
+            </tr>`;
+          return;
+        }
+
+        tbody.innerHTML = logs.map(log => {
+          const dt = log.created_at || log.timestamp || log.date;
+          const dateStr = dt ? new Date(dt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-';
+
+          return `
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+              <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">${dateStr}</td>
+              <td class="px-4 py-3 text-sm font-medium">${escapeHtml(log.user_name || log.userName || '-')}</td>
+              <td class="px-4 py-3">${getActionBadge(log.action)}</td>
+              <td class="px-4 py-3 text-sm">${escapeHtml(log.entity_type || log.entityType || '-')}</td>
+              <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 font-mono">${log.entity_id || log.entityId || '-'}</td>
+              <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate" title="${escapeHtml(JSON.stringify(log.details || ''))}">${formatDetails(log.details)}</td>
+              <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 font-mono">${escapeHtml(log.ip || log.ip_address || '-')}</td>
+            </tr>`;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="px-5 py-8 text-center text-red-400">
+              <i class="bi bi-exclamation-circle text-3xl"></i>
+              <p class="mt-2">Erro: ${err.message}</p>
+            </td>
+          </tr>`;
+      }
+    }
+
+    function prevPage() { if (currentPage > 1) loadAuditLog(currentPage - 1); }
+    function nextPage() { if (currentPage < totalPages) loadAuditLog(currentPage + 1); }
+
+    window.onAuthReady = function(user) {
+      if (user.role !== 'admin') {
+        window.location.href = '/dashboard.html';
+        return;
+      }
+      setDefaultDates();
+      loadUsers();
+      loadAuditLog(1);
+    };
+  </script>
+</body>
+</html>

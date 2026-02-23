@@ -39,6 +39,9 @@
       <a href="/relatorios-graficos.html" data-page="relatorios-graficos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
         <i class="bi bi-bar-chart-line"></i><span>Gráficos</span>
       </a>
+      <a href="/presenca.html" data-page="presenca" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-calendar-check"></i><span>Presença</span>
+      </a>
       <a href="/entregas.html" data-page="entregas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-box-seam"></i><span>Entregas</span>
       </a>
@@ -50,6 +53,18 @@
       </a>
       <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-shield-lock"></i><span>Usuários</span>
+      </a>
+      <a href="/feriados.html" data-page="feriados" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-calendar-event"></i><span>Feriados</span>
+      </a>
+      <a href="/insights.html" data-page="insights" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-stars"></i><span>Insights IA</span>
+      </a>
+      <a href="/whatsapp.html" data-page="whatsapp" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
+      </a>
+      <a href="/audit-log.html" data-page="audit-log" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-journal-text"></i><span>Audit Log</span>
       </a>
     </nav>
     <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-blue-700 bg-blue-800">
@@ -295,8 +310,9 @@
           <td class="px-5 py-3">
             <div class="flex items-center justify-center gap-1">
               <button onclick="resetPassword(${u.id}, '${(u.name || '').replace(/'/g, "\\'")}')" title="Enviar nova senha por e-mail"
-                class="p-1.5 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors">
-                <i class="bi bi-envelope-arrow-up"></i>
+                class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 dark:text-amber-400 dark:bg-amber-900/20 dark:hover:bg-amber-900/40 rounded-lg transition-colors border border-amber-200 dark:border-amber-800">
+                <i class="bi bi-envelope"></i>
+                <span>Reenviar Senha</span>
               </button>
               <button onclick="openEditModal(${u.id})" title="Editar"
                 class="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors">

@@ -25,9 +25,9 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net", "https://unpkg.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net", "https://unpkg.com", "https://cdn.tailwindcss.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://unpkg.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://unpkg.com", "https://cdn.tailwindcss.com"],
       scriptSrcAttr: ["'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "blob:", "https://*.tile.openstreetmap.org"],
       connectSrc: ["'self'", "https://calendar.google.com"],
@@ -59,9 +59,9 @@ app.use('/api/dashboard/presenca', require('./src/routes/dashboardPresenca'));
 app.use('/api/insights', require('./src/routes/insights'));
 app.use('/api/holerites', require('./src/routes/holerites'));
 
-// SPA fallback - serve index.html for all non-API routes
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// Root redirect to dashboard
+app.get('/', (req, res) => {
+  res.redirect('/dashboard.html');
 });
 
 // Error handler

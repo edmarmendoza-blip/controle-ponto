@@ -208,6 +208,23 @@
         </button>
       </form>
 
+      <!-- Forgot Password -->
+      <div class="mt-4 text-center">
+        <button type="button" id="forgotPasswordBtn" class="text-sm text-primary-light hover:text-primary dark:text-blue-400 dark:hover:text-blue-300 hover:underline transition-colors cursor-pointer">
+          <i class="bi bi-key mr-1"></i>Esqueci minha senha
+        </button>
+      </div>
+      <div id="forgotPasswordDiv" class="hidden mt-4">
+        <div class="p-4 rounded-xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-200/50 dark:border-blue-800/30">
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Digite seu e-mail para receber uma nova senha.</p>
+          <div class="flex gap-2">
+            <input type="email" id="forgotEmail" placeholder="seu@email.com" class="flex-1 text-sm py-2 px-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+            <button type="button" onclick="sendForgotPassword()" id="sendResetBtn" class="text-sm py-2 px-4 rounded-lg bg-primary text-white hover:bg-primary-dark transition-colors whitespace-nowrap">Enviar</button>
+          </div>
+          <div id="forgotMessage" class="hidden mt-2 text-sm"></div>
+        </div>
+      </div>
+
       <!-- Footer -->
       <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700/50 text-center">
         <p class="text-xs text-gray-400 dark:text-gray-500">
@@ -421,6 +438,33 @@
     document.getElementById('email').addEventListener('input', hideError);
     document.getElementById('password').addEventListener('input', hideError);
     document.getElementById('totpToken').addEventListener('input', hideError);
+
+    // Forgot Password
+    document.getElementById('forgotPasswordBtn').addEventListener('click', function () {
+      const div = document.getElementById('forgotPasswordDiv');
+      div.classList.toggle('hidden');
+      if (!div.classList.contains('hidden')) {
+        const emailVal = document.getElementById('email').value;
+        if (emailVal) document.getElementById('forgotEmail').value = emailVal;
+        document.getElementById('forgotEmail').focus();
+      }
+    });
+
+    async function sendForgotPassword() {
+      const email = document.getElementById('forgotEmail').value.trim();
+      const msgDiv = document.getElementById('forgotMessage');
+      const btn = document.getElementById('sendResetBtn');
+      if (!email) { msgDiv.className = 'mt-2 text-sm text-red-500'; msgDiv.textContent = 'Informe seu e-mail.'; msgDiv.classList.remove('hidden'); return; }
+      btn.disabled = true; btn.textContent = 'Enviando...';
+      try {
+        const res = await fetch('/api/auth/forgot-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+        const data = await res.json();
+        msgDiv.className = 'mt-2 text-sm text-green-600 dark:text-green-400';
+        msgDiv.innerHTML = '<i class="bi bi-check-circle mr-1"></i>' + (data.message || 'Verifique seu e-mail.');
+        msgDiv.classList.remove('hidden');
+      } catch (err) { msgDiv.className = 'mt-2 text-sm text-red-500'; msgDiv.textContent = 'Erro ao enviar.'; msgDiv.classList.remove('hidden'); }
+      finally { btn.disabled = false; btn.textContent = 'Enviar'; }
+    }
   </script>
 </body>
 </html>

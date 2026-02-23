@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feriados - Lar Digital</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+    }
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-[#1e40af] text-white z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col">
+    <div class="p-5 border-b border-white/20">
+      <a href="/dashboard.html" class="flex items-center gap-3 text-xl font-bold">
+        <i class="bi bi-clock-history text-2xl"></i>
+        <span>Lar Digital</span>
+      </a>
+    </div>
+    <nav class="flex-1 overflow-y-auto py-4">
+      <ul class="space-y-1 px-3">
+        <li>
+          <a href="/dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="/funcionarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-people"></i><span>Funcionarios</span>
+          </a>
+        </li>
+        <li>
+          <a href="/registros.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-clock"></i><span>Registros</span>
+          </a>
+        </li>
+        <li>
+          <a href="/relatorios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-file-earmark-text"></i><span>Relatorios</span>
+          </a>
+        </li>
+        <li>
+          <a href="/relatorios-graficos.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-bar-chart-line"></i><span>Graficos</span>
+          </a>
+        </li>
+        <li>
+          <a href="/presenca.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-calendar-check"></i><span>Presenca</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/entregas.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-box-seam"></i><span>Entregas</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/holerites.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-receipt"></i><span>Holerites</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/ferias.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-calendar-heart"></i><span>Ferias</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/usuarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-shield-lock"></i><span>Usuarios</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/feriados.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/20 font-medium">
+            <i class="bi bi-calendar-event"></i><span>Feriados</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/insights.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-stars"></i><span>Insights IA</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/whatsapp.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/audit-log.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-journal-text"></i><span>Audit Log</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="p-4 border-t border-white/20">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+          <i class="bi bi-person-fill"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium truncate" id="user-name">Carregando...</div>
+          <div class="text-xs text-white/70" id="user-role">-</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="theme-toggle" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-sm">
+          <i class="bi bi-moon-fill" id="theme-icon"></i>
+          <span>Tema</span>
+        </button>
+        <button id="logout-btn" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-500/80 hover:bg-red-500 transition-colors text-sm">
+          <i class="bi bi-box-arrow-left"></i>
+          <span>Sair</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Sidebar Overlay -->
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+
+  <!-- Main Content -->
+  <main class="md:ml-64 min-h-screen">
+    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+      <div class="flex items-center gap-3">
+        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300">
+          <i class="bi bi-list text-xl"></i>
+        </button>
+        <h1 class="text-xl font-semibold">Feriados</h1>
+      </div>
+      <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
+    </header>
+
+    <div class="p-4 md:p-6" id="page-content">
+      <!-- Action Bar -->
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div class="flex items-center gap-3">
+          <select id="filter-year" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary" onchange="loadFeriados()">
+          </select>
+          <span class="text-sm text-gray-500 dark:text-gray-400" id="sync-status"></span>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="syncGoogle()" id="btn-sync" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium">
+            <i class="bi bi-google mr-1"></i>
+            Sincronizar Google
+          </button>
+          <button onclick="openModal()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
+            <i class="bi bi-plus-lg mr-1"></i>
+            Novo Feriado
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Nacionais</p>
+              <p class="text-3xl font-bold mt-1 text-red-600 dark:text-red-400" id="stat-nacional">0</p>
+            </div>
+            <div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center">
+              <i class="bi bi-flag-fill text-xl text-red-600 dark:text-red-400"></i>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Estaduais</p>
+              <p class="text-3xl font-bold mt-1 text-blue-600 dark:text-blue-400" id="stat-estadual">0</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+              <i class="bi bi-geo-alt-fill text-xl text-blue-600 dark:text-blue-400"></i>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Municipais</p>
+              <p class="text-3xl font-bold mt-1 text-green-600 dark:text-green-400" id="stat-municipal">0</p>
+            </div>
+            <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+              <i class="bi bi-building text-xl text-green-600 dark:text-green-400"></i>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Facultativos</p>
+              <p class="text-3xl font-bold mt-1 text-yellow-600 dark:text-yellow-400" id="stat-facultativo">0</p>
+            </div>
+            <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl flex items-center justify-center">
+              <i class="bi bi-star-fill text-xl text-yellow-600 dark:text-yellow-400"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feriados Table -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <div class="p-5 border-b border-gray-100 dark:border-gray-700">
+          <h2 class="text-lg font-semibold">Lista de Feriados</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="bg-gray-50 dark:bg-gray-700/50">
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Descricao</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tipo</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Dia da Semana</th>
+                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acoes</th>
+              </tr>
+            </thead>
+            <tbody id="feriados-table" class="divide-y divide-gray-100 dark:divide-gray-700">
+              <tr>
+                <td colspan="5" class="px-5 py-8 text-center text-gray-400">
+                  <i class="bi bi-arrow-repeat animate-spin text-2xl"></i>
+                  <p class="mt-2">Carregando feriados...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add/Edit Modal -->
+  <div id="feriado-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+        <h3 class="text-lg font-semibold" id="modal-title">Novo Feriado</h3>
+        <button onclick="closeModal()" class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="p-5 space-y-4">
+        <input type="hidden" id="feriado-id">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="feriado-data">Data</label>
+          <input type="date" id="feriado-data" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary" required>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="feriado-descricao">Descricao</label>
+          <input type="text" id="feriado-descricao" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Ex: Natal" required>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="feriado-tipo">Tipo</label>
+          <select id="feriado-tipo" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+            <option value="nacional">Nacional</option>
+            <option value="estadual">Estadual</option>
+            <option value="municipal">Municipal</option>
+            <option value="facultativo">Facultativo</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 p-5 border-t border-gray-100 dark:border-gray-700">
+        <button onclick="closeModal()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium">Cancelar</button>
+        <button onclick="saveFeriado()" id="btn-save" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
+          <i class="bi bi-check-lg mr-1"></i> Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+  <script src="/js/shared.js"></script>
+  <script>
+    let feriados = [];
+
+    // Populate year selector
+    (function() {
+      const select = document.getElementById('filter-year');
+      const currentYear = new Date().getFullYear();
+      for (let y = currentYear + 1; y >= currentYear - 2; y--) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        if (y === currentYear) opt.selected = true;
+        select.appendChild(opt);
+      }
+    })();
+
+    function tipoBadge(tipo) {
+      const map = {
+        nacional:    { label: 'Nacional',    cls: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
+        estadual:    { label: 'Estadual',    cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+        municipal:   { label: 'Municipal',   cls: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+        facultativo: { label: 'Facultativo', cls: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' }
+      };
+      const t = map[tipo] || { label: tipo || '-', cls: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400' };
+      return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${t.cls}">${t.label}</span>`;
+    }
+
+    function diaSemana(dateStr) {
+      if (!dateStr) return '-';
+      const dias = ['Domingo', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado'];
+      const d = new Date(dateStr + 'T00:00:00');
+      return dias[d.getDay()];
+    }
+
+    async function loadFeriados() {
+      const ano = document.getElementById('filter-year').value;
+      const tbody = document.getElementById('feriados-table');
+      tbody.innerHTML = '<tr><td colspan="5" class="px-5 py-8 text-center text-gray-400"><i class="bi bi-arrow-repeat animate-spin text-2xl"></i><p class="mt-2">Carregando feriados...</p></td></tr>';
+
+      try {
+        const data = await Shared.api(`/api/feriados?ano=${ano}`);
+        feriados = Array.isArray(data) ? data : [];
+
+        // Update stats
+        const stats = { nacional: 0, estadual: 0, municipal: 0, facultativo: 0 };
+        feriados.forEach(f => { if (stats[f.tipo] !== undefined) stats[f.tipo]++; });
+        document.getElementById('stat-nacional').textContent = stats.nacional;
+        document.getElementById('stat-estadual').textContent = stats.estadual;
+        document.getElementById('stat-municipal').textContent = stats.municipal;
+        document.getElementById('stat-facultativo').textContent = stats.facultativo;
+
+        if (feriados.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" class="px-5 py-12 text-center text-gray-400">
+                <i class="bi bi-calendar-x text-3xl"></i>
+                <p class="mt-2 font-medium">Nenhum feriado cadastrado para ${ano}</p>
+                <p class="text-xs mt-1">Clique em "Sincronizar Google" ou "Novo Feriado".</p>
+              </td>
+            </tr>`;
+          return;
+        }
+
+        // Sort by date
+        feriados.sort((a, b) => a.data.localeCompare(b.data));
+
+        tbody.innerHTML = feriados.map(f => {
+          const isPast = f.data < new Date().toISOString().split('T')[0];
+          return `
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors ${isPast ? 'opacity-60' : ''}">
+              <td class="px-5 py-3 font-mono text-sm whitespace-nowrap">${Shared.formatDate(f.data)}</td>
+              <td class="px-5 py-3 font-medium">${f.descricao || '-'}</td>
+              <td class="px-5 py-3">${tipoBadge(f.tipo)}</td>
+              <td class="px-5 py-3 text-sm text-gray-500 dark:text-gray-400">${diaSemana(f.data)}</td>
+              <td class="px-5 py-3">
+                <div class="flex items-center justify-center gap-1">
+                  <button onclick="editFeriado(${f.id})" class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors" title="Editar">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button onclick="deleteFeriado(${f.id}, '${(f.descricao || '').replace(/'/g, "\\'")}')" class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors" title="Excluir">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>`;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="px-5 py-8 text-center text-red-400">
+              <i class="bi bi-exclamation-circle text-3xl"></i>
+              <p class="mt-2">${err.message}</p>
+            </td>
+          </tr>`;
+      }
+
+      // Load sync status
+      try {
+        const syncData = await Shared.api('/api/feriados/sync-status');
+        if (syncData.lastSync) {
+          const dt = new Date(syncData.lastSync);
+          document.getElementById('sync-status').innerHTML = `<i class="bi bi-check-circle text-green-500 mr-1"></i>Ultima sync: ${dt.toLocaleDateString('pt-BR')} ${dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+        }
+      } catch (e) { /* ignore */ }
+    }
+
+    async function syncGoogle() {
+      const btn = document.getElementById('btn-sync');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin mr-1"></i> Sincronizando...';
+
+      try {
+        const ano = document.getElementById('filter-year').value;
+        const data = await Shared.api('/api/feriados/sync', {
+          method: 'POST',
+          body: JSON.stringify({ year: parseInt(ano) })
+        });
+        showToast(data.message || 'Sincronizado com sucesso!');
+        await loadFeriados();
+      } catch (err) {
+        showToast('Erro: ' + err.message, 'danger');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-google mr-1"></i> Sincronizar Google';
+      }
+    }
+
+    function openModal(feriado) {
+      document.getElementById('modal-title').textContent = feriado ? 'Editar Feriado' : 'Novo Feriado';
+      document.getElementById('feriado-id').value = feriado ? feriado.id : '';
+      document.getElementById('feriado-data').value = feriado ? feriado.data : '';
+      document.getElementById('feriado-descricao').value = feriado ? feriado.descricao : '';
+      document.getElementById('feriado-tipo').value = feriado ? feriado.tipo : 'nacional';
+      document.getElementById('feriado-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('feriado-modal').classList.add('hidden');
+    }
+
+    function editFeriado(id) {
+      const f = feriados.find(x => x.id === id);
+      if (f) openModal(f);
+    }
+
+    async function saveFeriado() {
+      const id = document.getElementById('feriado-id').value;
+      const data = document.getElementById('feriado-data').value;
+      const descricao = document.getElementById('feriado-descricao').value.trim();
+      const tipo = document.getElementById('feriado-tipo').value;
+
+      if (!data || !descricao) {
+        showToast('Preencha data e descricao.', 'warning');
+        return;
+      }
+
+      const ano = parseInt(data.split('-')[0]);
+      const body = { data, descricao, tipo, ano };
+
+      const btn = document.getElementById('btn-save');
+      btn.disabled = true;
+
+      try {
+        if (id) {
+          await Shared.api(`/api/feriados/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+          showToast('Feriado atualizado!');
+        } else {
+          await Shared.api('/api/feriados', { method: 'POST', body: JSON.stringify(body) });
+          showToast('Feriado criado!');
+        }
+        closeModal();
+        await loadFeriados();
+      } catch (err) {
+        showToast('Erro: ' + err.message, 'danger');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function deleteFeriado(id, descricao) {
+      if (!confirm(`Excluir feriado "${descricao}"?`)) return;
+      try {
+        await Shared.api(`/api/feriados/${id}`, { method: 'DELETE' });
+        showToast('Feriado excluido.');
+        await loadFeriados();
+      } catch (err) {
+        showToast('Erro: ' + err.message, 'danger');
+      }
+    }
+
+    window.onAuthReady = function(user) {
+      if (user.role !== 'admin') {
+        window.location.href = '/dashboard.html';
+        return;
+      }
+      loadFeriados();
+    };
+  </script>
+</body>
+</html>

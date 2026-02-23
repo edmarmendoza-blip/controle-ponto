@@ -393,6 +393,55 @@ router.get('/2fa/status', authenticateToken, (req, res) => {
   }
 });
 
+// POST /api/auth/forgot-password - Self-service password recovery
+router.post('/forgot-password', loginLimiter, [
+  body('email').isEmail().normalizeEmail().withMessage('Email inválido')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    const user = User.findByEmail(req.body.email);
+    // Always return success to prevent email enumeration
+    if (!user || !user.active) {
+      return res.json({ message: 'Se o e-mail estiver cadastrado, você receberá uma nova senha.' });
+    }
+    const crypto = require('crypto');
+    const newPassword = crypto.randomBytes(4).toString('hex');
+    const bcrypt = require('bcryptjs');
+    const { db } = require('../config/database');
+    const hashed = await bcrypt.hash(newPassword, 12);
+    db.prepare("UPDATE users SET password = ?, updated_at = datetime('now','localtime') WHERE id = ?").run(hashed, user.id);
+    await EmailService.send({
+      to: user.email,
+      subject: '[Lar Digital] Recuperação de Senha',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: #1e40af; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+            <h2 style="margin: 0;">Recuperação de Senha</h2>
+          </div>
+          <div style="padding: 20px; background: #f8fafc; border-radius: 0 0 8px 8px;">
+            <p>Olá <strong>${user.name}</strong>,</p>
+            <p>Sua nova senha temporária:</p>
+            <div style="background: white; border: 2px solid #1e40af; border-radius: 8px; padding: 16px; text-align: center; margin: 20px 0;">
+              <p style="font-size: 24px; font-weight: bold; color: #1e40af; margin: 0; letter-spacing: 2px;">${newPassword}</p>
+            </div>
+            <p style="color: #dc2626; font-size: 14px;"><strong>Importante:</strong> Troque sua senha imediatamente após o login.</p>
+            <hr style="border: none; border-top: 1px solid #e2e8f0;">
+            <p style="color: #94a3b8; font-size: 12px;">Lar Digital - Gestão da Casa</p>
+          </div>
+        </div>
+      `
+    }).catch(err => console.error('[Email] Forgot password error:', err.message));
+    AuditLog.log(user.id, 'password_reset', 'user', user.id, { self_service: true }, req.ip);
+    res.json({ message: 'Se o e-mail estiver cadastrado, você receberá uma nova senha.' });
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    res.status(500).json({ error: 'Erro ao processar solicitação' });
+  }
+});
+
 // GET /api/auth/audit-log (admin)
 router.get('/audit-log', authenticateToken, requireAdmin, (req, res) => {
   try {

@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presenca - Lar Digital</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+    }
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-[#1e40af] text-white z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col">
+    <div class="p-5 border-b border-white/20">
+      <a href="/dashboard.html" class="flex items-center gap-3 text-xl font-bold">
+        <i class="bi bi-clock-history text-2xl"></i>
+        <span>Lar Digital</span>
+      </a>
+    </div>
+    <nav class="flex-1 overflow-y-auto py-4">
+      <ul class="space-y-1 px-3">
+        <li>
+          <a href="/dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="/funcionarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-people"></i><span>Funcionarios</span>
+          </a>
+        </li>
+        <li>
+          <a href="/registros.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-clock"></i><span>Registros</span>
+          </a>
+        </li>
+        <li>
+          <a href="/relatorios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-file-earmark-text"></i><span>Relatorios</span>
+          </a>
+        </li>
+        <li>
+          <a href="/relatorios-graficos.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-bar-chart-line"></i><span>Graficos</span>
+          </a>
+        </li>
+        <li>
+          <a href="/presenca.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/20 font-medium">
+            <i class="bi bi-calendar-check"></i><span>Presenca</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/entregas.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-box-seam"></i><span>Entregas</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/holerites.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-receipt"></i><span>Holerites</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/ferias.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-calendar-heart"></i><span>Ferias</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/usuarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-shield-lock"></i><span>Usuarios</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/feriados.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-calendar-event"></i><span>Feriados</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/insights.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-stars"></i><span>Insights IA</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/whatsapp.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/audit-log.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-journal-text"></i><span>Audit Log</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="p-4 border-t border-white/20">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+          <i class="bi bi-person-fill"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium truncate" id="user-name">Carregando...</div>
+          <div class="text-xs text-white/70" id="user-role">-</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="theme-toggle" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-sm">
+          <i class="bi bi-moon-fill" id="theme-icon"></i>
+          <span>Tema</span>
+        </button>
+        <button id="logout-btn" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-500/80 hover:bg-red-500 transition-colors text-sm">
+          <i class="bi bi-box-arrow-left"></i>
+          <span>Sair</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Sidebar Overlay -->
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+
+  <!-- Main Content -->
+  <main class="md:ml-64 min-h-screen">
+    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+      <div class="flex items-center gap-3">
+        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300">
+          <i class="bi bi-list text-xl"></i>
+        </button>
+        <h1 class="text-xl font-semibold">Presenca</h1>
+      </div>
+      <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
+    </header>
+
+    <div class="p-4 md:p-6" id="page-content">
+      <!-- Filters -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 mb-6">
+        <div class="flex flex-wrap items-end gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mes</label>
+            <select id="filter-month" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+              <option value="01">Janeiro</option>
+              <option value="02">Fevereiro</option>
+              <option value="03">Marco</option>
+              <option value="04">Abril</option>
+              <option value="05">Maio</option>
+              <option value="06">Junho</option>
+              <option value="07">Julho</option>
+              <option value="08">Agosto</option>
+              <option value="09">Setembro</option>
+              <option value="10">Outubro</option>
+              <option value="11">Novembro</option>
+              <option value="12">Dezembro</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ano</label>
+            <select id="filter-year" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+            </select>
+          </div>
+          <button onclick="loadPresenca()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
+            <i class="bi bi-search mr-1"></i> Filtrar
+          </button>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Total Funcionarios</p>
+              <p class="text-3xl font-bold mt-1" id="stat-total">-</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+              <i class="bi bi-people-fill text-xl text-blue-600 dark:text-blue-400"></i>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Media Presenca</p>
+              <p class="text-3xl font-bold mt-1 text-green-600 dark:text-green-400" id="stat-avg">-</p>
+            </div>
+            <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+              <i class="bi bi-graph-up text-xl text-green-600 dark:text-green-400"></i>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Dias Uteis</p>
+              <p class="text-3xl font-bold mt-1 text-purple-600 dark:text-purple-400" id="stat-workdays">-</p>
+            </div>
+            <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
+              <i class="bi bi-calendar-week text-xl text-purple-600 dark:text-purple-400"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attendance Table -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <div class="p-5 border-b border-gray-100 dark:border-gray-700">
+          <h2 class="text-lg font-semibold">Presenca Mensal</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="bg-gray-50 dark:bg-gray-700/50">
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Funcionario</th>
+                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Dias Presentes</th>
+                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Dias Ausentes</th>
+                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Percentual</th>
+              </tr>
+            </thead>
+            <tbody id="presenca-table" class="divide-y divide-gray-100 dark:divide-gray-700">
+              <tr>
+                <td colspan="4" class="px-5 py-8 text-center text-gray-400">
+                  <i class="bi bi-arrow-repeat animate-spin text-2xl"></i>
+                  <p class="mt-2">Carregando dados...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+  <script src="/js/shared.js"></script>
+  <script>
+    // Set default month/year
+    (function() {
+      const now = new Date();
+      document.getElementById('filter-month').value = String(now.getMonth() + 1).padStart(2, '0');
+      const yearSelect = document.getElementById('filter-year');
+      const currentYear = now.getFullYear();
+      for (let y = currentYear + 1; y >= currentYear - 3; y--) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        if (y === currentYear) opt.selected = true;
+        yearSelect.appendChild(opt);
+      }
+    })();
+
+    function getPercentageColor(pct) {
+      if (pct >= 90) return 'text-green-600 dark:text-green-400';
+      if (pct >= 70) return 'text-yellow-600 dark:text-yellow-400';
+      return 'text-red-600 dark:text-red-400';
+    }
+
+    function getPercentageBg(pct) {
+      if (pct >= 90) return 'bg-green-500';
+      if (pct >= 70) return 'bg-yellow-500';
+      return 'bg-red-500';
+    }
+
+    async function loadPresenca() {
+      const mes = document.getElementById('filter-month').value;
+      const ano = document.getElementById('filter-year').value;
+      const tbody = document.getElementById('presenca-table');
+      tbody.innerHTML = `<tr><td colspan="4" class="px-5 py-8 text-center text-gray-400"><i class="bi bi-arrow-repeat animate-spin text-2xl"></i><p class="mt-2">Carregando dados...</p></td></tr>`;
+
+      try {
+        const [presencaData, funcData] = await Promise.all([
+          Shared.api(`/api/dashboard/presenca/mensal?mes=${mes}&ano=${ano}`),
+          Shared.api('/api/funcionarios')
+        ]);
+
+        const funcionarios = Array.isArray(funcData) ? funcData : (funcData.funcionarios || []);
+        const presenca = presencaData.presenca || presencaData.funcionarios || presencaData || [];
+        const diasUteis = presencaData.diasUteis || presencaData.dias_uteis || 22;
+
+        document.getElementById('stat-total').textContent = funcionarios.length;
+        document.getElementById('stat-workdays').textContent = diasUteis;
+
+        // Build attendance map from presenca data
+        const presencaMap = {};
+        if (Array.isArray(presenca)) {
+          presenca.forEach(p => {
+            presencaMap[p.funcionario_id || p.id] = p;
+          });
+        }
+
+        // Build table rows
+        const rows = funcionarios.map(f => {
+          const p = presencaMap[f.id] || {};
+          const diasPresentes = p.dias_presentes || p.presentes || p.dias || 0;
+          const diasAusentes = Math.max(0, diasUteis - diasPresentes);
+          const percentual = diasUteis > 0 ? Math.round((diasPresentes / diasUteis) * 100) : 0;
+
+          return {
+            nome: f.nome || f.name || '-',
+            cargo: f.cargo || '-',
+            diasPresentes,
+            diasAusentes,
+            percentual
+          };
+        });
+
+        // Calculate average
+        const totalPct = rows.reduce((sum, r) => sum + r.percentual, 0);
+        const avgPct = rows.length > 0 ? Math.round(totalPct / rows.length) : 0;
+        document.getElementById('stat-avg').textContent = avgPct + '%';
+
+        if (rows.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="4" class="px-5 py-8 text-center text-gray-400">
+                <i class="bi bi-inbox text-3xl"></i>
+                <p class="mt-2">Nenhum funcionario encontrado</p>
+              </td>
+            </tr>`;
+          return;
+        }
+
+        // Sort by percentage desc
+        rows.sort((a, b) => b.percentual - a.percentual);
+
+        tbody.innerHTML = rows.map(r => `
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+            <td class="px-5 py-3">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <i class="bi bi-person-fill text-primary"></i>
+                </div>
+                <div>
+                  <span class="font-medium">${r.nome}</span>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">${r.cargo}</p>
+                </div>
+              </div>
+            </td>
+            <td class="px-5 py-3 text-center">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                ${r.diasPresentes} dias
+              </span>
+            </td>
+            <td class="px-5 py-3 text-center">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                ${r.diasAusentes} dias
+              </span>
+            </td>
+            <td class="px-5 py-3 text-center">
+              <div class="flex items-center justify-center gap-2">
+                <div class="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div class="${getPercentageBg(r.percentual)} h-2 rounded-full" style="width: ${Math.min(r.percentual, 100)}%"></div>
+                </div>
+                <span class="text-sm font-semibold ${getPercentageColor(r.percentual)}">${r.percentual}%</span>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error(err);
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" class="px-5 py-8 text-center text-red-400">
+              <i class="bi bi-exclamation-circle text-3xl"></i>
+              <p class="mt-2">Erro ao carregar dados: ${err.message}</p>
+            </td>
+          </tr>`;
+      }
+    }
+
+    window.onAuthReady = function() {
+      loadPresenca();
+    };
+  </script>
+</body>
+</html>

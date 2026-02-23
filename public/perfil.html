@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meu Perfil - Lar Digital</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+    }
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-[#1e40af] text-white z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col">
+    <div class="p-5 border-b border-white/20">
+      <a href="/dashboard.html" class="flex items-center gap-3 text-xl font-bold">
+        <i class="bi bi-clock-history text-2xl"></i>
+        <span>Lar Digital</span>
+      </a>
+    </div>
+    <nav class="flex-1 overflow-y-auto py-4">
+      <ul class="space-y-1 px-3">
+        <li>
+          <a href="/dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="/funcionarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-people"></i><span>Funcionarios</span>
+          </a>
+        </li>
+        <li>
+          <a href="/registros.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-clock"></i><span>Registros</span>
+          </a>
+        </li>
+        <li>
+          <a href="/relatorios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-file-earmark-text"></i><span>Relatorios</span>
+          </a>
+        </li>
+        <li>
+          <a href="/relatorios-graficos.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-bar-chart-line"></i><span>Graficos</span>
+          </a>
+        </li>
+        <li>
+          <a href="/presenca.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-calendar-check"></i><span>Presenca</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/entregas.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-box-seam"></i><span>Entregas</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/holerites.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-receipt"></i><span>Holerites</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/ferias.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-calendar-heart"></i><span>Ferias</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/usuarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-shield-lock"></i><span>Usuarios</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/feriados.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-calendar-event"></i><span>Feriados</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/insights.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-stars"></i><span>Insights IA</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/whatsapp.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
+          </a>
+        </li>
+        <li class="admin-only hidden">
+          <a href="/audit-log.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+            <i class="bi bi-journal-text"></i><span>Audit Log</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="p-4 border-t border-white/20">
+      <a href="/perfil.html" class="flex items-center gap-3 mb-3 hover:bg-white/10 rounded-lg p-1 -m-1 transition-colors">
+        <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+          <i class="bi bi-person-fill"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium truncate" id="user-name">Carregando...</div>
+          <div class="text-xs text-white/70" id="user-role">-</div>
+        </div>
+      </a>
+      <div class="flex items-center gap-2">
+        <button id="theme-toggle" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-sm">
+          <i class="bi bi-moon-fill" id="theme-icon"></i>
+          <span>Tema</span>
+        </button>
+        <button id="logout-btn" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-500/80 hover:bg-red-500 transition-colors text-sm">
+          <i class="bi bi-box-arrow-left"></i>
+          <span>Sair</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Sidebar Overlay -->
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+
+  <!-- Main Content -->
+  <main class="md:ml-64 min-h-screen">
+    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+      <div class="flex items-center gap-3">
+        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300">
+          <i class="bi bi-list text-xl"></i>
+        </button>
+        <h1 class="text-xl font-semibold">Meu Perfil</h1>
+      </div>
+      <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
+    </header>
+
+    <div class="p-4 md:p-6" id="page-content">
+      <div class="max-w-2xl mx-auto space-y-6">
+
+        <!-- User Info Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <div class="p-5 border-b border-gray-100 dark:border-gray-700">
+            <h2 class="text-lg font-semibold flex items-center gap-2">
+              <i class="bi bi-person-circle text-primary"></i>
+              Informacoes do Usuario
+            </h2>
+          </div>
+          <div class="p-5 space-y-4">
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <i class="bi bi-person-fill text-3xl text-primary"></i>
+              </div>
+              <div>
+                <p class="text-xl font-semibold" id="profile-name">-</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400" id="profile-email">-</p>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 mt-1" id="profile-role">-</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Password Change Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <div class="p-5 border-b border-gray-100 dark:border-gray-700">
+            <h2 class="text-lg font-semibold flex items-center gap-2">
+              <i class="bi bi-key text-yellow-500"></i>
+              Alterar Senha
+            </h2>
+          </div>
+          <div class="p-5">
+            <form id="password-form" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="current-password">Senha Atual</label>
+                <input type="password" id="current-password" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary" required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="new-password">Nova Senha</label>
+                <input type="password" id="new-password" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary" required minlength="6">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="confirm-password">Confirmar Nova Senha</label>
+                <input type="password" id="confirm-password" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary" required minlength="6">
+              </div>
+              <div class="flex justify-end">
+                <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
+                  <i class="bi bi-check-lg mr-1"></i> Alterar Senha
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- 2FA Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <div class="p-5 border-b border-gray-100 dark:border-gray-700">
+            <h2 class="text-lg font-semibold flex items-center gap-2">
+              <i class="bi bi-shield-lock text-green-500"></i>
+              Autenticacao em Dois Fatores (2FA)
+            </h2>
+          </div>
+          <div class="p-5" id="twofa-section">
+            <!-- 2FA Status: loading -->
+            <div id="twofa-loading" class="flex items-center justify-center py-8">
+              <i class="bi bi-arrow-repeat animate-spin text-2xl text-gray-400"></i>
+              <span class="ml-2 text-gray-400">Carregando status...</span>
+            </div>
+
+            <!-- 2FA Status: enabled -->
+            <div id="twofa-enabled" class="hidden">
+              <div class="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg mb-4">
+                <i class="bi bi-shield-fill-check text-2xl text-green-600 dark:text-green-400"></i>
+                <div>
+                  <p class="font-medium text-green-700 dark:text-green-300">2FA Ativado</p>
+                  <p class="text-sm text-green-600 dark:text-green-400">Sua conta esta protegida com autenticacao em dois fatores.</p>
+                </div>
+              </div>
+              <button onclick="disable2FA()" id="btn-disable-2fa" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium">
+                <i class="bi bi-shield-x mr-1"></i> Desativar 2FA
+              </button>
+            </div>
+
+            <!-- 2FA Status: disabled -->
+            <div id="twofa-disabled" class="hidden">
+              <div class="flex items-center gap-3 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg mb-4">
+                <i class="bi bi-shield-exclamation text-2xl text-yellow-600 dark:text-yellow-400"></i>
+                <div>
+                  <p class="font-medium text-yellow-700 dark:text-yellow-300">2FA Desativado</p>
+                  <p class="text-sm text-yellow-600 dark:text-yellow-400">Ative a autenticacao em dois fatores para maior seguranca.</p>
+                </div>
+              </div>
+              <button onclick="setup2FA()" id="btn-setup-2fa" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium">
+                <i class="bi bi-shield-plus mr-1"></i> Ativar 2FA
+              </button>
+            </div>
+
+            <!-- 2FA Setup: QR code + verify -->
+            <div id="twofa-setup" class="hidden">
+              <div class="text-center mb-4">
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Escaneie o QR Code abaixo com seu aplicativo autenticador (Google Authenticator, Authy, etc):</p>
+                <div class="inline-block p-4 bg-white rounded-xl shadow-sm border border-gray-200">
+                  <img id="twofa-qr" src="" alt="QR Code" class="w-48 h-48">
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Ou insira manualmente: <code id="twofa-secret" class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs">-</code></p>
+              </div>
+              <div class="max-w-xs mx-auto">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Codigo de Verificacao</label>
+                <div class="flex gap-2">
+                  <input type="text" id="twofa-code" class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm text-center tracking-widest font-mono focus:ring-2 focus:ring-primary focus:border-primary" placeholder="000000" maxlength="6" inputmode="numeric">
+                  <button onclick="verify2FA()" id="btn-verify-2fa" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
+                    Verificar
+                  </button>
+                </div>
+              </div>
+              <div class="text-center mt-3">
+                <button onclick="cancelSetup()" class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">Cancelar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+  <script src="/js/shared.js"></script>
+  <script>
+    let twofaSecret = null;
+
+    function loadProfile(user) {
+      document.getElementById('profile-name').textContent = user.name || '-';
+      document.getElementById('profile-email').textContent = user.email || '-';
+      const roleMap = { admin: 'Administrador', gestor: 'Gestor', viewer: 'Visualizador' };
+      document.getElementById('profile-role').textContent = roleMap[user.role] || user.role;
+    }
+
+    async function load2FAStatus() {
+      document.getElementById('twofa-loading').classList.remove('hidden');
+      document.getElementById('twofa-enabled').classList.add('hidden');
+      document.getElementById('twofa-disabled').classList.add('hidden');
+      document.getElementById('twofa-setup').classList.add('hidden');
+
+      try {
+        const data = await Shared.api('/api/auth/2fa/status');
+        document.getElementById('twofa-loading').classList.add('hidden');
+        if (data.enabled) {
+          document.getElementById('twofa-enabled').classList.remove('hidden');
+        } else {
+          document.getElementById('twofa-disabled').classList.remove('hidden');
+        }
+      } catch (err) {
+        document.getElementById('twofa-loading').classList.add('hidden');
+        document.getElementById('twofa-disabled').classList.remove('hidden');
+      }
+    }
+
+    // Password change
+    document.getElementById('password-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const currentPassword = document.getElementById('current-password').value;
+      const newPassword = document.getElementById('new-password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+
+      if (newPassword !== confirmPassword) {
+        showToast('As senhas nao conferem.', 'warning');
+        return;
+      }
+      if (newPassword.length < 6) {
+        showToast('A nova senha deve ter pelo menos 6 caracteres.', 'warning');
+        return;
+      }
+
+      try {
+        await Shared.api('/api/auth/password', {
+          method: 'PUT',
+          body: JSON.stringify({ currentPassword, newPassword })
+        });
+        showToast('Senha alterada com sucesso!');
+        this.reset();
+      } catch (err) {
+        showToast('Erro: ' + err.message, 'danger');
+      }
+    });
+
+    async function setup2FA() {
+      const btn = document.getElementById('btn-setup-2fa');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin mr-1"></i> Configurando...';
+
+      try {
+        const data = await Shared.api('/api/auth/2fa/setup', { method: 'POST' });
+        twofaSecret = data.secret;
+        document.getElementById('twofa-qr').src = data.qrCode || data.qr || '';
+        document.getElementById('twofa-secret').textContent = data.secret || '-';
+
+        document.getElementById('twofa-disabled').classList.add('hidden');
+        document.getElementById('twofa-setup').classList.remove('hidden');
+      } catch (err) {
+        showToast('Erro: ' + err.message, 'danger');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-shield-plus mr-1"></i> Ativar 2FA';
+      }
+    }
+
+    async function verify2FA() {
+      const code = document.getElementById('twofa-code').value.trim();
+      if (!code || code.length !== 6) {
+        showToast('Insira o codigo de 6 digitos.', 'warning');
+        return;
+      }
+
+      const btn = document.getElementById('btn-verify-2fa');
+      btn.disabled = true;
+
+      try {
+        await Shared.api('/api/auth/2fa/verify', {
+          method: 'POST',
+          body: JSON.stringify({ token: code, secret: twofaSecret })
+        });
+        showToast('2FA ativado com sucesso!');
+        document.getElementById('twofa-setup').classList.add('hidden');
+        document.getElementById('twofa-enabled').classList.remove('hidden');
+      } catch (err) {
+        showToast('Erro: ' + err.message, 'danger');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function cancelSetup() {
+      document.getElementById('twofa-setup').classList.add('hidden');
+      document.getElementById('twofa-disabled').classList.remove('hidden');
+      twofaSecret = null;
+    }
+
+    async function disable2FA() {
+      if (!confirm('Deseja realmente desativar a autenticacao em dois fatores?')) return;
+
+      const btn = document.getElementById('btn-disable-2fa');
+      btn.disabled = true;
+
+      try {
+        await Shared.api('/api/auth/2fa', { method: 'DELETE' });
+        showToast('2FA desativado.');
+        document.getElementById('twofa-enabled').classList.add('hidden');
+        document.getElementById('twofa-disabled').classList.remove('hidden');
+      } catch (err) {
+        showToast('Erro: ' + err.message, 'danger');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    window.onAuthReady = function(user) {
+      loadProfile(user);
+      load2FAStatus();
+    };
+  </script>
+</body>
+</html>
