@@ -3,6 +3,7 @@ const { body, param, query, validationResult } = require('express-validator');
 const Funcionario = require('../models/Funcionario');
 const { authenticateToken, requireAdmin, requireGestor } = require('../middleware/auth');
 const AuditLog = require('../services/auditLog');
+const EmailService = require('../services/emailService');
 
 const router = express.Router();
 
@@ -135,6 +136,15 @@ router.post('/', authenticateToken, requireGestor, [
     }
     const id = Funcionario.create(req.body);
     AuditLog.log(req.user.id, 'create', 'funcionario', id, { nome: req.body.nome, cargo: req.body.cargo }, req.ip);
+
+    // Send welcome email if employee has email
+    if (req.body.email_pessoal) {
+      const func = Funcionario.findById(id);
+      EmailService.sendWelcome(func).catch(err => {
+        console.error('[Email] Welcome email error:', err.message);
+      });
+    }
+
     res.status(201).json({ id, message: 'Funcionário criado com sucesso' });
   } catch (err) {
     console.error('Create funcionario error:', err);
@@ -159,8 +169,22 @@ router.put('/:id', authenticateToken, requireGestor, [
     if (!funcionario) {
       return res.status(404).json({ error: 'Funcionário não encontrado' });
     }
+    const oldFeriasStatus = funcionario.ferias_status;
     Funcionario.update(req.params.id, req.body);
     AuditLog.log(req.user.id, 'update', 'funcionario', parseInt(req.params.id), req.body, req.ip);
+
+    // Send vacation notification if status changed to approved
+    if (req.body.ferias_status && req.body.ferias_status !== oldFeriasStatus) {
+      const updated = Funcionario.findById(req.params.id);
+      if (updated.notificacoes_ativas && updated.email_pessoal) {
+        if (req.body.ferias_status === 'aprovada') {
+          EmailService.sendVacationNotification(updated, 'aprovada').catch(err => {
+            console.error('[Email] Vacation notification error:', err.message);
+          });
+        }
+      }
+    }
+
     res.json({ message: 'Funcionário atualizado com sucesso' });
   } catch (err) {
     console.error('Update funcionario error:', err);

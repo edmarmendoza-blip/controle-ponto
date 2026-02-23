@@ -6,6 +6,7 @@ const fs = require('fs');
 const { db } = require('../config/database');
 const Registro = require('../models/Registro');
 const Funcionario = require('../models/Funcionario');
+const EmailService = require('./emailService');
 
 // Portuguese keyword patterns for clock-in/out detection
 const ENTRADA_PATTERNS = [
@@ -120,6 +121,10 @@ class WhatsAppService {
       this.status = 'disconnected';
       this.groupChat = null;
       this.groupId = null;
+      // Send email alert
+      EmailService.sendWhatsAppAlert(reason).catch(err => {
+        console.error('[WhatsApp] Error sending disconnect alert:', err.message);
+      });
       // Auto-reconnect with retry
       this._initRetries = 0;
       this._retryInitialize();
@@ -245,6 +250,7 @@ class WhatsAppService {
     // Download media if present
     let mediaType = null;
     let mediaPath = null;
+    let visionAnalysis = null;
     if (msg.hasMedia) {
       try {
         const media = await msg.downloadMedia();
@@ -259,6 +265,11 @@ class WhatsAppService {
           fs.writeFileSync(filePath, Buffer.from(media.data, 'base64'));
           mediaPath = `/uploads/whatsapp/${today}/${filename}`;
           console.log(`[WhatsApp] Media saved: ${mediaPath} (${mediaType})`);
+
+          // Analyze images with Claude Vision
+          if (mediaType === 'image' && process.env.ANTHROPIC_API_KEY) {
+            visionAnalysis = await this.analyzeImage(media.data, media.mimetype, senderName, text);
+          }
         }
       } catch (err) {
         console.error('[WhatsApp] Error downloading media:', err.message);
@@ -279,8 +290,9 @@ class WhatsAppService {
       funcionario = this.autoCreateEmployee(senderPhone, senderName);
     }
 
-    // Store the message
-    this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, text, intent || 'other', mediaType, mediaPath);
+    // Store the message (append vision analysis to text if available)
+    const storedText = visionAnalysis ? (text ? `${text}\n\n[Análise IA]: ${visionAnalysis}` : `[Análise IA]: ${visionAnalysis}`) : text;
+    this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, storedText, intent || 'other', mediaType, mediaPath);
 
     // If clock-in/out intent detected and employee found, register the punch
     if (intent && funcionario) {
@@ -473,6 +485,42 @@ class WhatsAppService {
       } else {
         console.error(`[WhatsApp] Error registering punch for ${funcionario.nome}:`, err.message);
       }
+    }
+  }
+
+  async analyzeImage(base64Data, mimetype, senderName, captionText) {
+    try {
+      const Anthropic = require('@anthropic-ai/sdk');
+      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+      const prompt = `Analise esta foto enviada por "${senderName}" no grupo de trabalho da residência "Lar Digital".
+${captionText ? `Legenda da foto: "${captionText}"` : 'Sem legenda.'}
+
+Descreva brevemente:
+1. O que aparece na foto (entrega, serviço realizado, local, produto, etc.)
+2. Se parece ser um registro de trabalho/entrega, descreva o que foi feito
+3. Qualquer detalhe relevante (quantidade, estado, marca, etc.)
+
+Responda em 2-3 frases curtas, direto ao ponto, em português.`;
+
+      const response = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 300,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mimetype, data: base64Data } },
+            { type: 'text', text: prompt }
+          ]
+        }]
+      });
+
+      const analysis = response.content[0]?.text || '';
+      console.log(`[WhatsApp] Vision analysis: ${analysis.substring(0, 100)}...`);
+      return analysis;
+    } catch (err) {
+      console.error('[WhatsApp] Vision analysis error:', err.message);
+      return null;
     }
   }
 

@@ -56,6 +56,7 @@ app.use('/api/feriados', require('./src/routes/feriados'));
 app.use('/api/whatsapp', require('./src/routes/whatsapp'));
 app.use('/api/dashboard/presenca', require('./src/routes/dashboardPresenca'));
 app.use('/api/insights', require('./src/routes/insights'));
+app.use('/api/holerites', require('./src/routes/holerites'));
 
 // SPA fallback - serve index.html for all non-API routes
 app.get('*', (req, res) => {
@@ -121,5 +122,9 @@ if (require.main === module || process.env.NODE_ENV === 'production' || process.
       }, msUntilMidnight);
     }
     scheduleMidnightInsights();
+
+    // Initialize email schedulers (vacation alerts, monthly closing, IMAP sync)
+    const Schedulers = require('./src/services/schedulers');
+    Schedulers.init();
   });
 }

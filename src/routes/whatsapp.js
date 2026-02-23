@@ -129,4 +129,37 @@ router.get('/messages', authenticateToken, (req, res) => {
   }
 });
 
+// POST /api/whatsapp/messages/:id/analyze - Re-analyze image with Claude Vision
+router.post('/messages/:id/analyze', authenticateToken, async (req, res) => {
+  try {
+    const msg = db.prepare('SELECT * FROM whatsapp_mensagens WHERE id = ?').get(req.params.id);
+    if (!msg) return res.status(404).json({ error: 'Mensagem não encontrada' });
+    if (msg.media_type !== 'image') return res.status(400).json({ error: 'Apenas imagens podem ser analisadas' });
+    if (!msg.media_path) return res.status(400).json({ error: 'Arquivo de mídia não encontrado' });
+
+    const filePath = require('path').join(__dirname, '..', '..', 'public', msg.media_path);
+    const fs = require('fs');
+    if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Arquivo não existe no disco' });
+
+    const imageData = fs.readFileSync(filePath).toString('base64');
+    const ext = msg.media_path.split('.').pop().toLowerCase();
+    const mimeMap = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp' };
+    const mimetype = mimeMap[ext] || 'image/jpeg';
+
+    const analysis = await whatsappService.analyzeImage(imageData, mimetype, msg.sender_name, msg.message_text);
+    if (!analysis) return res.status(500).json({ error: 'Falha na análise da imagem' });
+
+    // Update message text with analysis
+    const originalText = msg.message_text || '';
+    const cleanText = originalText.replace(/\n?\n?\[Análise IA\]:.*$/s, '');
+    const newText = cleanText ? `${cleanText}\n\n[Análise IA]: ${analysis}` : `[Análise IA]: ${analysis}`;
+    db.prepare('UPDATE whatsapp_mensagens SET message_text = ? WHERE id = ?').run(newText, msg.id);
+
+    res.json({ success: true, analysis, message_text: newText });
+  } catch (err) {
+    console.error('[WhatsApp] Re-analyze error:', err.message);
+    res.status(500).json({ error: 'Erro ao analisar imagem' });
+  }
+});
+
 module.exports = router;
