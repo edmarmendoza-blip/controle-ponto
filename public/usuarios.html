@@ -293,7 +293,11 @@
           <td class="px-5 py-3">${u.totp_enabled ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"><i class="bi bi-shield-lock-fill mr-1"></i>Ativo</span>' : '<span class="text-xs text-gray-400">-</span>'}</td>
           <td class="px-5 py-3 text-gray-600 dark:text-gray-400">${formatCreatedAt(u.created_at || u.createdAt)}</td>
           <td class="px-5 py-3">
-            <div class="flex items-center justify-center gap-2">
+            <div class="flex items-center justify-center gap-1">
+              <button onclick="resetPassword(${u.id}, '${(u.name || '').replace(/'/g, "\\'")}')" title="Enviar nova senha por e-mail"
+                class="p-1.5 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors">
+                <i class="bi bi-envelope-arrow-up"></i>
+              </button>
               <button onclick="openEditModal(${u.id})" title="Editar"
                 class="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors">
                 <i class="bi bi-pencil-square"></i>
@@ -423,6 +427,21 @@
       } finally {
         btn.disabled = false;
         btn.textContent = 'Excluir';
+      }
+    }
+
+    // Reset password
+    async function resetPassword(id, name) {
+      if (!confirm(`Redefinir a senha de "${name}" e enviar por e-mail?`)) return;
+      try {
+        const data = await Shared.api(`/api/auth/users/${id}/reset-password`, { method: 'POST' });
+        if (data.emailSent) {
+          Shared.showToast(`Nova senha enviada para o e-mail de ${name}`, 'success');
+        } else {
+          Shared.showToast('Senha redefinida, mas o e-mail não foi enviado (SMTP não configurado)', 'warning');
+        }
+      } catch (err) {
+        Shared.showToast(err.message, 'danger');
       }
     }
 

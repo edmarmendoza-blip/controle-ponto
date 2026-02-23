@@ -5,6 +5,7 @@ const User = require('../models/User');
 const { loginLimiter } = require('../middleware/rateLimiter');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const AuditLog = require('../services/auditLog');
+const EmailService = require('../services/emailService');
 
 const router = express.Router();
 
@@ -129,6 +130,38 @@ router.post('/users', authenticateToken, requireAdmin, [
 
     const id = await User.create(req.body);
     AuditLog.log(req.user.id, 'create', 'user', id, { email: req.body.email, name: req.body.name, role: req.body.role }, req.ip);
+
+    // Send welcome email with credentials
+    const roleLabels = { admin: 'Administrador', gestor: 'Gestor', viewer: 'Visualizador' };
+    EmailService.send({
+      to: req.body.email,
+      subject: '[Lar Digital] Sua conta foi criada',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: #1e40af; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+            <h2 style="margin: 0;">Bem-vindo(a) ao Lar Digital!</h2>
+          </div>
+          <div style="padding: 20px; background: #f8fafc; border-radius: 0 0 8px 8px;">
+            <p>Olá <strong>${req.body.name}</strong>,</p>
+            <p>Sua conta no sistema <strong>Lar Digital</strong> foi criada com sucesso.</p>
+            <div style="background: white; border: 2px solid #1e40af; border-radius: 8px; padding: 16px; margin: 20px 0;">
+              <table style="width: 100%;">
+                <tr><td style="padding: 6px 0; color: #64748b;">E-mail:</td><td style="padding: 6px 0; font-weight: bold;">${req.body.email}</td></tr>
+                <tr><td style="padding: 6px 0; color: #64748b;">Senha:</td><td style="padding: 6px 0; font-weight: bold; font-size: 18px; letter-spacing: 1px;">${req.body.password}</td></tr>
+                <tr><td style="padding: 6px 0; color: #64748b;">Função:</td><td style="padding: 6px 0;">${roleLabels[req.body.role] || req.body.role}</td></tr>
+              </table>
+            </div>
+            <p><a href="${process.env.APP_URL || 'https://lardigital.app'}/login.html" style="display: inline-block; background: #1e40af; color: white; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Acessar o Sistema</a></p>
+            <p style="color: #dc2626; font-size: 14px;"><strong>Importante:</strong> Troque sua senha após o primeiro login.</p>
+            <hr style="border: none; border-top: 1px solid #e2e8f0;">
+            <p style="color: #94a3b8; font-size: 12px;">Lar Digital - Gestão da Casa</p>
+          </div>
+        </div>
+      `
+    }).catch(err => {
+      console.error('[Email] Welcome user email error:', err.message);
+    });
+
     res.status(201).json({ id, message: 'Usuário criado com sucesso' });
   } catch (err) {
     console.error('Create user error:', err);
@@ -206,6 +239,67 @@ router.delete('/users/:id', authenticateToken, requireAdmin, [
   } catch (err) {
     console.error('Delete user error:', err);
     res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// POST /api/auth/users/:id/reset-password - Generate new password and send by email
+router.post('/users/:id/reset-password', authenticateToken, requireAdmin, [
+  param('id').isInt().withMessage('ID inválido')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const user = User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    // Generate random password
+    const crypto = require('crypto');
+    const newPassword = crypto.randomBytes(4).toString('hex'); // 8 char hex password
+
+    const bcrypt = require('bcryptjs');
+    const { db } = require('../config/database');
+    const hashed = await bcrypt.hash(newPassword, 12);
+    db.prepare('UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(hashed, user.id);
+
+    // Send email
+    const sent = await EmailService.send({
+      to: user.email,
+      subject: '[Lar Digital] Sua senha foi redefinida',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: #1e40af; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+            <h2 style="margin: 0;">Senha Redefinida</h2>
+          </div>
+          <div style="padding: 20px; background: #f8fafc; border-radius: 0 0 8px 8px;">
+            <p>Olá <strong>${user.name}</strong>,</p>
+            <p>Sua senha no sistema Lar Digital foi redefinida por um administrador.</p>
+            <div style="background: white; border: 2px solid #1e40af; border-radius: 8px; padding: 16px; text-align: center; margin: 20px 0;">
+              <p style="color: #64748b; margin: 0 0 8px 0; font-size: 14px;">Sua nova senha:</p>
+              <p style="font-size: 24px; font-weight: bold; color: #1e40af; margin: 0; letter-spacing: 2px;">${newPassword}</p>
+            </div>
+            <p style="color: #dc2626; font-size: 14px;"><strong>Importante:</strong> Troque sua senha após o primeiro login.</p>
+            <p style="color: #64748b; font-size: 14px;">Acesse: <a href="${process.env.APP_URL || 'https://lardigital.app'}" style="color: #1e40af;">${process.env.APP_URL || 'https://lardigital.app'}</a></p>
+            <hr style="border: none; border-top: 1px solid #e2e8f0;">
+            <p style="color: #94a3b8; font-size: 12px;">Lar Digital - Gestão da Casa</p>
+          </div>
+        </div>
+      `
+    });
+
+    AuditLog.log(req.user.id, 'password_reset', 'user', parseInt(req.params.id), { email: user.email }, req.ip);
+
+    res.json({
+      message: sent ? 'Senha redefinida e enviada por e-mail' : 'Senha redefinida (e-mail não configurado)',
+      emailSent: !!sent
+    });
+  } catch (err) {
+    console.error('Reset password error:', err);
+    res.status(500).json({ error: 'Erro ao redefinir senha' });
   }
 });
 
