@@ -17,111 +17,74 @@
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
 
   <!-- Sidebar -->
-  <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-[#1e40af] text-white z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col">
-    <div class="p-5 border-b border-white/20">
-      <a href="/dashboard.html" class="flex items-center gap-3 text-xl font-bold">
+  <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen bg-blue-800 text-white transition-transform -translate-x-full md:translate-x-0">
+    <div class="p-4 border-b border-blue-700">
+      <a href="/dashboard.html" class="flex items-center gap-2">
         <i class="bi bi-clock-history text-2xl"></i>
-        <span>Lar Digital</span>
+        <span class="text-xl font-bold">Lar Digital</span>
       </a>
+      <p class="text-blue-200 text-xs mt-1">Gestão da Casa</p>
     </div>
-    <nav class="flex-1 overflow-y-auto py-4">
-      <ul class="space-y-1 px-3">
-        <li>
-          <a href="/dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
-            <i class="bi bi-speedometer2"></i><span>Dashboard</span>
-          </a>
-        </li>
-        <li>
-          <a href="/funcionarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
-            <i class="bi bi-people"></i><span>Funcionários</span>
-          </a>
-        </li>
-        <li>
-          <a href="/registros.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
-            <i class="bi bi-clock"></i><span>Registros</span>
-          </a>
-        </li>
-        <li>
-          <a href="/relatorios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
-            <i class="bi bi-file-earmark-text"></i><span>Relatórios</span>
-          </a>
-        </li>
-        <li>
-          <a href="/relatorios-graficos.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/20 font-medium">
-            <i class="bi bi-bar-chart-line"></i><span>Gráficos</span>
-          </a>
-        </li>
-        <li>
-          <a href="/presenca.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
-            <i class="bi bi-calendar-check"></i><span>Presença</span>
-          </a>
-        </li>
-        <li class="admin-only hidden">
-          <a href="/entregas.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
-            <i class="bi bi-box-seam"></i><span>Entregas</span>
-          </a>
-        </li>
-        <li class="admin-only hidden">
-          <a href="/holerites.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
-            <i class="bi bi-receipt"></i><span>Holerites</span>
-          </a>
-        </li>
-        <li class="admin-only hidden">
-          <a href="/ferias.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
-            <i class="bi bi-calendar-heart"></i><span>Férias</span>
-          </a>
-        </li>
-        <li class="admin-only hidden">
-          <a href="/usuarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
-            <i class="bi bi-shield-lock"></i><span>Usuários</span>
-          </a>
-        </li>
-        <li class="admin-only hidden">
-          <a href="/feriados.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
-            <i class="bi bi-calendar-event"></i><span>Feriados</span>
-          </a>
-        </li>
-        <li class="admin-only hidden">
-          <a href="/insights.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
-            <i class="bi bi-stars"></i><span>Insights IA</span>
-          </a>
-        </li>
-        <li class="admin-only hidden">
-          <a href="/whatsapp.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
-            <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
-          </a>
-        </li>
-        <li class="admin-only hidden">
-          <a href="/audit-log.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
-            <i class="bi bi-journal-text"></i><span>Audit Log</span>
-          </a>
-        </li>
-      </ul>
+    <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-180px)]">
+      <a href="/dashboard.html" data-page="dashboard" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+      </a>
+      <a href="/funcionarios.html" data-page="funcionarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-people"></i><span>Funcionários</span>
+      </a>
+      <a href="/registros.html" data-page="registros" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-clock"></i><span>Registros</span>
+      </a>
+      <a href="/relatorios.html" data-page="relatorios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-file-earmark-text"></i><span>Relatórios</span>
+      </a>
+      <a href="/relatorios-graficos.html" data-page="relatorios-graficos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-bar-chart-line"></i><span>Gráficos</span>
+      </a>
+      <a href="/presenca.html" data-page="presenca" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-calendar-check"></i><span>Presença</span>
+      </a>
+      <a href="/entregas.html" data-page="entregas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-box-seam"></i><span>Entregas</span>
+      </a>
+      <a href="/holerites.html" data-page="holerites" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-receipt"></i><span>Holerites</span>
+      </a>
+      <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-calendar-heart"></i><span>Férias</span>
+      </a>
+      <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-shield-lock"></i><span>Usuários</span>
+      </a>
+      <a href="/feriados.html" data-page="feriados" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-calendar-event"></i><span>Feriados</span>
+      </a>
+      <a href="/insights.html" data-page="insights" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-stars"></i><span>Insights IA</span>
+      </a>
+      <a href="/whatsapp.html" data-page="whatsapp" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
+      </a>
+      <a href="/audit-log.html" data-page="audit-log" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-journal-text"></i><span>Audit Log</span>
+      </a>
     </nav>
-    <div class="p-4 border-t border-white/20">
-      <div class="flex items-center gap-3 mb-3">
-        <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
-          <i class="bi bi-person-fill"></i>
+    <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-blue-700 bg-blue-800">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2 text-sm">
+          <i class="bi bi-person-circle"></i>
+          <div>
+            <div id="user-name" class="font-medium">-</div>
+            <div id="user-role" class="text-blue-300 text-xs">-</div>
+          </div>
         </div>
-        <div class="flex-1 min-w-0">
-          <div class="text-sm font-medium truncate" id="user-name">Carregando...</div>
-          <div class="text-xs text-white/70" id="user-role">-</div>
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <button id="theme-toggle" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-sm">
-          <i class="bi bi-moon-fill" id="theme-icon"></i>
-          <span>Tema</span>
-        </button>
-        <button id="logout-btn" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-500/80 hover:bg-red-500 transition-colors text-sm">
-          <i class="bi bi-box-arrow-left"></i>
-          <span>Sair</span>
+        <button id="theme-toggle" class="p-1.5 rounded-lg hover:bg-blue-700 transition-colors">
+          <i id="theme-icon" class="bi bi-moon-fill"></i>
         </button>
       </div>
+      <button id="logout-btn" class="w-full py-1.5 text-sm bg-blue-700 hover:bg-blue-600 rounded-lg transition-colors">Sair</button>
     </div>
   </aside>
-
-  <!-- Sidebar Overlay -->
   <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
 
   <!-- Main Content -->

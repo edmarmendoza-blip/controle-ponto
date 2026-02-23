@@ -36,7 +36,15 @@
     }
     api('/api/auth/me').then(user => {
       currentUser = user;
-      document.getElementById('user-name').textContent = user.name;
+      const nameEl = document.getElementById('user-name');
+      nameEl.textContent = user.name;
+      // Make user name clickable to profile page
+      if (nameEl && !nameEl.dataset.linked) {
+        nameEl.style.cursor = 'pointer';
+        nameEl.title = 'Meu Perfil';
+        nameEl.addEventListener('click', () => { window.location.href = '/perfil.html'; });
+        nameEl.dataset.linked = '1';
+      }
       document.getElementById('user-role').textContent =
         user.role === 'admin' ? 'Administrador' : user.role === 'gestor' ? 'Gestor' : 'Visualizador';
       // Show admin-only items
