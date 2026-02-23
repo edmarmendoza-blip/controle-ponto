@@ -140,7 +140,7 @@ Responda SOMENTE com o JSON, sem texto adicional, sem markdown.`;
   static saveInsight(data, insightsJson, count, model) {
     db.prepare(`
       INSERT OR REPLACE INTO insights_ia (data, insights_json, mensagens_analisadas, modelo, created_at)
-      VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+      VALUES (?, ?, ?, ?, datetime('now','localtime'))
     `).run(data, insightsJson, count, model);
   }
 

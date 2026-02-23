@@ -93,7 +93,7 @@ router.put('/password', authenticateToken, [
     const bcrypt = require('bcryptjs');
     const hashedPassword = await bcrypt.hash(req.body.newPassword, 12);
     const { db } = require('../config/database');
-    db.prepare('UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(hashedPassword, req.user.id);
+    db.prepare("UPDATE users SET password = ?, updated_at = datetime('now','localtime') WHERE id = ?").run(hashedPassword, req.user.id);
 
     AuditLog.log(req.user.id, 'password_change', 'user', req.user.id, null, req.ip);
 
@@ -264,7 +264,7 @@ router.post('/users/:id/reset-password', authenticateToken, requireAdmin, [
     const bcrypt = require('bcryptjs');
     const { db } = require('../config/database');
     const hashed = await bcrypt.hash(newPassword, 12);
-    db.prepare('UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(hashed, user.id);
+    db.prepare("UPDATE users SET password = ?, updated_at = datetime('now','localtime') WHERE id = ?").run(hashed, user.id);
 
     // Send email
     const sent = await EmailService.send({

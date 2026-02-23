@@ -28,8 +28,8 @@ function initializeDatabase() {
           name TEXT NOT NULL,
           role TEXT DEFAULT 'viewer' CHECK(role IN ('admin', 'gestor', 'viewer')),
           active INTEGER DEFAULT 1,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          created_at DATETIME DEFAULT (datetime('now','localtime')),
+          updated_at DATETIME DEFAULT (datetime('now','localtime'))
         );
         INSERT INTO users SELECT * FROM users_old;
         DROP TABLE users_old;
@@ -136,8 +136,8 @@ function initializeDatabase() {
       active INTEGER DEFAULT 1,
       totp_secret TEXT DEFAULT NULL,
       totp_enabled INTEGER DEFAULT 0,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at DATETIME DEFAULT (datetime('now','localtime')),
+      updated_at DATETIME DEFAULT (datetime('now','localtime'))
     );
 
     CREATE TABLE IF NOT EXISTS funcionarios (
@@ -175,8 +175,8 @@ function initializeDatabase() {
       ferias_status TEXT DEFAULT 'sem_direito',
       notificacoes_ativas INTEGER DEFAULT 0,
       notificacoes_config TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at DATETIME DEFAULT (datetime('now','localtime')),
+      updated_at DATETIME DEFAULT (datetime('now','localtime'))
     );
 
     CREATE TABLE IF NOT EXISTS funcionario_transportes (
@@ -200,8 +200,8 @@ function initializeDatabase() {
       updated_by INTEGER,
       latitude REAL DEFAULT NULL,
       longitude REAL DEFAULT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      created_at DATETIME DEFAULT (datetime('now','localtime')),
+      updated_at DATETIME DEFAULT (datetime('now','localtime')),
       FOREIGN KEY (funcionario_id) REFERENCES funcionarios(id),
       FOREIGN KEY (created_by) REFERENCES users(id),
       FOREIGN KEY (updated_by) REFERENCES users(id)
@@ -224,7 +224,7 @@ function initializeDatabase() {
       entity_id INTEGER,
       details TEXT,
       ip_address TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      created_at DATETIME DEFAULT (datetime('now','localtime')),
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
 
@@ -245,7 +245,7 @@ function initializeDatabase() {
       processed INTEGER DEFAULT 0,
       media_type TEXT DEFAULT NULL,
       media_path TEXT DEFAULT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      created_at DATETIME DEFAULT (datetime('now','localtime')),
       FOREIGN KEY (funcionario_id) REFERENCES funcionarios(id)
     );
 
@@ -261,7 +261,7 @@ function initializeDatabase() {
       insights_json TEXT NOT NULL,
       mensagens_analisadas INTEGER DEFAULT 0,
       modelo TEXT DEFAULT 'claude-sonnet-4-6',
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at DATETIME DEFAULT (datetime('now','localtime'))
     );
 
     CREATE INDEX IF NOT EXISTS idx_whatsapp_mensagens_date ON whatsapp_mensagens(created_at);

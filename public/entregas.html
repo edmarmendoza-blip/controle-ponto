@@ -189,7 +189,7 @@
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
   <script src="/js/shared.js"></script>
   <script>
-    document.getElementById('filter-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('filter-date').value = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
 
     async function loadEmployees() {
       try {
@@ -228,7 +228,7 @@
         const messages = Array.isArray(data) ? data : (data.messages || []);
 
         // Update stats
-        const todayStr = new Date().toISOString().split('T')[0];
+        const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
         const todayMsgs = messages.filter(m => (m.created_at || '').startsWith(todayStr));
         const withText = messages.filter(m => m.message_text && m.message_text !== '<Mídia oculta>');
 

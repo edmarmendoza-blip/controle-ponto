@@ -69,7 +69,7 @@ class Funcionario {
     if (fields.length === 0 && !data.transportes) return null;
 
     if (fields.length > 0) {
-      fields.push('updated_at = CURRENT_TIMESTAMP');
+      fields.push("updated_at = datetime('now','localtime')");
       values.push(id);
       db.prepare(`UPDATE funcionarios SET ${fields.join(', ')} WHERE id = ?`).run(...values);
     }
@@ -83,12 +83,12 @@ class Funcionario {
   }
 
   static delete(id) {
-    return db.prepare("UPDATE funcionarios SET status = 'desligado', data_desligamento = date('now'), updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(id);
+    return db.prepare("UPDATE funcionarios SET status = 'desligado', data_desligamento = date('now','localtime'), updated_at = datetime('now','localtime') WHERE id = ?").run(id);
   }
 
   static desligar(id, motivo) {
     return db.prepare(
-      "UPDATE funcionarios SET status = 'desligado', data_desligamento = date('now'), motivo_desligamento = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
+      "UPDATE funcionarios SET status = 'desligado', data_desligamento = date('now','localtime'), motivo_desligamento = ?, updated_at = datetime('now','localtime') WHERE id = ?"
     ).run(motivo || null, id);
   }
 

@@ -71,7 +71,7 @@ class Registro {
     if (fields.length === 0) return null;
     fields.push('updated_by = ?');
     values.push(updatedBy);
-    fields.push('updated_at = CURRENT_TIMESTAMP');
+    fields.push("updated_at = datetime('now','localtime')");
     values.push(id);
     return db.prepare(`UPDATE registros SET ${fields.join(', ')} WHERE id = ?`).run(...values);
   }

@@ -43,7 +43,7 @@ class HoleriteIMAP {
         file_path TEXT,
         funcionario_id INTEGER,
         processado INTEGER DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        created_at DATETIME DEFAULT (datetime('now','localtime')),
         FOREIGN KEY (funcionario_id) REFERENCES funcionarios(id)
       )
     `);
