@@ -26,11 +26,24 @@ router.get('/mensal', authenticateToken, [
     const resumo = HorasExtrasService.calcularResumoMensal(registros);
     const diasUteis = FeriadosService.getWorkingDaysInMonth(parseInt(mes), parseInt(ano));
 
+    // Filter out Dono(a) da Casa and add cargo flags
+    const funcionariosResult = Object.values(resumo).filter(f => {
+      const cargoNome = (f.cargo || '').toLowerCase();
+      return !cargoNome.includes('dono') && !cargoNome.includes('dona');
+    }).map(f => {
+      // Get cargo flags from the first registro (all share the same cargo)
+      const reg0 = f.registros && f.registros[0];
+      const permiteHE = (reg0 && reg0.contabiliza_hora_extra) || (reg0 && reg0.cargo_permite_hora_extra) ? true : false;
+      const permiteDE = (reg0 && reg0.cargo_permite_dia_extra) ? true : false;
+      const precisaBaterPonto = reg0 ? (reg0.cargo_precisa_bater_ponto !== 0) : true;
+      return { ...f, permiteHE, permiteDE, precisaBaterPonto };
+    });
+
     res.json({
       mes: parseInt(mes),
       ano: parseInt(ano),
       diasUteis,
-      funcionarios: Object.values(resumo)
+      funcionarios: funcionariosResult
     });
   } catch (err) {
     console.error('Relatório mensal error:', err);
@@ -158,10 +171,12 @@ router.get('/folha', authenticateToken, [
       const recebeVA = (func.tem_vale_alimentacao || func.recebe_va || (cargo && cargo.recebe_vale_refeicao)) ? true : false;
       const recebeCombustivel = (cargo && cargo.recebe_ajuda_combustivel) ? true : false;
 
-      // Use employee values first, fallback to cargo defaults
-      const valorHE = func.valor_hora_extra || (cargo && cargo.valor_hora_extra) || 0;
-      const valorDE = func.valor_dia_especial || (cargo && cargo.valor_dia_extra) || 0;
-      const funcComValores = { ...func, valor_hora_extra: valorHE, valor_dia_especial: valorDE };
+      // Use employee values first (non-zero), fallback to cargo defaults
+      const valorHE = (func.valor_hora_extra && func.valor_hora_extra > 0) ? func.valor_hora_extra : ((cargo && cargo.valor_hora_extra) || 0);
+      const valorDE = (func.valor_dia_especial && func.valor_dia_especial > 0) ? func.valor_dia_especial : ((cargo && cargo.valor_dia_extra) || 0);
+      const valorVADia = (func.valor_va_dia && func.valor_va_dia > 0) ? func.valor_va_dia : ((cargo && cargo.valor_vale_refeicao) || 0);
+      const valorCombustivel = (cargo && cargo.valor_ajuda_combustivel) || 0;
+      const funcComValores = { ...func, valor_hora_extra: valorHE, valor_dia_especial: valorDE, salario_hora: valorHE };
 
       const registros = Registro.getMonthlyReport(mesInt, anoInt, func.id);
       const folha = precisaBaterPonto ? HorasExtrasService.calcularFolha(registros, funcComValores) : { resumo: { diasTrabalhados: 0, diasTrabalhadosUteis: 0, diasTrabalhadosEspeciais: 0, totalHorasTrabalhadas: 0, totalHorasExtras: 0, totalPgtoHE: 0, totalPgtoFDS: 0 }, registros: [] };
@@ -171,8 +186,8 @@ router.get('/folha', authenticateToken, [
       const totalPgtoHE = permiteHE ? (r.totalPgtoHE || 0) : 0;
       const totalPgtoFDS = permiteDE ? (r.totalPgtoFDS || 0) : 0;
       const totalVT = recebeVT ? Funcionario.calcularVT(func.id, diasTrab) : null;
-      const totalVA = recebeVA ? Math.round((func.valor_va_dia || (cargo && cargo.valor_vale_refeicao) || 0) * diasTrab * 100) / 100 : null;
-      const totalAjudaCombustivel = recebeCombustivel ? ((cargo && cargo.valor_ajuda_combustivel) || 0) : null;
+      const totalVA = recebeVA ? Math.round(valorVADia * diasTrab * 100) / 100 : null;
+      const totalAjudaCombustivel = recebeCombustivel ? valorCombustivel : null;
 
       const totalGeral = Math.round((totalPgtoHE + totalPgtoFDS + (totalVT || 0) + (totalVA || 0) + (totalAjudaCombustivel || 0)) * 100) / 100;
 
@@ -180,8 +195,11 @@ router.get('/folha', authenticateToken, [
         funcionario: {
           nome: func.nome,
           cargo: func.cargo_nome || func.cargo,
+          salario_hora: valorHE,
           valor_hora_extra: valorHE,
           valor_dia_especial: valorDE,
+          valor_va_dia: valorVADia,
+          valor_ajuda_combustivel: valorCombustivel,
           jornada_diaria: func.jornada_diaria || 9.8,
           pix_tipo: func.pix_tipo || null,
           pix_chave: func.pix_chave || null,

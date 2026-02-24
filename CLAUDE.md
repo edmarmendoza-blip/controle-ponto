@@ -253,16 +253,47 @@ audit_log, access_log, ferias, pending_confirmations
 - Campo descricao guarda a análise completa da Vision AI
 - Thumbnails servidos via GET /uploads/entregas/{arquivo} ou /uploads/whatsapp/{data}/{arquivo}
 
-## FOLHA DE PAGAMENTO (Relatórios → Valor dos Pagamentos do Mês)
-Cálculos condicionais por cargo/funcionário:
+## FLUXO CARGOS → FUNCIONÁRIOS → RELATÓRIOS
+
+### Regra fundamental: Employee overrides Cargo. Cargo is the default.
+
+### Herança de valores (COALESCE)
+```
+salario_hora:    COALESCE(NULLIF(func.salario_hora, 0), cargo.valor_hora_extra, 0)
+valor_hora_extra: COALESCE(NULLIF(func.valor_hora_extra, 0), cargo.valor_hora_extra, 0)
+valor_dia_extra:  COALESCE(NULLIF(func.valor_dia_especial, 0), cargo.valor_dia_extra, 0)
+vale_alimentacao: COALESCE(NULLIF(func.valor_va_dia, 0), cargo.valor_vale_refeicao, 0)
+combustivel:      cargo.valor_ajuda_combustivel
+```
+
+### Funcionários LIST
+- Query JOIN com cargos: `salario_hora_display`, `valor_hora_extra_display`, `valor_dia_extra_display`
+- Frontend mostra `salario_hora_display` (valor real herdado do cargo)
+
+### Funcionários EDIT
+- Cargo é `<select>` dropdown carregado de GET /api/cargos
+- Ao trocar cargo: auto-fill campos vazios/zero com defaults do cargo
+- Campos com valor do funcionário são preservados (override)
+
+### Relatório Mensal (tab 1)
+- Exclui "Dono(a) da Casa" automaticamente
+- Colunas dinâmicas: esconde "Extras" se nenhum funcionário tem permiteHE
+- Flags do cargo propagados na resposta: permiteHE, permiteDE, precisaBaterPonto
+
+### Folha de Pagamento (tab 2)
 - HE: só calcula se cargo.permite_hora_extra OU func.contabiliza_hora_extra
 - Dia Extra: só calcula se cargo.permite_dia_extra
 - VT: só mostra se cargo.recebe_vale_transporte OU func.recebe_vt
 - VA: só mostra se cargo.recebe_vale_refeicao OU func.tem_vale_alimentacao
 - Combustível: só mostra se cargo.recebe_ajuda_combustivel
-- Valores: func override → cargo default → 0
 - Cargo "Dono(a) da Casa": excluído completamente
 - Se benefício não se aplica: mostra "-" em vez de R$ 0,00
+- TOTAL por funcionário: soma apenas o que se aplica
+
+### Migrações automáticas (database.js)
+- Cargos essenciais criados automaticamente: Babá, Babá Folguista, Governanta, Caseiro
+- Funcionários auto-vinculados a cargo_id por nome (Edmar/Carolina → Dono(a) da Casa)
+- Defaults antigos resetados para herdar do cargo (valores zerados)
 
 ## LOG DE ACESSOS
 - Tabela: access_log (user_id, user_nome, user_email, acao, ip, user_agent, created_at)

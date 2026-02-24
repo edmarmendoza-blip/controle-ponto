@@ -16,11 +16,25 @@ const ALL_FIELDS = [
 class Funcionario {
   static getAll(includeInactive = false) {
     const where = includeInactive ? '' : "WHERE f.status = 'ativo'";
-    return db.prepare(`SELECT f.*, c.nome as cargo_nome FROM funcionarios f LEFT JOIN cargos c ON f.cargo_id = c.id ${where} ORDER BY f.nome`).all();
+    return db.prepare(`
+      SELECT f.*,
+        c.nome as cargo_nome,
+        COALESCE(NULLIF(f.salario_hora, 0), c.valor_hora_extra, 0) as salario_hora_display,
+        COALESCE(NULLIF(f.valor_hora_extra, 0), c.valor_hora_extra, 0) as valor_hora_extra_display,
+        COALESCE(NULLIF(f.valor_dia_especial, 0), c.valor_dia_extra, 0) as valor_dia_extra_display
+      FROM funcionarios f LEFT JOIN cargos c ON f.cargo_id = c.id ${where} ORDER BY f.nome
+    `).all();
   }
 
   static findById(id) {
-    const func = db.prepare('SELECT f.*, c.nome as cargo_nome FROM funcionarios f LEFT JOIN cargos c ON f.cargo_id = c.id WHERE f.id = ?').get(id);
+    const func = db.prepare(`
+      SELECT f.*,
+        c.nome as cargo_nome,
+        COALESCE(NULLIF(f.salario_hora, 0), c.valor_hora_extra, 0) as salario_hora_display,
+        COALESCE(NULLIF(f.valor_hora_extra, 0), c.valor_hora_extra, 0) as valor_hora_extra_display,
+        COALESCE(NULLIF(f.valor_dia_especial, 0), c.valor_dia_extra, 0) as valor_dia_extra_display
+      FROM funcionarios f LEFT JOIN cargos c ON f.cargo_id = c.id WHERE f.id = ?
+    `).get(id);
     if (func) {
       func.transportes = this.getTransportes(id);
     }

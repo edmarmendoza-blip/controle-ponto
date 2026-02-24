@@ -363,7 +363,7 @@
                 <tr>
                   <td><strong>${f.nome}</strong></td>
                   <td>${f.cargo_nome || f.cargo || '-'}</td>
-                  <td>${formatCurrency(f.salario_hora)}</td>
+                  <td>${formatCurrency(f.salario_hora_display || f.salario_hora)}</td>
                   <td>${f.telefone || '-'}</td>
                   <td>${f.horario_entrada || '08:00'}</td>
                   <td><span class="badge-status badge-${f.status}">${f.status === 'ativo' ? 'Ativo' : 'Inativo'}</span></td>
@@ -425,11 +425,11 @@
         <div class="row">
           <div class="col-md-4 mb-3">
             <label class="form-label">Valor Hora Extra (R$)</label>
-            <input type="number" class="form-control" id="func-valor-hora-extra" step="0.01" min="0" value="43.25">
+            <input type="number" class="form-control" id="func-valor-hora-extra" step="0.01" min="0" placeholder="Herda do cargo">
           </div>
           <div class="col-md-4 mb-3">
             <label class="form-label">Valor Dia Especial (R$)</label>
-            <input type="number" class="form-control" id="func-valor-dia-especial" step="0.01" min="0" value="320.00">
+            <input type="number" class="form-control" id="func-valor-dia-especial" step="0.01" min="0" placeholder="Herda do cargo">
           </div>
           <div class="col-md-4 mb-3">
             <label class="form-label">Jornada Diária (h)</label>
@@ -463,12 +463,17 @@
         select.appendChild(opt);
       });
 
-      // Auto-fill benefits from cargo when selected
+      // Auto-fill benefits from cargo when selected (only if employee has no override)
       select.addEventListener('change', function() {
         const cargo = cargosList.find(c => c.id == this.value);
         if (cargo) {
-          document.getElementById('func-valor-hora-extra').value = cargo.valor_hora_extra || 0;
-          document.getElementById('func-valor-dia-especial').value = cargo.valor_dia_extra || 0;
+          const heField = document.getElementById('func-valor-hora-extra');
+          const deField = document.getElementById('func-valor-dia-especial');
+          const salField = document.getElementById('func-salario');
+          // Only fill if current value is 0 or empty
+          if (!parseFloat(heField.value)) heField.value = cargo.valor_hora_extra || 0;
+          if (!parseFloat(deField.value)) deField.value = cargo.valor_dia_extra || 0;
+          if (!parseFloat(salField.value)) salField.value = cargo.valor_hora_extra || 0;
         }
       });
 
@@ -476,12 +481,13 @@
         api(`/api/funcionarios/${id}`).then(f => {
           document.getElementById('func-nome').value = f.nome;
           document.getElementById('func-cargo').value = f.cargo_id || '';
-          document.getElementById('func-salario').value = f.salario_hora || 0;
+          // Use _display values (COALESCE from cargo) for showing real values
+          document.getElementById('func-salario').value = f.salario_hora_display || f.salario_hora || 0;
           document.getElementById('func-telefone').value = f.telefone || '';
           document.getElementById('func-horario-entrada').value = f.horario_entrada || '08:00';
-          document.getElementById('func-valor-hora-extra').value = f.valor_hora_extra ?? 43.25;
-          document.getElementById('func-valor-dia-especial').value = f.valor_dia_especial ?? 320.00;
-          document.getElementById('func-jornada-diaria').value = f.jornada_diaria ?? 9.8;
+          document.getElementById('func-valor-hora-extra').value = f.valor_hora_extra_display || f.valor_hora_extra || 0;
+          document.getElementById('func-valor-dia-especial').value = f.valor_dia_extra_display || f.valor_dia_especial || 0;
+          document.getElementById('func-jornada-diaria').value = f.jornada_diaria || 9.8;
           const statusEl = document.getElementById('func-status');
           if (statusEl) statusEl.value = f.status;
         });
@@ -500,8 +506,8 @@
       salario_hora: parseFloat(document.getElementById('func-salario').value),
       telefone: document.getElementById('func-telefone').value || null,
       horario_entrada: document.getElementById('func-horario-entrada').value || '08:00',
-      valor_hora_extra: parseFloat(document.getElementById('func-valor-hora-extra').value) || 43.25,
-      valor_dia_especial: parseFloat(document.getElementById('func-valor-dia-especial').value) || 320.00,
+      valor_hora_extra: parseFloat(document.getElementById('func-valor-hora-extra').value) || 0,
+      valor_dia_especial: parseFloat(document.getElementById('func-valor-dia-especial').value) || 0,
       jornada_diaria: parseFloat(document.getElementById('func-jornada-diaria').value) || 9.8
     };
 
@@ -913,6 +919,10 @@
         return;
       }
 
+      // Determine which columns are relevant across all employees
+      const anyHasHE = data.funcionarios.some(f => f.permiteHE !== false && f.totalHorasExtras > 0);
+      const showHECol = data.funcionarios.some(f => f.permiteHE !== false);
+
       let html = `
         <div class="row g-3 mb-4">
           <div class="col-md-3">
@@ -929,13 +939,13 @@
               <div class="stat-label">Funcionários</div>
             </div>
           </div>
-          <div class="col-md-3">
+          ${showHECol ? `<div class="col-md-3">
             <div class="stat-card">
               <div class="stat-icon icon-yellow"><i class="bi bi-clock-history"></i></div>
-              <div class="stat-value">${data.funcionarios.reduce((s, f) => s + f.totalHorasExtras, 0).toFixed(1)}</div>
+              <div class="stat-value">${data.funcionarios.reduce((s, f) => s + (f.permiteHE !== false ? f.totalHorasExtras : 0), 0).toFixed(1)}</div>
               <div class="stat-label">Total H. Extras</div>
             </div>
-          </div>
+          </div>` : ''}
           <div class="col-md-3">
             <div class="stat-card">
               <div class="stat-icon icon-red"><i class="bi bi-cash-stack"></i></div>
@@ -946,6 +956,7 @@
         </div>`;
 
       for (const func of data.funcionarios) {
+        const funcHasHE = func.permiteHE !== false;
         html += `
           <div class="summary-card mb-4">
             <h5><i class="bi bi-person me-2"></i>${func.nome} - ${func.cargo} (${formatCurrency(func.salario_hora)}/h)</h5>
@@ -956,7 +967,7 @@
                     <thead>
                       <tr>
                         <th>Data</th><th>Dia</th><th>Entrada</th><th>Saída</th>
-                        <th>Horas</th><th>Extras</th><th>Valor</th>
+                        <th>Horas</th>${funcHasHE ? '<th>Extras</th>' : ''}<th>Valor</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -971,7 +982,7 @@
                             <td>${r.entrada || '-'}</td>
                             <td>${r.saida || '-'}</td>
                             <td>${r.horasTrabalhadas.toFixed(2)}</td>
-                            <td>${r.horasExtras > 0 ? `<span class="text-warning fw-bold">${r.horasExtras.toFixed(2)}</span>` : '0.00'}</td>
+                            ${funcHasHE ? `<td>${r.horasExtras > 0 ? '<span class="text-warning fw-bold">' + r.horasExtras.toFixed(2) + '</span>' : '0.00'}</td>` : ''}
                             <td>${formatCurrency(r.valorTotal)}</td>
                           </tr>`;
                       }).join('')}
@@ -985,9 +996,9 @@
                   <div class="summary-item"><span class="label">Dias Trabalhados</span><span class="value">${func.diasTrabalhados}</span></div>
                   <div class="summary-item"><span class="label">Horas Trabalhadas</span><span class="value">${func.totalHorasTrabalhadas.toFixed(2)}</span></div>
                   <div class="summary-item"><span class="label">Horas Normais</span><span class="value">${func.totalHorasNormais.toFixed(2)}</span></div>
-                  <div class="summary-item"><span class="label">Horas Extras</span><span class="value text-warning">${func.totalHorasExtras.toFixed(2)}</span></div>
+                  ${funcHasHE ? `<div class="summary-item"><span class="label">Horas Extras</span><span class="value text-warning">${func.totalHorasExtras.toFixed(2)}</span></div>` : ''}
                   <div class="summary-item"><span class="label">Valor Normal</span><span class="value">${formatCurrency(func.totalValorNormal)}</span></div>
-                  <div class="summary-item"><span class="label">Valor H. Extras</span><span class="value text-warning">${formatCurrency(func.totalHorasExtraValor)}</span></div>
+                  ${funcHasHE ? `<div class="summary-item"><span class="label">Valor H. Extras</span><span class="value text-warning">${formatCurrency(func.totalHorasExtraValor)}</span></div>` : ''}
                   <hr>
                   <div class="summary-item"><span class="label fw-bold">Total</span><span class="value text-primary fs-5">${formatCurrency(func.totalValor)}</span></div>
                 </div>

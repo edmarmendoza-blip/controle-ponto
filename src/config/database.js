@@ -175,23 +175,75 @@ function initializeDatabase() {
       }
     } catch (e) { console.error('[Migration] cargos CHECK removal:', e.message); }
 
-    // Migrate cargo text to cargo_id where null
+    // Ensure essential cargos exist
     try {
-      const nullCargoCount = db.prepare("SELECT COUNT(*) as c FROM funcionarios WHERE cargo_id IS NULL AND cargo IS NOT NULL AND cargo != '' AND cargo != 'A definir'").get();
-      if (nullCargoCount && nullCargoCount.c > 0) {
-        const funcs = db.prepare("SELECT id, cargo FROM funcionarios WHERE cargo_id IS NULL AND cargo IS NOT NULL AND cargo != '' AND cargo != 'A definir'").all();
-        const cargos = db.prepare('SELECT id, nome FROM cargos').all();
-        let updated = 0;
-        for (const f of funcs) {
-          const match = cargos.find(c => f.cargo.toLowerCase().includes(c.nome.toLowerCase()));
-          if (match) {
-            db.prepare('UPDATE funcionarios SET cargo_id = ? WHERE id = ?').run(match.id, f.id);
-            updated++;
+      const essentialCargos = [
+        { nome: 'Babá', precisa_bater_ponto: 1, permite_hora_extra: 1, permite_dia_extra: 0, valor_hora_extra: 30, valor_dia_extra: 0, recebe_vale_transporte: 1, recebe_vale_refeicao: 0, recebe_ajuda_combustivel: 0 },
+        { nome: 'Babá Folguista', precisa_bater_ponto: 1, permite_hora_extra: 1, permite_dia_extra: 0, valor_hora_extra: 30, valor_dia_extra: 0, recebe_vale_transporte: 1, recebe_vale_refeicao: 0, recebe_ajuda_combustivel: 0 },
+        { nome: 'Governanta', precisa_bater_ponto: 0, permite_hora_extra: 0, permite_dia_extra: 0, valor_hora_extra: 0, valor_dia_extra: 0, recebe_vale_transporte: 1, recebe_vale_refeicao: 1, recebe_ajuda_combustivel: 0 },
+        { nome: 'Caseiro', precisa_bater_ponto: 1, permite_hora_extra: 1, permite_dia_extra: 1, valor_hora_extra: 35, valor_dia_extra: 250, recebe_vale_transporte: 0, recebe_vale_refeicao: 0, recebe_ajuda_combustivel: 0 }
+      ];
+      for (const c of essentialCargos) {
+        const exists = db.prepare('SELECT id FROM cargos WHERE nome = ?').get(c.nome);
+        if (!exists) {
+          db.prepare('INSERT INTO cargos (nome, precisa_bater_ponto, permite_hora_extra, permite_dia_extra, valor_hora_extra, valor_dia_extra, recebe_vale_transporte, recebe_vale_refeicao, recebe_ajuda_combustivel) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
+            c.nome, c.precisa_bater_ponto, c.permite_hora_extra, c.permite_dia_extra, c.valor_hora_extra, c.valor_dia_extra, c.recebe_vale_transporte, c.recebe_vale_refeicao, c.recebe_ajuda_combustivel
+          );
+          console.log(`[Migration] Created cargo: ${c.nome}`);
+        }
+      }
+    } catch (e) { console.error('[Migration] essential cargos:', e.message); }
+
+    // Migrate cargo text to cargo_id where null (includes 'A definir')
+    try {
+      const funcs = db.prepare("SELECT id, nome, cargo FROM funcionarios WHERE cargo_id IS NULL").all();
+      const cargos = db.prepare('SELECT id, nome FROM cargos').all();
+      let updated = 0;
+      for (const f of funcs) {
+        const cargoText = (f.cargo || '').toLowerCase();
+        // Direct name matching
+        let match = cargos.find(c => cargoText.includes(c.nome.toLowerCase()));
+        // For 'A definir' or empty: check if name suggests Dono(a) da Casa
+        if (!match && (cargoText === 'a definir' || cargoText === '')) {
+          const nomeLC = f.nome.toLowerCase();
+          if (nomeLC.includes('edmar') || nomeLC.includes('carolina')) {
+            match = cargos.find(c => c.nome.toLowerCase().includes('dono'));
           }
         }
-        if (updated > 0) console.log(`[Migration] Linked ${updated} funcionarios to cargo_id`);
+        // Specific nickname matches
+        if (!match) {
+          if (cargoText.includes('caseiro') || cargoText.includes('cuidador')) {
+            match = cargos.find(c => c.nome.toLowerCase() === 'caseiro');
+          }
+        }
+        if (match) {
+          db.prepare('UPDATE funcionarios SET cargo_id = ?, cargo = ? WHERE id = ?').run(match.id, match.nome, f.id);
+          updated++;
+        }
       }
+      if (updated > 0) console.log(`[Migration] Linked ${updated} funcionarios to cargo_id`);
     } catch (e) { console.error('[Migration] cargo_id link:', e.message); }
+
+    // Reset hardcoded default values to 0 so employees inherit from cargo
+    try {
+      // Only reset if ALL values are the old hardcoded defaults (43.25, 320, 9.8)
+      const resetCount = db.prepare(`
+        UPDATE funcionarios SET
+          valor_hora_extra = 0,
+          valor_dia_especial = 0,
+          salario_hora = 0,
+          contabiliza_hora_extra = 0,
+          recebe_vt = 0,
+          recebe_va = 0
+        WHERE cargo_id IS NOT NULL
+          AND (valor_hora_extra = 43.25 OR valor_hora_extra = 0)
+          AND (valor_dia_especial = 320 OR valor_dia_especial = 0)
+          AND contabiliza_hora_extra = 1
+          AND recebe_vt = 1
+          AND recebe_va = 1
+      `).run();
+      if (resetCount.changes > 0) console.log(`[Migration] Reset ${resetCount.changes} funcionarios old defaults to inherit from cargo`);
+    } catch (e) { console.error('[Migration] reset defaults:', e.message); }
   } catch (migrationErr) {
     console.error('Migration warning:', migrationErr.message);
   }
