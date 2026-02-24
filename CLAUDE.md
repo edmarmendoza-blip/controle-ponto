@@ -191,7 +191,7 @@ APP_NAME=Lar Digital
 7. **Gráficos** - Chart.js: barras, linha, pizza
 8. **Feriados** - SP 2026, sync auto, CRUD manual (manual=true prevalece)
 9. **WhatsApp** - QR Code, status, reconectar, parser inteligente
-10. **Entregas** - Fotos WhatsApp, cards com thumbnail e detalhes
+10. **Entregas** - Cards com thumbnail, upload manual com foto, confirmação WhatsApp (SIM/NÃO)
 11. **Insights IA** - Operacional + Melhorias (admin only)
 12. **Usuários** - CRUD, roles, excluir com confirmação, reenviar senha (admin only)
 13. **Audit Log** - Log de ações (admin only)
@@ -225,20 +225,32 @@ funcionario_transportes, entregas, holerites, email_logs,
 audit_log, ferias, pending_confirmations
 
 ## ENTREGAS - FLUXO COMPLETO
+### Via WhatsApp (automático com confirmação):
 1. Foto chega no grupo WhatsApp
 2. whatsapp-web.js salva foto em /uploads/whatsapp/{data}/
 3. Vision AI (claude-haiku-4-5-20251001) analisa a imagem em português
-4. Se identificada como entrega → Entrega.create() automaticamente
-5. Extrai: destinatário, remetente, transportadora, descrição
-6. Vincula whatsapp_mensagem_id como FK
-7. Frontend exibe cards com thumbnail clicável, data/hora, detalhes
-8. Admin pode editar detalhes manualmente
+4. Se identificada como entrega → bot pergunta "Isso é uma entrega? Responda SIM ou NÃO"
+5. Se SIM → Entrega.create() com destinatário, remetente, transportadora, descrição
+6. Se NÃO → entrega ignorada
+7. Vincula whatsapp_mensagem_id como FK
+
+### Via Website (upload manual):
+1. Botão "Nova Entrega" na página Entregas
+2. Modal com: upload foto, destinatário, remetente, transportadora, data/hora, recebido por, observação
+3. POST /api/entregas/upload (multer, max 10MB, só imagens)
+4. Foto salva em /public/uploads/entregas/
+
+### Frontend:
+- Cards com thumbnail clicável 80x80, data/hora, detalhes
+- Modal de imagem ampliada
+- Modal de edição de detalhes
+- Filtros por data (de/até)
 
 ### Regras:
-- Fotos que NÃO são entregas (selfies, prints, etc) são ignoradas
+- Fotos que NÃO são entregas (selfies, prints, etc) são ignoradas (via confirmação SIM/NÃO)
 - Cada foto gera no máximo 1 registro de entrega
 - Campo descricao guarda a análise completa da Vision AI
-- Thumbnails servidos via GET /uploads/whatsapp/{data}/{arquivo}
+- Thumbnails servidos via GET /uploads/entregas/{arquivo} ou /uploads/whatsapp/{data}/{arquivo}
 
 ## WHATSAPP + INTELIGÊNCIA ARTIFICIAL
 As mensagens do grupo "Casa dos Bull" são interpretadas pela API Claude (Anthropic).

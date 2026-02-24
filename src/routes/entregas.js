@@ -1,10 +1,29 @@
 const express = require('express');
 const { body, param, validationResult } = require('express-validator');
+const path = require('path');
+const multer = require('multer');
 const Entrega = require('../models/Entrega');
 const { authenticateToken, requireGestor } = require('../middleware/auth');
 const AuditLog = require('../services/auditLog');
 
 const router = express.Router();
+
+// Multer config for entrega photo upload
+const storage = multer.diskStorage({
+  destination: path.join(__dirname, '../../public/uploads/entregas'),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname) || '.jpg';
+    cb(null, 'entrega_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6) + ext);
+  }
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('Apenas imagens são permitidas'));
+  }
+});
 
 // GET /api/entregas
 router.get('/', authenticateToken, (req, res) => {
@@ -41,7 +60,7 @@ router.get('/:id', authenticateToken, [
   }
 });
 
-// POST /api/entregas
+// POST /api/entregas (JSON, sem foto)
 router.post('/', authenticateToken, requireGestor, (req, res) => {
   try {
     const id = Entrega.create(req.body);
@@ -49,6 +68,27 @@ router.post('/', authenticateToken, requireGestor, (req, res) => {
     res.status(201).json({ id, message: 'Entrega registrada com sucesso' });
   } catch (err) {
     console.error('Create entrega error:', err);
+    res.status(500).json({ error: 'Erro ao registrar entrega' });
+  }
+});
+
+// POST /api/entregas/upload (com foto)
+router.post('/upload', authenticateToken, requireGestor, upload.single('foto'), (req, res) => {
+  try {
+    const data = {
+      destinatario: req.body.destinatario || null,
+      remetente: req.body.remetente || null,
+      transportadora: req.body.transportadora || null,
+      descricao: req.body.descricao || null,
+      data_hora: req.body.data_hora || null,
+      funcionario_id: req.body.funcionario_id || null,
+      imagem_path: req.file ? '/uploads/entregas/' + req.file.filename : null
+    };
+    const id = Entrega.create(data);
+    AuditLog.log(req.user.id, 'create', 'entrega', id, { ...data, has_foto: !!req.file }, req.ip);
+    res.status(201).json({ id, message: 'Entrega registrada com sucesso' });
+  } catch (err) {
+    console.error('Create entrega upload error:', err);
     res.status(500).json({ error: 'Erro ao registrar entrega' });
   }
 });

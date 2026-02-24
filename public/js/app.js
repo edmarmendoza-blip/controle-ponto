@@ -2030,12 +2030,35 @@
     }
     try {
       const users = await api('/api/auth/users');
+      const activeUsers = users.filter(u => u.active);
+      const inactiveUsers = users.filter(u => !u.active);
+      let showInactive = false;
+
+      const renderRow = (u) => `
+        <tr class="${!u.active ? 'opacity-50' : ''}" ${!u.active ? 'data-inactive="true" style="display:none"' : ''}>
+          <td><strong>${u.name}</strong></td>
+          <td>${u.email}</td>
+          <td><span class="badge bg-${u.role === 'admin' ? 'danger' : u.role === 'gestor' ? 'warning text-dark' : 'secondary'}">${u.role}</span></td>
+          <td><span class="badge-status badge-${u.active ? 'ativo' : 'inativo'}">${u.active ? 'Ativo' : 'Inativo'}</span></td>
+          <td>${formatDate(u.created_at ? u.created_at.split(' ')[0] || u.created_at.split('T')[0] : '')}</td>
+          <td class="text-nowrap">
+            <button class="btn btn-action btn-outline-primary" onclick="App.openUsuarioModal(${u.id})" title="Editar"><i class="bi bi-pencil"></i></button>
+            ${u.id !== currentUser.id ? `<button class="btn btn-action btn-outline-warning ms-1" onclick="App.resetUsuarioPassword(${u.id}, '${u.email.replace(/'/g, "\\'")}')" title="Reenviar Senha"><i class="bi bi-key"></i></button>` : ''}
+            ${u.id !== currentUser.id && u.active ? `<button class="btn btn-action btn-outline-danger ms-1" onclick="App.deleteUsuario(${u.id}, '${u.name.replace(/'/g, "\\'")}')" title="Desativar"><i class="bi bi-person-x"></i></button>` : ''}
+          </td>
+        </tr>`;
+
       content.innerHTML = `
         <div class="page-header">
-          <h3><i class="bi bi-person-gear me-2"></i>${users.length} usuário(s)</h3>
-          <button class="btn btn-primary btn-sm" onclick="App.openUsuarioModal()">
-            <i class="bi bi-plus-lg"></i> Novo Usuário
-          </button>
+          <h3><i class="bi bi-person-gear me-2"></i>${activeUsers.length} usuário(s) ativo(s)</h3>
+          <div class="d-flex gap-2">
+            ${inactiveUsers.length > 0 ? `<button class="btn btn-outline-secondary btn-sm" id="btn-toggle-inativos-users">
+              <i class="bi bi-eye"></i> Mostrar inativos (${inactiveUsers.length})
+            </button>` : ''}
+            <button class="btn btn-primary btn-sm" onclick="App.openUsuarioModal()">
+              <i class="bi bi-plus-lg"></i> Novo Usuário
+            </button>
+          </div>
         </div>
         <div class="data-table">
           <table class="table">
@@ -2050,22 +2073,23 @@
               </tr>
             </thead>
             <tbody>
-              ${users.map(u => `
-                <tr>
-                  <td><strong>${u.name}</strong></td>
-                  <td>${u.email}</td>
-                  <td><span class="badge bg-${u.role === 'admin' ? 'danger' : u.role === 'gestor' ? 'warning text-dark' : 'secondary'}">${u.role}</span></td>
-                  <td><span class="badge-status badge-${u.active ? 'ativo' : 'inativo'}">${u.active ? 'Ativo' : 'Inativo'}</span></td>
-                  <td>${formatDate(u.created_at ? u.created_at.split(' ')[0] || u.created_at.split('T')[0] : '')}</td>
-                  <td class="text-nowrap">
-                    <button class="btn btn-action btn-outline-primary" onclick="App.openUsuarioModal(${u.id})" title="Editar"><i class="bi bi-pencil"></i></button>
-                    ${u.id !== currentUser.id ? `<button class="btn btn-action btn-outline-warning ms-1" onclick="App.resetUsuarioPassword(${u.id}, '${u.email.replace(/'/g, "\\'")}')" title="Reenviar Senha"><i class="bi bi-key"></i></button>` : ''}
-                    ${u.id !== currentUser.id && u.active ? `<button class="btn btn-action btn-outline-danger ms-1" onclick="App.deleteUsuario(${u.id}, '${u.name.replace(/'/g, "\\'")}')" title="Desativar"><i class="bi bi-person-x"></i></button>` : ''}
-                  </td>
-                </tr>`).join('')}
+              ${users.map(renderRow).join('')}
             </tbody>
           </table>
         </div>`;
+
+      const toggleBtn = document.getElementById('btn-toggle-inativos-users');
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+          showInactive = !showInactive;
+          toggleBtn.innerHTML = showInactive
+            ? `<i class="bi bi-eye-slash"></i> Ocultar inativos (${inactiveUsers.length})`
+            : `<i class="bi bi-eye"></i> Mostrar inativos (${inactiveUsers.length})`;
+          content.querySelectorAll('tr[data-inactive]').forEach(row => {
+            row.style.display = showInactive ? '' : 'none';
+          });
+        });
+      }
     } catch (err) {
       content.innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
     }
@@ -2778,11 +2802,13 @@
         <div class="mb-3"><label class="form-label">Nome</label><input type="text" class="form-control" id="cargo-nome" required></div>
         <hr><h6 class="text-muted">Configurações</h6>
         <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-ponto" checked><label class="form-check-label" for="cargo-ponto">Precisa bater ponto</label></div>
-        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-hora-extra" checked><label class="form-check-label" for="cargo-hora-extra">Permite hora extra</label></div>
-        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-dia-extra"><label class="form-check-label" for="cargo-dia-extra">Permite dia extra</label></div>
-        <div class="row">
-          <div class="col-6 mb-3"><label class="form-label">Valor Hora Extra (R$)</label><input type="number" class="form-control" id="cargo-val-hora-extra" step="0.01" min="0" value="0"></div>
-          <div class="col-6 mb-3"><label class="form-label">Valor Dia Extra (R$)</label><input type="number" class="form-control" id="cargo-val-dia-extra" step="0.01" min="0" value="0"></div>
+        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-hora-extra" checked onchange="document.getElementById('cargo-he-fields').style.display=this.checked?'':'none'"><label class="form-check-label" for="cargo-hora-extra">Permite hora extra</label></div>
+        <div id="cargo-he-fields">
+          <div class="mb-3"><label class="form-label">Valor Hora Extra (R$)</label><input type="number" class="form-control" id="cargo-val-hora-extra" step="0.01" min="0" value="0"></div>
+        </div>
+        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-dia-extra" onchange="document.getElementById('cargo-de-fields').style.display=this.checked?'':'none'"><label class="form-check-label" for="cargo-dia-extra">Permite dia extra</label></div>
+        <div id="cargo-de-fields" style="display:none">
+          <div class="mb-3"><label class="form-label">Valor Dia Extra (R$)</label><input type="number" class="form-control" id="cargo-val-dia-extra" step="0.01" min="0" value="0"></div>
         </div>
         <hr><h6 class="text-muted">Benefícios</h6>
         <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-vt" onchange="document.getElementById('cargo-vt-fields').style.display=this.checked?'':'none'"><label class="form-check-label" for="cargo-vt">Recebe Vale Transporte</label></div>
@@ -2802,7 +2828,7 @@
         <div id="cargo-dormida-fields" style="display:none">
           <div class="row">
             <div class="col-6 mb-3"><label class="form-label">Dias de dormida</label><input type="number" class="form-control" id="cargo-dias-dormida" min="0" value="0"></div>
-            <div class="col-6 mb-3"><label class="form-label">Tipo</label><select class="form-select" id="cargo-tipo-dormida"><option value="seg-sex">Segunda a Sexta</option><option value="sex-seg">Sexta a Segunda</option><option value="todos">Todos os dias</option><option value="customizado">Personalizado</option></select></div>
+            <div class="col-6 mb-3"><label class="form-label">Tipo</label><select class="form-select" id="cargo-tipo-dormida"><option value="uteis">Segunda a Sexta</option><option value="fds">Sexta a Segunda</option><option value="todos">Todos os dias</option><option value="customizado">Personalizado</option></select></div>
           </div>
         </div>
       </form>`;
@@ -2827,9 +2853,10 @@
         document.getElementById('cargo-dorme').checked = !!c.dorme_no_local;
         document.getElementById('cargo-dias-dormida').value = c.dias_dormida || 0;
         // Map old values to new dropdown options
-        const tipoMap = { 'semana': 'seg-sex', 'uteis': 'seg-sex', 'todos': 'todos', 'customizado': 'customizado' };
-        document.getElementById('cargo-tipo-dormida').value = tipoMap[c.tipo_dias_dormida] || c.tipo_dias_dormida || 'seg-sex';
+        document.getElementById('cargo-tipo-dormida').value = c.tipo_dias_dormida || 'uteis';
         // Show/hide conditional fields based on checkbox state
+        document.getElementById('cargo-he-fields').style.display = c.permite_hora_extra ? '' : 'none';
+        document.getElementById('cargo-de-fields').style.display = c.permite_dia_extra ? '' : 'none';
         document.getElementById('cargo-vt-fields').style.display = c.recebe_vale_transporte ? '' : 'none';
         document.getElementById('cargo-vr-fields').style.display = c.recebe_vale_refeicao ? '' : 'none';
         document.getElementById('cargo-combustivel-fields').style.display = c.recebe_ajuda_combustivel ? '' : 'none';
@@ -2854,7 +2881,7 @@
       valor_ajuda_combustivel: parseFloat(document.getElementById('cargo-val-combustivel').value) || 0,
       dorme_no_local: document.getElementById('cargo-dorme').checked ? 1 : 0,
       dias_dormida: parseInt(document.getElementById('cargo-dias-dormida').value) || 0,
-      tipo_dias_dormida: document.getElementById('cargo-tipo-dormida').value || 'seg-sex'
+      tipo_dias_dormida: document.getElementById('cargo-tipo-dormida').value || 'uteis'
     };
     if (!data.nome) return showToast('Nome obrigatório', 'danger');
     try {
@@ -2896,7 +2923,10 @@
       content.innerHTML = `
         <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
           <h3><i class="bi bi-box-seam me-2"></i>Entregas</h3>
-          <span class="badge bg-primary">${entregas.length} registro${entregas.length !== 1 ? 's' : ''}</span>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary">${entregas.length} registro${entregas.length !== 1 ? 's' : ''}</span>
+            <button class="btn btn-sm btn-success" onclick="App.openNovaEntrega()"><i class="bi bi-plus-lg me-1"></i>Nova Entrega</button>
+          </div>
         </div>
         <div class="card mb-3">
           <div class="card-body py-2">
@@ -2991,6 +3021,60 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- Modal Nova Entrega -->
+        <div class="modal fade" id="novaEntregaModal" tabindex="-1">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Nova Entrega</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <form id="novaEntregaForm" enctype="multipart/form-data">
+                  <div class="mb-3">
+                    <label class="form-label">Foto da entrega</label>
+                    <input type="file" id="novaEntregaFoto" class="form-control" accept="image/*">
+                    <div id="novaEntregaPreview" class="mt-2" style="display:none">
+                      <img id="novaEntregaPreviewImg" class="rounded" style="max-height:150px;max-width:100%">
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Destinatário</label>
+                    <input type="text" id="novaEntregaDestinatario" class="form-control" placeholder="Ex: Edmar, Roberto...">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Remetente</label>
+                    <input type="text" id="novaEntregaRemetente" class="form-control" placeholder="Ex: Amazon, Mercado Livre...">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Transportadora</label>
+                    <input type="text" id="novaEntregaTransportadora" class="form-control" placeholder="Ex: Correios, Loggi...">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Data/hora</label>
+                    <input type="datetime-local" id="novaEntregaDataHora" class="form-control">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Recebido por</label>
+                    <select id="novaEntregaFuncionario" class="form-select">
+                      <option value="">-- Selecione --</option>
+                      ${funcs.map(f => '<option value="' + f.id + '">' + escapeAttr(f.nome) + '</option>').join('')}
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Observação</label>
+                    <textarea id="novaEntregaDescricao" class="form-control" rows="2" placeholder="Detalhes sobre a entrega..."></textarea>
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="App.saveNovaEntrega()" id="btnSaveNovaEntrega"><i class="bi bi-check-lg me-1"></i>Salvar</button>
+              </div>
+            </div>
+          </div>
         </div>`;
     } catch (err) {
       content.innerHTML = '<div class="alert alert-danger">Erro: ' + err.message + '</div>';
@@ -3039,6 +3123,66 @@
     generateInsights: generateInsights,
     openCargoModal: openCargoModal,
     saveCargo: saveCargo,
+    openNovaEntrega: function() {
+      document.getElementById('novaEntregaForm').reset();
+      document.getElementById('novaEntregaPreview').style.display = 'none';
+      // Default data/hora = agora
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      document.getElementById('novaEntregaDataHora').value =
+        now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) +
+        'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+      // Preview da foto
+      document.getElementById('novaEntregaFoto').onchange = function() {
+        const file = this.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            document.getElementById('novaEntregaPreviewImg').src = e.target.result;
+            document.getElementById('novaEntregaPreview').style.display = 'block';
+          };
+          reader.readAsDataURL(file);
+        } else {
+          document.getElementById('novaEntregaPreview').style.display = 'none';
+        }
+      };
+      new bootstrap.Modal(document.getElementById('novaEntregaModal')).show();
+    },
+    saveNovaEntrega: async function() {
+      const btn = document.getElementById('btnSaveNovaEntrega');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Salvando...';
+      try {
+        const fotoFile = document.getElementById('novaEntregaFoto').files[0];
+        const formData = new FormData();
+        if (fotoFile) formData.append('foto', fotoFile);
+        formData.append('destinatario', document.getElementById('novaEntregaDestinatario').value);
+        formData.append('remetente', document.getElementById('novaEntregaRemetente').value);
+        formData.append('transportadora', document.getElementById('novaEntregaTransportadora').value);
+        formData.append('descricao', document.getElementById('novaEntregaDescricao').value);
+        formData.append('data_hora', document.getElementById('novaEntregaDataHora').value.replace('T', ' '));
+        formData.append('funcionario_id', document.getElementById('novaEntregaFuncionario').value);
+
+        const token = localStorage.getItem('ponto_token') || localStorage.getItem('token');
+        const resp = await fetch('/api/entregas/upload', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token },
+          body: formData
+        });
+        const result = await resp.json();
+        if (!resp.ok) throw new Error(result.error || 'Erro ao salvar');
+        bootstrap.Modal.getInstance(document.getElementById('novaEntregaModal'))?.hide();
+        showToast('Entrega registrada com sucesso!');
+        const di = document.getElementById('entrega-data-inicio')?.value;
+        const df = document.getElementById('entrega-data-fim')?.value;
+        renderEntregas(di || undefined, df || undefined);
+      } catch (err) {
+        showToast('Erro: ' + err.message, 'danger');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Salvar';
+      }
+    },
     filterEntregas: function(action) {
       if (action === 'clear') {
         renderEntregas();

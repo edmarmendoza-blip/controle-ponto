@@ -140,6 +140,40 @@ function initializeDatabase() {
     if (funcColsCargo.length > 0 && !funcColsCargo.includes('cargo_id')) {
       try { db.exec('ALTER TABLE funcionarios ADD COLUMN cargo_id INTEGER REFERENCES cargos(id)'); } catch (e) { /* ignore */ }
     }
+
+    // Remove restrictive CHECK on cargos.tipo_dias_dormida (recreate table without it)
+    try {
+      const cargoCheck = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='cargos'").get();
+      if (cargoCheck && cargoCheck.sql && cargoCheck.sql.includes("CHECK(tipo_dias_dormida IN ('semana', 'mes', 'escala'))")) {
+        db.exec(`
+          CREATE TABLE cargos_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL UNIQUE,
+            precisa_bater_ponto INTEGER DEFAULT 1,
+            permite_hora_extra INTEGER DEFAULT 1,
+            permite_dia_extra INTEGER DEFAULT 0,
+            valor_hora_extra REAL DEFAULT 0,
+            valor_dia_extra REAL DEFAULT 0,
+            recebe_vale_transporte INTEGER DEFAULT 1,
+            valor_vale_transporte REAL DEFAULT 0,
+            recebe_vale_refeicao INTEGER DEFAULT 0,
+            valor_vale_refeicao REAL DEFAULT 0,
+            recebe_ajuda_combustivel INTEGER DEFAULT 0,
+            valor_ajuda_combustivel REAL DEFAULT 0,
+            dorme_no_local INTEGER DEFAULT 0,
+            dias_dormida INTEGER DEFAULT 0,
+            tipo_dias_dormida TEXT DEFAULT 'uteis',
+            ativo INTEGER DEFAULT 1,
+            created_at DATETIME DEFAULT (datetime('now','localtime')),
+            updated_at DATETIME DEFAULT (datetime('now','localtime'))
+          );
+          INSERT INTO cargos_new SELECT * FROM cargos;
+          DROP TABLE cargos;
+          ALTER TABLE cargos_new RENAME TO cargos;
+        `);
+        console.log('[Migration] Removed CHECK constraint on cargos.tipo_dias_dormida');
+      }
+    } catch (e) { console.error('[Migration] cargos CHECK removal:', e.message); }
   } catch (migrationErr) {
     console.error('Migration warning:', migrationErr.message);
   }
@@ -285,7 +319,7 @@ function initializeDatabase() {
       valor_ajuda_combustivel REAL DEFAULT 0,
       dorme_no_local INTEGER DEFAULT 0,
       dias_dormida INTEGER DEFAULT 0,
-      tipo_dias_dormida TEXT DEFAULT 'semana' CHECK(tipo_dias_dormida IN ('semana', 'mes', 'escala')),
+      tipo_dias_dormida TEXT DEFAULT 'uteis',
       ativo INTEGER DEFAULT 1,
       created_at DATETIME DEFAULT (datetime('now','localtime')),
       updated_at DATETIME DEFAULT (datetime('now','localtime'))

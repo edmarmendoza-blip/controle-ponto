@@ -271,12 +271,39 @@ class WhatsAppService {
     this.expireOldConfirmations();
 
     // Check if this is a confirmation response (SIM/NÃO)
-    if (text && funcionario) {
-      const pending = this.getPendingConfirmation(funcionario.id);
+    const confirmFuncId = funcionario?.id || 0;
+    if (text) {
+      const pending = this.getPendingConfirmation(confirmFuncId);
       if (pending) {
         const response = this.checkConfirmationResponse(text);
         if (response === 'confirmed') {
           this.resolvePendingConfirmation(pending.id, 'confirmed');
+
+          // Handle entrega confirmation
+          if (pending.tipo === 'entrega') {
+            try {
+              const entregaInfo = JSON.parse(pending.message_text);
+              const Entrega = require('../models/Entrega');
+              const entregaId = Entrega.create({
+                funcionario_id: entregaInfo.funcionario_id || null,
+                imagem_path: entregaInfo.imagem_path,
+                destinatario: entregaInfo.destinatario || null,
+                remetente: entregaInfo.remetente || null,
+                transportadora: entregaInfo.transportadora || null,
+                descricao: entregaInfo.descricao,
+                whatsapp_mensagem_id: entregaInfo.whatsapp_mensagem_id
+              });
+              const dest = entregaInfo.destinatario ? ` para ${entregaInfo.destinatario}` : '';
+              await this.sendGroupMessage(`✅ Entrega #${entregaId} registrada${dest}!`);
+              console.log(`[WhatsApp] Entrega #${entregaId} confirmed by ${senderName}`);
+            } catch (err) {
+              console.error('[WhatsApp] Error creating confirmed entrega:', err.message);
+              await this.sendGroupMessage(`❌ Erro ao registrar entrega: ${err.message}`);
+            }
+            this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, storedText, 'other', mediaType, mediaPath);
+            return;
+          }
+
           // Register with the adjusted time
           try {
             if (pending.tipo === 'entrada') {
@@ -324,7 +351,11 @@ class WhatsAppService {
           return;
         } else if (response === 'denied') {
           this.resolvePendingConfirmation(pending.id, 'denied');
-          await this.sendGroupMessage(`❌ Ajuste cancelado para ${funcionario.nome}.`);
+          if (pending.tipo === 'entrega') {
+            await this.sendGroupMessage(`📦 Entrega ignorada.`);
+          } else {
+            await this.sendGroupMessage(`❌ Ajuste cancelado para ${funcionario.nome}.`);
+          }
           this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, storedText, 'other', mediaType, mediaPath);
           return;
         }
@@ -384,11 +415,11 @@ class WhatsAppService {
     const msgType = (intent === 'entrada' || intent === 'saida') ? intent : 'other';
     const msgDbId = this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, storedText, msgType, mediaType, mediaPath);
 
-    // Create entrega from Vision analysis if image is a delivery
+    // Ask for confirmation when AI detects a delivery photo
     if (visionAnalysis?.is_entrega && mediaPath) {
       try {
-        const Entrega = require('../models/Entrega');
-        const entregaId = Entrega.create({
+        const entregaData = JSON.stringify({
+          type: 'entrega',
           funcionario_id: funcionario?.id || null,
           imagem_path: mediaPath,
           destinatario: visionAnalysis.destinatario || null,
@@ -397,9 +428,16 @@ class WhatsAppService {
           descricao: visionAnalysis.descricao,
           whatsapp_mensagem_id: msgDbId
         });
-        console.log(`[WhatsApp] Entrega #${entregaId} created from image by ${senderName}`);
+        const funcId = funcionario?.id || 0;
+        this.createPendingConfirmation(funcId, 'entrega', new Date().toISOString().split('T')[0], '00:00', entregaData);
+        const dest = visionAnalysis.destinatario ? ` para *${visionAnalysis.destinatario}*` : '';
+        const rem = visionAnalysis.remetente ? ` de *${visionAnalysis.remetente}*` : '';
+        await this.sendGroupMessage(
+          `📦 ${senderName}, isso é uma entrega${dest}${rem}? Responda *SIM* para registrar ou *NÃO* para ignorar.`
+        );
+        console.log(`[WhatsApp] Delivery confirmation requested from ${senderName}`);
       } catch (err) {
-        console.error('[WhatsApp] Error creating entrega:', err.message);
+        console.error('[WhatsApp] Error requesting entrega confirmation:', err.message);
       }
     }
 
