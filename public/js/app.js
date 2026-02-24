@@ -119,6 +119,10 @@
   }
 
   function logout() {
+    // Log logout before clearing token
+    if (token) {
+      fetch('/api/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } }).catch(() => {});
+    }
     token = null;
     currentUser = null;
     localStorage.removeItem('ponto_token');
@@ -187,7 +191,8 @@
       presenca: 'Dashboard de Presença',
       usuarios: 'Gerenciar Usuários',
       perfil: 'Meu Perfil',
-      auditlog: 'Log de Auditoria'
+      auditlog: 'Log de Auditoria',
+      accesslog: 'Log de Acessos'
     };
     document.getElementById('page-title').textContent = titles[page] || page;
     renderPage(page);
@@ -231,6 +236,7 @@
       case 'insights': renderInsightsIA(); break;
       case 'cargos': renderCargos(); break;
       case 'entregas': renderEntregas(); break;
+      case 'accesslog': renderAccessLog(); break;
       default: content.innerHTML = '<p>Página não encontrada</p>';
     }
   }
@@ -356,8 +362,8 @@
               ${funcionarios.map(f => `
                 <tr>
                   <td><strong>${f.nome}</strong></td>
-                  <td>${f.cargo}</td>
-                  <td>${formatCurrency(f.salario_hora || f.valor_hora_extra)}</td>
+                  <td>${f.cargo_nome || f.cargo || '-'}</td>
+                  <td>${formatCurrency(f.salario_hora)}</td>
                   <td>${f.telefone || '-'}</td>
                   <td>${f.horario_entrada || '08:00'}</td>
                   <td><span class="badge-status badge-${f.status}">${f.status === 'ativo' ? 'Ativo' : 'Inativo'}</span></td>
@@ -449,18 +455,28 @@
     // Load cargos dropdown
     api('/api/cargos').then(cargos => {
       const select = document.getElementById('func-cargo');
-      (Array.isArray(cargos) ? cargos : []).forEach(c => {
+      const cargosList = Array.isArray(cargos) ? cargos : [];
+      cargosList.forEach(c => {
         const opt = document.createElement('option');
-        opt.value = c.nome;
+        opt.value = c.id;
         opt.textContent = c.nome;
         select.appendChild(opt);
+      });
+
+      // Auto-fill benefits from cargo when selected
+      select.addEventListener('change', function() {
+        const cargo = cargosList.find(c => c.id == this.value);
+        if (cargo) {
+          document.getElementById('func-valor-hora-extra').value = cargo.valor_hora_extra || 0;
+          document.getElementById('func-valor-dia-especial').value = cargo.valor_dia_extra || 0;
+        }
       });
 
       if (isEdit) {
         api(`/api/funcionarios/${id}`).then(f => {
           document.getElementById('func-nome').value = f.nome;
-          document.getElementById('func-cargo').value = f.cargo;
-          document.getElementById('func-salario').value = f.salario_hora;
+          document.getElementById('func-cargo').value = f.cargo_id || '';
+          document.getElementById('func-salario').value = f.salario_hora || 0;
           document.getElementById('func-telefone').value = f.telefone || '';
           document.getElementById('func-horario-entrada').value = f.horario_entrada || '08:00';
           document.getElementById('func-valor-hora-extra').value = f.valor_hora_extra ?? 43.25;
@@ -474,9 +490,13 @@
   }
 
   async function saveFuncionario(id) {
+    const cargoSelect = document.getElementById('func-cargo');
+    const cargoId = parseInt(cargoSelect.value);
+    const cargoNome = cargoSelect.options[cargoSelect.selectedIndex]?.text || '';
     const data = {
       nome: document.getElementById('func-nome').value,
-      cargo: document.getElementById('func-cargo').value,
+      cargo: cargoNome,
+      cargo_id: cargoId || null,
       salario_hora: parseFloat(document.getElementById('func-salario').value),
       telefone: document.getElementById('func-telefone').value || null,
       horario_entrada: document.getElementById('func-horario-entrada').value || '08:00',
@@ -485,7 +505,7 @@
       jornada_diaria: parseFloat(document.getElementById('func-jornada-diaria').value) || 9.8
     };
 
-    if (!data.nome || !data.cargo || isNaN(data.salario_hora)) {
+    if (!data.nome || !cargoId || isNaN(data.salario_hora)) {
       showToast('Preencha todos os campos obrigatórios', 'danger');
       return;
     }
@@ -1050,45 +1070,45 @@
               <div class="col-6 col-md-3">
                 <div class="border rounded p-2 text-center h-100">
                   <small class="text-muted d-block">Horas Extras</small>
-                  <span class="fw-bold text-warning">${(r.totalHorasExtras || 0).toFixed(1)}h</span>
-                  <small class="text-muted d-block">${(r.totalHorasExtras || 0).toFixed(1)} × ${formatCurrency(f.valor_hora_extra || 0)}</small>
+                  ${f.permiteHE !== false ? `<span class="fw-bold text-warning">${(r.totalHorasExtras || 0).toFixed(1)}h</span>
+                  <small class="text-muted d-block">${(r.totalHorasExtras || 0).toFixed(1)} × ${formatCurrency(f.valor_hora_extra || 0)}</small>` : '<span class="text-muted">-</span>'}
                 </div>
               </div>
               <div class="col-6 col-md-3">
                 <div class="border rounded p-2 text-center h-100">
                   <small class="text-muted d-block">Dias Especiais</small>
-                  <span class="fw-bold text-info">${r.diasTrabalhadosEspeciais || 0}</span>
-                  <small class="text-muted d-block">${r.diasTrabalhadosEspeciais || 0} × ${formatCurrency(f.valor_dia_especial || 0)}</small>
+                  ${f.permiteDE !== false ? `<span class="fw-bold text-info">${r.diasTrabalhadosEspeciais || 0}</span>
+                  <small class="text-muted d-block">${r.diasTrabalhadosEspeciais || 0} × ${formatCurrency(f.valor_dia_especial || 0)}</small>` : '<span class="text-muted">-</span>'}
                 </div>
               </div>
             </div>
 
             <table class="table table-sm table-bordered mb-0">
               <tbody>
-                <tr>
+                ${f.permiteHE !== false ? `<tr>
                   <td>Horas Extras</td>
                   <td class="text-end">${(r.totalHorasExtras || 0).toFixed(1)}h × ${formatCurrency(f.valor_hora_extra || 0)}</td>
                   <td class="text-end fw-bold" style="width:130px">${formatCurrency(r.totalPgtoHE || 0)}</td>
-                </tr>
-                <tr>
+                </tr>` : `<tr><td>Horas Extras</td><td class="text-end text-muted">não se aplica</td><td class="text-end text-muted" style="width:130px">-</td></tr>`}
+                ${f.permiteDE !== false ? `<tr>
                   <td>Dias Especiais (FDS/Feriado)</td>
                   <td class="text-end">${r.diasTrabalhadosEspeciais || 0} × ${formatCurrency(f.valor_dia_especial || 0)}</td>
                   <td class="text-end fw-bold">${formatCurrency(r.totalPgtoFDS || 0)}</td>
-                </tr>
-                ${(r.totalVT || 0) > 0 ? `<tr>
+                </tr>` : `<tr><td>Dias Especiais</td><td class="text-end text-muted">não se aplica</td><td class="text-end text-muted">-</td></tr>`}
+                ${f.recebeVT !== false ? `<tr>
                   <td>Vale Transporte</td>
                   <td class="text-end"><small class="text-muted">mensal</small></td>
-                  <td class="text-end fw-bold">${formatCurrency(r.totalVT)}</td>
+                  <td class="text-end fw-bold">${r.totalVT != null ? formatCurrency(r.totalVT) : '-'}</td>
                 </tr>` : ''}
-                ${(r.totalVA || 0) > 0 ? `<tr>
+                ${f.recebeVA !== false ? `<tr>
                   <td>Vale Alimentação</td>
                   <td class="text-end"><small class="text-muted">mensal</small></td>
-                  <td class="text-end fw-bold">${formatCurrency(r.totalVA)}</td>
+                  <td class="text-end fw-bold">${r.totalVA != null ? formatCurrency(r.totalVA) : '-'}</td>
                 </tr>` : ''}
-                ${(r.totalAjudaCombustivel || 0) > 0 ? `<tr>
+                ${f.recebeCombustivel !== false ? `<tr>
                   <td>Ajuda Combustível</td>
                   <td class="text-end"><small class="text-muted">mensal</small></td>
-                  <td class="text-end fw-bold">${formatCurrency(r.totalAjudaCombustivel)}</td>
+                  <td class="text-end fw-bold">${r.totalAjudaCombustivel != null ? formatCurrency(r.totalAjudaCombustivel) : '-'}</td>
                 </tr>` : ''}
                 <tr class="table-success">
                   <td colspan="2" class="fw-bold fs-6">TOTAL A PAGAR</td>
@@ -2899,6 +2919,98 @@
   }
 
   // ============================================================
+  // Log de Acessos
+  // ============================================================
+  async function renderAccessLog() {
+    const content = document.getElementById('page-content');
+    if (currentUser.role !== 'admin') {
+      content.innerHTML = '<div class="alert alert-warning">Acesso restrito a administradores</div>';
+      return;
+    }
+    const hoje = new Date().toISOString().split('T')[0];
+    const mesPassado = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+    content.innerHTML = `
+      <div class="page-header"><h3><i class="bi bi-door-open me-2"></i>Log de Acessos</h3></div>
+      <div class="card mb-3">
+        <div class="card-body py-2">
+          <div class="row g-2 align-items-end">
+            <div class="col-auto">
+              <label class="form-label mb-0 small">De</label>
+              <input type="date" id="access-start" class="form-control form-control-sm" value="${mesPassado}">
+            </div>
+            <div class="col-auto">
+              <label class="form-label mb-0 small">Até</label>
+              <input type="date" id="access-end" class="form-control form-control-sm" value="${hoje}">
+            </div>
+            <div class="col-auto">
+              <label class="form-label mb-0 small">Ação</label>
+              <select id="access-acao" class="form-select form-select-sm">
+                <option value="">Todas</option>
+                <option value="login">Login</option>
+                <option value="logout">Logout</option>
+                <option value="login_failed">Falhou</option>
+              </select>
+            </div>
+            <div class="col-auto">
+              <button class="btn btn-sm btn-primary" onclick="App.loadAccessLog()"><i class="bi bi-funnel me-1"></i>Filtrar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="access-log-content"></div>`;
+    loadAccessLog();
+  }
+
+  async function loadAccessLog(page) {
+    const container = document.getElementById('access-log-content');
+    container.innerHTML = '<div class="loading-spinner"><div class="spinner-border spinner-border-sm text-primary"></div></div>';
+    try {
+      const startDate = document.getElementById('access-start')?.value || '';
+      const endDate = document.getElementById('access-end')?.value || '';
+      const acao = document.getElementById('access-acao')?.value || '';
+      let url = '/api/auth/access-log?page=' + (page || 1);
+      if (startDate) url += '&startDate=' + startDate;
+      if (endDate) url += '&endDate=' + endDate;
+      if (acao) url += '&acao=' + acao;
+      const data = await api(url);
+      const logs = data.logs || [];
+      const badgeMap = { login: 'bg-success', logout: 'bg-primary', login_failed: 'bg-danger' };
+      const labelMap = { login: 'Login', logout: 'Logout', login_failed: 'Falhou' };
+
+      container.innerHTML = `
+        <div class="data-table">
+          <table class="table table-sm">
+            <thead>
+              <tr><th>Data/Hora</th><th>Usuário</th><th>Email</th><th>Ação</th><th>IP</th><th>Navegador</th></tr>
+            </thead>
+            <tbody>
+              ${logs.length === 0 ? '<tr><td colspan="6" class="text-center text-muted py-3">Nenhum registro</td></tr>' : logs.map(l => {
+                const dt = new Date(l.created_at).toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo'});
+                const badge = badgeMap[l.acao] || 'bg-secondary';
+                const label = labelMap[l.acao] || l.acao;
+                const ua = (l.user_agent || '').substring(0, 50);
+                return `<tr>
+                  <td><small>${dt}</small></td>
+                  <td>${l.user_nome || '-'}</td>
+                  <td><small>${l.user_email || '-'}</small></td>
+                  <td><span class="badge ${badge}">${label}</span></td>
+                  <td><small class="text-muted">${l.ip || '-'}</small></td>
+                  <td><small class="text-muted" title="${(l.user_agent || '').replace(/"/g, '&quot;')}">${ua}${ua.length < (l.user_agent||'').length ? '...' : ''}</small></td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+        ${data.pages > 1 ? '<nav><ul class="pagination pagination-sm justify-content-center">' +
+          Array.from({length: data.pages}, (_, i) => `<li class="page-item ${i+1 === data.page ? 'active' : ''}"><a class="page-link" href="#" onclick="App.loadAccessLog(${i+1});return false">${i+1}</a></li>`).join('') +
+          '</ul></nav>' : ''}
+        <small class="text-muted">${data.total || 0} registros</small>`;
+    } catch (err) {
+      container.innerHTML = '<div class="alert alert-danger">Erro: ' + err.message + '</div>';
+    }
+  }
+
+  // ============================================================
   // Entregas
   // ============================================================
   async function renderEntregas(dataInicio, dataFim) {
@@ -3122,6 +3234,7 @@
     loadInsights: loadInsights,
     generateInsights: generateInsights,
     openCargoModal: openCargoModal,
+    loadAccessLog: loadAccessLog,
     saveCargo: saveCargo,
     openNovaEntrega: function() {
       document.getElementById('novaEntregaForm').reset();

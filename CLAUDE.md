@@ -195,7 +195,8 @@ APP_NAME=Lar Digital
 11. **Insights IA** - Operacional + Melhorias (admin only)
 12. **Usuários** - CRUD, roles, excluir com confirmação, reenviar senha (admin only)
 13. **Audit Log** - Log de ações (admin only)
-14. **Perfil** - Editar dados, trocar senha, 2FA
+14. **Log de Acessos** - Login/logout/falhas com IP e navegador (admin only, bi-door-open)
+15. **Perfil** - Editar dados, trocar senha, 2FA
 
 ## CADASTRO DE CARGOS
 nome, precisa_bater_ponto, permite_hora_extra, permite_dia_extra,
@@ -222,7 +223,7 @@ Texto livre ou JSON: dias_semana, entrada, saída, carga diária
 ## TABELAS DO BANCO
 users, funcionarios, cargos, registros, feriados (com manual boolean),
 funcionario_transportes, entregas, holerites, email_logs,
-audit_log, ferias, pending_confirmations
+audit_log, access_log, ferias, pending_confirmations
 
 ## ENTREGAS - FLUXO COMPLETO
 ### Via WhatsApp (automático com confirmação):
@@ -251,6 +252,23 @@ audit_log, ferias, pending_confirmations
 - Cada foto gera no máximo 1 registro de entrega
 - Campo descricao guarda a análise completa da Vision AI
 - Thumbnails servidos via GET /uploads/entregas/{arquivo} ou /uploads/whatsapp/{data}/{arquivo}
+
+## FOLHA DE PAGAMENTO (Relatórios → Valor dos Pagamentos do Mês)
+Cálculos condicionais por cargo/funcionário:
+- HE: só calcula se cargo.permite_hora_extra OU func.contabiliza_hora_extra
+- Dia Extra: só calcula se cargo.permite_dia_extra
+- VT: só mostra se cargo.recebe_vale_transporte OU func.recebe_vt
+- VA: só mostra se cargo.recebe_vale_refeicao OU func.tem_vale_alimentacao
+- Combustível: só mostra se cargo.recebe_ajuda_combustivel
+- Valores: func override → cargo default → 0
+- Cargo "Dono(a) da Casa": excluído completamente
+- Se benefício não se aplica: mostra "-" em vez de R$ 0,00
+
+## LOG DE ACESSOS
+- Tabela: access_log (user_id, user_nome, user_email, acao, ip, user_agent, created_at)
+- Registra: login (sucesso), login_failed (falha), logout
+- API: GET /api/auth/access-log (admin, filtros: acao, startDate, endDate, userId)
+- Frontend: página "Log de Acessos" com tabela paginada e badges coloridos
 
 ## WHATSAPP + INTELIGÊNCIA ARTIFICIAL
 As mensagens do grupo "Casa dos Bull" são interpretadas pela API Claude (Anthropic).

@@ -6,8 +6,19 @@ const { loginLimiter } = require('../middleware/rateLimiter');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const AuditLog = require('../services/auditLog');
 const EmailService = require('../services/emailService');
+const { db } = require('../config/database');
 
 const router = express.Router();
+
+function logAccess(userId, nome, email, acao, ip, userAgent) {
+  try {
+    db.prepare('INSERT INTO access_log (user_id, user_nome, user_email, acao, ip, user_agent) VALUES (?, ?, ?, ?, ?, ?)').run(
+      userId || null, nome || null, email || null, acao, ip || null, userAgent || null
+    );
+  } catch (err) {
+    console.error('[AccessLog] Error:', err.message);
+  }
+}
 
 // POST /api/auth/login
 router.post('/login', loginLimiter, [
@@ -24,11 +35,13 @@ router.post('/login', loginLimiter, [
     const user = User.findByEmail(email);
 
     if (!user || !user.active) {
+      logAccess(null, null, email, 'login_failed', req.ip, req.get('User-Agent'));
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
     const valid = await User.validatePassword(password, user.password);
     if (!valid) {
+      logAccess(user.id, user.name, email, 'login_failed', req.ip, req.get('User-Agent'));
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
@@ -57,6 +70,7 @@ router.post('/login', loginLimiter, [
     );
 
     AuditLog.log(user.id, 'login', 'user', user.id, null, req.ip);
+    logAccess(user.id, user.name, user.email, 'login', req.ip, req.get('User-Agent'));
 
     res.json({
       token,
@@ -498,6 +512,42 @@ router.get('/audit-log', authenticateToken, requireAdmin, (req, res) => {
   } catch (err) {
     console.error('Audit log error:', err);
     res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// POST /api/auth/logout
+router.post('/logout', authenticateToken, (req, res) => {
+  try {
+    logAccess(req.user.id, req.user.name, req.user.email, 'logout', req.ip, req.get('User-Agent'));
+  } catch (err) {
+    console.error('[AccessLog] Logout error:', err.message);
+  }
+  res.json({ message: 'Logout registrado' });
+});
+
+// GET /api/auth/access-log (admin)
+router.get('/access-log', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const { page, userId, acao, startDate, endDate } = req.query;
+    const limit = 50;
+    const pageNum = parseInt(page) || 1;
+    const offset = (pageNum - 1) * limit;
+
+    let where = 'WHERE 1=1';
+    const params = [];
+
+    if (userId) { where += ' AND user_id = ?'; params.push(parseInt(userId)); }
+    if (acao) { where += ' AND acao = ?'; params.push(acao); }
+    if (startDate) { where += " AND date(created_at) >= ?"; params.push(startDate); }
+    if (endDate) { where += " AND date(created_at) <= ?"; params.push(endDate); }
+
+    const total = db.prepare(`SELECT COUNT(*) as total FROM access_log ${where}`).get(...params).total;
+    const logs = db.prepare(`SELECT * FROM access_log ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`).all(...params, limit, offset);
+
+    res.json({ logs, total, page: pageNum, limit, pages: Math.ceil(total / limit) });
+  } catch (err) {
+    console.error('Access log error:', err);
+    res.status(500).json({ error: 'Erro ao buscar log de acessos' });
   }
 });
 

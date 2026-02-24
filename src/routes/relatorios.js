@@ -140,46 +140,63 @@ router.get('/folha', authenticateToken, [
 
     const resultados = [];
     for (const func of funcionarios) {
-      const registros = Registro.getMonthlyReport(mesInt, anoInt, func.id);
-      const folha = HorasExtrasService.calcularFolha(registros, func);
-      const r = folha.resumo;
-
-      // Calculate VT/VA
-      const diasTrab = r.diasTrabalhados || 0;
-      const totalVT = func.recebe_vt ? Funcionario.calcularVT(func.id, diasTrab) : 0;
-      const totalVA = func.tem_vale_alimentacao ? Math.round((func.valor_va_dia || 0) * diasTrab * 100) / 100 : 0;
-
-      // Get ajuda combustível from cargo
-      let totalAjudaCombustivel = 0;
+      // Get cargo config for conditional calculations
+      let cargo = null;
       if (func.cargo_id) {
-        const cargo = db.prepare('SELECT recebe_ajuda_combustivel, valor_ajuda_combustivel FROM cargos WHERE id = ?').get(func.cargo_id);
-        if (cargo && cargo.recebe_ajuda_combustivel) {
-          totalAjudaCombustivel = cargo.valor_ajuda_combustivel || 0;
-        }
+        cargo = db.prepare('SELECT * FROM cargos WHERE id = ?').get(func.cargo_id);
       }
 
-      const totalGeral = Math.round(((r.totalPgtoHE || 0) + (r.totalPgtoFDS || 0) + totalVT + totalVA + totalAjudaCombustivel) * 100) / 100;
+      // Skip "Dono(a) da Casa" entirely
+      const cargoNome = (func.cargo_nome || func.cargo || '').toLowerCase();
+      if (cargoNome.includes('dono') || cargoNome.includes('dona')) continue;
+
+      // Determine what applies: employee overrides, fallback to cargo
+      const precisaBaterPonto = cargo ? cargo.precisa_bater_ponto : 1;
+      const permiteHE = (func.contabiliza_hora_extra || (cargo && cargo.permite_hora_extra)) ? true : false;
+      const permiteDE = (cargo && cargo.permite_dia_extra) ? true : false;
+      const recebeVT = (func.recebe_vt || (cargo && cargo.recebe_vale_transporte)) ? true : false;
+      const recebeVA = (func.tem_vale_alimentacao || func.recebe_va || (cargo && cargo.recebe_vale_refeicao)) ? true : false;
+      const recebeCombustivel = (cargo && cargo.recebe_ajuda_combustivel) ? true : false;
+
+      // Use employee values first, fallback to cargo defaults
+      const valorHE = func.valor_hora_extra || (cargo && cargo.valor_hora_extra) || 0;
+      const valorDE = func.valor_dia_especial || (cargo && cargo.valor_dia_extra) || 0;
+      const funcComValores = { ...func, valor_hora_extra: valorHE, valor_dia_especial: valorDE };
+
+      const registros = Registro.getMonthlyReport(mesInt, anoInt, func.id);
+      const folha = precisaBaterPonto ? HorasExtrasService.calcularFolha(registros, funcComValores) : { resumo: { diasTrabalhados: 0, diasTrabalhadosUteis: 0, diasTrabalhadosEspeciais: 0, totalHorasTrabalhadas: 0, totalHorasExtras: 0, totalPgtoHE: 0, totalPgtoFDS: 0 }, registros: [] };
+      const r = folha.resumo;
+
+      const diasTrab = r.diasTrabalhados || 0;
+      const totalPgtoHE = permiteHE ? (r.totalPgtoHE || 0) : 0;
+      const totalPgtoFDS = permiteDE ? (r.totalPgtoFDS || 0) : 0;
+      const totalVT = recebeVT ? Funcionario.calcularVT(func.id, diasTrab) : null;
+      const totalVA = recebeVA ? Math.round((func.valor_va_dia || (cargo && cargo.valor_vale_refeicao) || 0) * diasTrab * 100) / 100 : null;
+      const totalAjudaCombustivel = recebeCombustivel ? ((cargo && cargo.valor_ajuda_combustivel) || 0) : null;
+
+      const totalGeral = Math.round((totalPgtoHE + totalPgtoFDS + (totalVT || 0) + (totalVA || 0) + (totalAjudaCombustivel || 0)) * 100) / 100;
 
       resultados.push({
         funcionario: {
           nome: func.nome,
-          cargo: func.cargo,
-          valor_hora_extra: func.valor_hora_extra || 0,
-          valor_dia_especial: func.valor_dia_especial || 0,
+          cargo: func.cargo_nome || func.cargo,
+          valor_hora_extra: valorHE,
+          valor_dia_especial: valorDE,
           jornada_diaria: func.jornada_diaria || 9.8,
           pix_tipo: func.pix_tipo || null,
           pix_chave: func.pix_chave || null,
-          pix_banco: func.pix_banco || null
+          pix_banco: func.pix_banco || null,
+          permiteHE, permiteDE, recebeVT, recebeVA, recebeCombustivel, precisaBaterPonto
         },
         resumo: {
           diasTrabalhados: diasTrab,
           diasTrabalhadosUteis: r.diasTrabalhadosUteis || 0,
           diasTrabalhadosEspeciais: r.diasTrabalhadosEspeciais || 0,
           totalHorasTrabalhadas: r.totalHorasTrabalhadas || 0,
-          totalHorasExtras: r.totalHorasExtras || 0,
+          totalHorasExtras: permiteHE ? (r.totalHorasExtras || 0) : 0,
           totalHorasNormais: Math.round(((r.totalHorasTrabalhadas || 0) - (r.totalHorasExtras || 0)) * 100) / 100,
-          totalPgtoHE: r.totalPgtoHE || 0,
-          totalPgtoFDS: r.totalPgtoFDS || 0,
+          totalPgtoHE,
+          totalPgtoFDS,
           totalVT,
           totalVA,
           totalAjudaCombustivel,

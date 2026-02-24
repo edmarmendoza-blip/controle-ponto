@@ -15,12 +15,12 @@ const ALL_FIELDS = [
 
 class Funcionario {
   static getAll(includeInactive = false) {
-    const where = includeInactive ? '' : "WHERE status = 'ativo'";
-    return db.prepare(`SELECT * FROM funcionarios ${where} ORDER BY nome`).all();
+    const where = includeInactive ? '' : "WHERE f.status = 'ativo'";
+    return db.prepare(`SELECT f.*, c.nome as cargo_nome FROM funcionarios f LEFT JOIN cargos c ON f.cargo_id = c.id ${where} ORDER BY f.nome`).all();
   }
 
   static findById(id) {
-    const func = db.prepare('SELECT * FROM funcionarios WHERE id = ?').get(id);
+    const func = db.prepare('SELECT f.*, c.nome as cargo_nome FROM funcionarios f LEFT JOIN cargos c ON f.cargo_id = c.id WHERE f.id = ?').get(id);
     if (func) {
       func.transportes = this.getTransportes(id);
     }

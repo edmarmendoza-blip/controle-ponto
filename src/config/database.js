@@ -174,6 +174,24 @@ function initializeDatabase() {
         console.log('[Migration] Removed CHECK constraint on cargos.tipo_dias_dormida');
       }
     } catch (e) { console.error('[Migration] cargos CHECK removal:', e.message); }
+
+    // Migrate cargo text to cargo_id where null
+    try {
+      const nullCargoCount = db.prepare("SELECT COUNT(*) as c FROM funcionarios WHERE cargo_id IS NULL AND cargo IS NOT NULL AND cargo != '' AND cargo != 'A definir'").get();
+      if (nullCargoCount && nullCargoCount.c > 0) {
+        const funcs = db.prepare("SELECT id, cargo FROM funcionarios WHERE cargo_id IS NULL AND cargo IS NOT NULL AND cargo != '' AND cargo != 'A definir'").all();
+        const cargos = db.prepare('SELECT id, nome FROM cargos').all();
+        let updated = 0;
+        for (const f of funcs) {
+          const match = cargos.find(c => f.cargo.toLowerCase().includes(c.nome.toLowerCase()));
+          if (match) {
+            db.prepare('UPDATE funcionarios SET cargo_id = ? WHERE id = ?').run(match.id, f.id);
+            updated++;
+          }
+        }
+        if (updated > 0) console.log(`[Migration] Linked ${updated} funcionarios to cargo_id`);
+      }
+    } catch (e) { console.error('[Migration] cargo_id link:', e.message); }
   } catch (migrationErr) {
     console.error('Migration warning:', migrationErr.message);
   }
@@ -280,6 +298,17 @@ function initializeDatabase() {
       ip_address TEXT,
       created_at DATETIME DEFAULT (datetime('now','localtime')),
       FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS access_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER REFERENCES users(id),
+      user_nome TEXT,
+      user_email TEXT,
+      acao TEXT DEFAULT 'login',
+      ip TEXT,
+      user_agent TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
     );
 
     CREATE TABLE IF NOT EXISTS configuracoes (
