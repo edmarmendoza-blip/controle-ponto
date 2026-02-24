@@ -5,6 +5,7 @@ const Funcionario = require('../models/Funcionario');
 const HorasExtrasService = require('../services/horasExtras');
 const FeriadosService = require('../services/feriados');
 const { authenticateToken } = require('../middleware/auth');
+const { db } = require('../config/database');
 
 const router = express.Router();
 
@@ -141,28 +142,49 @@ router.get('/folha', authenticateToken, [
     for (const func of funcionarios) {
       const registros = Registro.getMonthlyReport(mesInt, anoInt, func.id);
       const folha = HorasExtrasService.calcularFolha(registros, func);
+      const r = folha.resumo;
 
       // Calculate VT/VA
-      const diasTrab = folha.resumo.diasTrabalhados;
+      const diasTrab = r.diasTrabalhados || 0;
       const totalVT = func.recebe_vt ? Funcionario.calcularVT(func.id, diasTrab) : 0;
       const totalVA = func.tem_vale_alimentacao ? Math.round((func.valor_va_dia || 0) * diasTrab * 100) / 100 : 0;
-      const totalGeral = Math.round((folha.resumo.totalMensal + totalVT + totalVA) * 100) / 100;
+
+      // Get ajuda combustível from cargo
+      let totalAjudaCombustivel = 0;
+      if (func.cargo_id) {
+        const cargo = db.prepare('SELECT recebe_ajuda_combustivel, valor_ajuda_combustivel FROM cargos WHERE id = ?').get(func.cargo_id);
+        if (cargo && cargo.recebe_ajuda_combustivel) {
+          totalAjudaCombustivel = cargo.valor_ajuda_combustivel || 0;
+        }
+      }
+
+      const totalGeral = Math.round(((r.totalPgtoHE || 0) + (r.totalPgtoFDS || 0) + totalVT + totalVA + totalAjudaCombustivel) * 100) / 100;
 
       resultados.push({
-        nome: func.nome,
-        cargo: func.cargo,
-        pix_tipo: func.pix_tipo,
-        pix_chave: func.pix_chave,
-        pix_banco: func.pix_banco,
-        diasTrabalhados: diasTrab,
-        totalHorasNormais: folha.resumo.totalHorasTrabalhadas - folha.resumo.totalHorasExtras,
-        totalHorasExtras: folha.resumo.totalHorasExtras,
-        totalValorNormal: folha.resumo.totalPgtoHE > 0 ? folha.resumo.totalMensal - folha.resumo.totalPgtoHE - folha.resumo.totalPgtoFDS : 0,
-        totalHorasExtraValor: folha.resumo.totalPgtoHE,
-        totalValorFeriados: folha.resumo.totalPgtoFDS,
-        totalVT,
-        totalVA,
-        totalGeral,
+        funcionario: {
+          nome: func.nome,
+          cargo: func.cargo,
+          valor_hora_extra: func.valor_hora_extra || 0,
+          valor_dia_especial: func.valor_dia_especial || 0,
+          jornada_diaria: func.jornada_diaria || 9.8,
+          pix_tipo: func.pix_tipo || null,
+          pix_chave: func.pix_chave || null,
+          pix_banco: func.pix_banco || null
+        },
+        resumo: {
+          diasTrabalhados: diasTrab,
+          diasTrabalhadosUteis: r.diasTrabalhadosUteis || 0,
+          diasTrabalhadosEspeciais: r.diasTrabalhadosEspeciais || 0,
+          totalHorasTrabalhadas: r.totalHorasTrabalhadas || 0,
+          totalHorasExtras: r.totalHorasExtras || 0,
+          totalHorasNormais: Math.round(((r.totalHorasTrabalhadas || 0) - (r.totalHorasExtras || 0)) * 100) / 100,
+          totalPgtoHE: r.totalPgtoHE || 0,
+          totalPgtoFDS: r.totalPgtoFDS || 0,
+          totalVT,
+          totalVA,
+          totalAjudaCombustivel,
+          totalGeral
+        },
         registros: folha.registros
       });
     }

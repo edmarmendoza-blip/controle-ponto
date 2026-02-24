@@ -399,7 +399,9 @@
         </div>
         <div class="mb-3">
           <label class="form-label">Cargo</label>
-          <input type="text" class="form-control" id="func-cargo" required>
+          <select class="form-select" id="func-cargo" required>
+            <option value="">Selecione...</option>
+          </select>
         </div>
         <div class="mb-3">
           <label class="form-label">Salário/Hora (R$)</label>
@@ -444,19 +446,31 @@
 
     openModal(title, body, footer);
 
-    if (isEdit) {
-      api(`/api/funcionarios/${id}`).then(f => {
-        document.getElementById('func-nome').value = f.nome;
-        document.getElementById('func-cargo').value = f.cargo;
-        document.getElementById('func-salario').value = f.salario_hora;
-        document.getElementById('func-telefone').value = f.telefone || '';
-        document.getElementById('func-horario-entrada').value = f.horario_entrada || '08:00';
-        document.getElementById('func-valor-hora-extra').value = f.valor_hora_extra ?? 43.25;
-        document.getElementById('func-valor-dia-especial').value = f.valor_dia_especial ?? 320.00;
-        document.getElementById('func-jornada-diaria').value = f.jornada_diaria ?? 9.8;
-        document.getElementById('func-status').value = f.status;
+    // Load cargos dropdown
+    api('/api/cargos').then(cargos => {
+      const select = document.getElementById('func-cargo');
+      (Array.isArray(cargos) ? cargos : []).forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.nome;
+        opt.textContent = c.nome;
+        select.appendChild(opt);
       });
-    }
+
+      if (isEdit) {
+        api(`/api/funcionarios/${id}`).then(f => {
+          document.getElementById('func-nome').value = f.nome;
+          document.getElementById('func-cargo').value = f.cargo;
+          document.getElementById('func-salario').value = f.salario_hora;
+          document.getElementById('func-telefone').value = f.telefone || '';
+          document.getElementById('func-horario-entrada').value = f.horario_entrada || '08:00';
+          document.getElementById('func-valor-hora-extra').value = f.valor_hora_extra ?? 43.25;
+          document.getElementById('func-valor-dia-especial').value = f.valor_dia_especial ?? 320.00;
+          document.getElementById('func-jornada-diaria').value = f.jornada_diaria ?? 9.8;
+          const statusEl = document.getElementById('func-status');
+          if (statusEl) statusEl.value = f.status;
+        });
+      }
+    });
   }
 
   async function saveFuncionario(id) {
@@ -794,7 +808,7 @@
             <a class="nav-link active" href="#" data-tab="mensal">Relatório Mensal</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#" data-tab="folha">Folha de Pagamento</a>
+            <a class="nav-link" href="#" data-tab="folha">Valor dos Pagamentos do Mês</a>
           </li>
         </ul>
         <div class="filter-bar">
@@ -981,80 +995,143 @@
       if (funcId) url += `&funcionarioId=${funcId}`;
       const data = await api(url);
 
-      if (data.folhas.length === 0) {
+      if (!data.folhas || data.folhas.length === 0) {
         container.innerHTML = '<div class="empty-state"><i class="bi bi-clipboard-x"></i><p>Nenhum registro encontrado para o período</p></div>';
         return;
       }
 
       const dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
       let html = '';
-
-      // Global totals
-      let grandTotalHoras = 0, grandTotalHE = 0, grandTotalPgtoHE = 0, grandTotalPgtoFDS = 0, grandTotalMensal = 0;
+      let grandTotal = 0;
 
       for (const folha of data.folhas) {
-        if (folha.registros.length === 0) continue;
-        const f = folha.funcionario;
-        const r = folha.resumo;
+        const f = folha.funcionario || {};
+        const r = folha.resumo || {};
+        const regs = folha.registros || [];
 
-        grandTotalHoras += r.totalHorasTrabalhadas;
-        grandTotalHE += r.totalHorasExtras;
-        grandTotalPgtoHE += r.totalPgtoHE;
-        grandTotalPgtoFDS += r.totalPgtoFDS;
-        grandTotalMensal += r.totalMensal;
+        if (regs.length === 0) continue;
+
+        grandTotal += r.totalGeral || 0;
+
+        // PIX info string
+        let pixInfo = '';
+        if (f.pix_chave) {
+          pixInfo = `<span class="badge bg-light text-dark border"><i class="bi bi-qr-code me-1"></i>PIX ${f.pix_tipo || ''}: ${f.pix_chave}${f.pix_banco ? ' (' + f.pix_banco + ')' : ''}</span>`;
+        }
 
         html += `
           <div class="summary-card mb-4">
-            <h5><i class="bi bi-person me-2"></i>${f.nome} - ${f.cargo}</h5>
-            <small class="text-muted">Jornada: ${f.jornada_diaria}h | Hora Extra: ${formatCurrency(f.valor_hora_extra)} | Dia Especial: ${formatCurrency(f.valor_dia_especial)}</small>
-            <div class="data-table mt-2">
-              <table class="table table-sm">
-                <thead>
-                  <tr>
-                    <th>Data</th><th>Dia</th><th>Entrada</th><th>Saída</th>
-                    <th>H. Trab.</th><th>H. Extra</th><th>Tipo Dia</th>
-                    <th>Pgto HE</th><th>Pgto FDS</th><th>Total Dia</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${folha.registros.map(reg => {
-                    const date = new Date(reg.data + 'T12:00:00');
-                    const isEspecial = reg.tipoDia.tipo === 'feriado' || reg.tipoDia.tipo === 'domingo' || reg.tipoDia.tipo === 'sabado';
-                    return `
-                      <tr class="${isEspecial ? 'table-warning' : ''}">
-                        <td>${formatDate(reg.data)}</td>
-                        <td>${dias[date.getDay()]}</td>
-                        <td>${reg.entrada || '-'}</td>
-                        <td>${reg.saida || '-'}</td>
-                        <td>${reg.horasTrabalhadas.toFixed(2)}</td>
-                        <td>${reg.horasExtras > 0 ? `<span class="text-warning fw-bold">${reg.horasExtras.toFixed(2)}</span>` : '0.00'}</td>
-                        <td><span class="badge bg-${isEspecial ? 'warning text-dark' : 'secondary'}">${reg.tipoDia.descricao}</span></td>
-                        <td>${reg.pgtoHoraExtra > 0 ? formatCurrency(reg.pgtoHoraExtra) : '-'}</td>
-                        <td>${reg.pgtoFDS > 0 ? formatCurrency(reg.pgtoFDS) : '-'}</td>
-                        <td class="fw-bold">${formatCurrency(reg.totalDia)}</td>
-                      </tr>`;
-                  }).join('')}
-                </tbody>
-              </table>
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+              <div>
+                <h5 class="mb-1"><i class="bi bi-person-badge me-2"></i>${f.nome || 'N/A'}</h5>
+                <span class="badge bg-primary me-2">${f.cargo || 'Sem cargo'}</span>
+                ${pixInfo}
+              </div>
+              <div class="text-end">
+                <div class="fs-4 fw-bold text-success">${formatCurrency(r.totalGeral || 0)}</div>
+                <small class="text-muted">Total a pagar</small>
+              </div>
             </div>
-            <div class="row mt-3">
-              <div class="col-md-6">
-                <div class="summary-card" style="background: #F8FAFC;">
-                  <h6>Resumo - ${f.nome}</h6>
-                  <div class="summary-item"><span class="label">Dias Trabalhados (úteis)</span><span class="value">${r.diasTrabalhadosUteis}</span></div>
-                  <div class="summary-item"><span class="label">Dias Trabalhados (FDS/feriado)</span><span class="value">${r.diasTrabalhadosEspeciais}</span></div>
-                  <div class="summary-item"><span class="label">Total Dias Trabalhados</span><span class="value">${r.diasTrabalhados}</span></div>
-                  <div class="summary-item"><span class="label">Total Horas Trabalhadas</span><span class="value">${r.totalHorasTrabalhadas.toFixed(2)}</span></div>
-                  <div class="summary-item"><span class="label">Total Horas Extras</span><span class="value text-warning">${r.totalHorasExtras.toFixed(2)}</span></div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-6 col-md-3">
+                <div class="border rounded p-2 text-center h-100">
+                  <small class="text-muted d-block">Dias Trabalhados</small>
+                  <span class="fw-bold">${r.diasTrabalhados || 0}</span>
+                  <small class="text-muted d-block">${r.diasTrabalhadosUteis || 0} úteis + ${r.diasTrabalhadosEspeciais || 0} especiais</small>
                 </div>
               </div>
-              <div class="col-md-6">
-                <div class="summary-card" style="background: #F8FAFC;">
-                  <h6>Pagamentos</h6>
-                  <div class="summary-item"><span class="label">Total Pago Horas Extras</span><span class="value">${formatCurrency(r.totalPgtoHE)}</span></div>
-                  <div class="summary-item"><span class="label">Total Pago FDS/Feriado</span><span class="value">${formatCurrency(r.totalPgtoFDS)}</span></div>
-                  <hr>
-                  <div class="summary-item"><span class="label fw-bold fs-6">TOTAL MENSAL</span><span class="value text-primary fs-5">${formatCurrency(r.totalMensal)}</span></div>
+              <div class="col-6 col-md-3">
+                <div class="border rounded p-2 text-center h-100">
+                  <small class="text-muted d-block">Horas Normais</small>
+                  <span class="fw-bold">${(r.totalHorasNormais || 0).toFixed(1)}h</span>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="border rounded p-2 text-center h-100">
+                  <small class="text-muted d-block">Horas Extras</small>
+                  <span class="fw-bold text-warning">${(r.totalHorasExtras || 0).toFixed(1)}h</span>
+                  <small class="text-muted d-block">${(r.totalHorasExtras || 0).toFixed(1)} × ${formatCurrency(f.valor_hora_extra || 0)}</small>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="border rounded p-2 text-center h-100">
+                  <small class="text-muted d-block">Dias Especiais</small>
+                  <span class="fw-bold text-info">${r.diasTrabalhadosEspeciais || 0}</span>
+                  <small class="text-muted d-block">${r.diasTrabalhadosEspeciais || 0} × ${formatCurrency(f.valor_dia_especial || 0)}</small>
+                </div>
+              </div>
+            </div>
+
+            <table class="table table-sm table-bordered mb-0">
+              <tbody>
+                <tr>
+                  <td>Horas Extras</td>
+                  <td class="text-end">${(r.totalHorasExtras || 0).toFixed(1)}h × ${formatCurrency(f.valor_hora_extra || 0)}</td>
+                  <td class="text-end fw-bold" style="width:130px">${formatCurrency(r.totalPgtoHE || 0)}</td>
+                </tr>
+                <tr>
+                  <td>Dias Especiais (FDS/Feriado)</td>
+                  <td class="text-end">${r.diasTrabalhadosEspeciais || 0} × ${formatCurrency(f.valor_dia_especial || 0)}</td>
+                  <td class="text-end fw-bold">${formatCurrency(r.totalPgtoFDS || 0)}</td>
+                </tr>
+                ${(r.totalVT || 0) > 0 ? `<tr>
+                  <td>Vale Transporte</td>
+                  <td class="text-end"><small class="text-muted">mensal</small></td>
+                  <td class="text-end fw-bold">${formatCurrency(r.totalVT)}</td>
+                </tr>` : ''}
+                ${(r.totalVA || 0) > 0 ? `<tr>
+                  <td>Vale Alimentação</td>
+                  <td class="text-end"><small class="text-muted">mensal</small></td>
+                  <td class="text-end fw-bold">${formatCurrency(r.totalVA)}</td>
+                </tr>` : ''}
+                ${(r.totalAjudaCombustivel || 0) > 0 ? `<tr>
+                  <td>Ajuda Combustível</td>
+                  <td class="text-end"><small class="text-muted">mensal</small></td>
+                  <td class="text-end fw-bold">${formatCurrency(r.totalAjudaCombustivel)}</td>
+                </tr>` : ''}
+                <tr class="table-success">
+                  <td colspan="2" class="fw-bold fs-6">TOTAL A PAGAR</td>
+                  <td class="text-end fw-bold fs-6 text-success">${formatCurrency(r.totalGeral || 0)}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="mt-2">
+              <a class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" href="#detalhes-${folha.funcionario ? f.nome.replace(/\\s/g, '-') : 'func'}-${mes}${ano}" role="button">
+                <i class="bi bi-list-ul me-1"></i>Ver detalhes diários
+              </a>
+              <div class="collapse mt-2" id="detalhes-${folha.funcionario ? f.nome.replace(/\\s/g, '-') : 'func'}-${mes}${ano}">
+                <div class="data-table">
+                  <table class="table table-sm">
+                    <thead>
+                      <tr>
+                        <th>Data</th><th>Dia</th><th>Entrada</th><th>Saída</th>
+                        <th>H. Trab.</th><th>H. Extra</th><th>Tipo</th>
+                        <th>Pgto HE</th><th>Pgto FDS</th><th>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${regs.map(reg => {
+                        const date = new Date(reg.data + 'T12:00:00');
+                        const tipoDia = reg.tipoDia || {};
+                        const isEspecial = tipoDia.tipo === 'feriado' || tipoDia.tipo === 'domingo' || tipoDia.tipo === 'sabado';
+                        return `
+                          <tr class="${isEspecial ? 'table-warning' : ''}">
+                            <td>${formatDate(reg.data)}</td>
+                            <td>${dias[date.getDay()]}</td>
+                            <td>${reg.entrada || '-'}</td>
+                            <td>${reg.saida || '-'}</td>
+                            <td>${(reg.horasTrabalhadas || 0).toFixed(2)}</td>
+                            <td>${(reg.horasExtras || 0) > 0 ? '<span class="text-warning fw-bold">' + (reg.horasExtras).toFixed(2) + '</span>' : '0.00'}</td>
+                            <td><span class="badge bg-${isEspecial ? 'warning text-dark' : 'secondary'}">${tipoDia.descricao || 'Útil'}</span></td>
+                            <td>${(reg.pgtoHoraExtra || 0) > 0 ? formatCurrency(reg.pgtoHoraExtra) : '-'}</td>
+                            <td>${(reg.pgtoFDS || 0) > 0 ? formatCurrency(reg.pgtoFDS) : '-'}</td>
+                            <td class="fw-bold">${formatCurrency(reg.totalDia || 0)}</td>
+                          </tr>`;
+                      }).join('')}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
@@ -1062,21 +1139,12 @@
       }
 
       // Grand total across all employees
-      if (data.folhas.length > 1) {
+      if (data.folhas.filter(f => (f.registros || []).length > 0).length > 1) {
         html += `
           <div class="summary-card mb-4" style="background: #EEF2FF; border-left: 4px solid #4F46E5;">
-            <h5><i class="bi bi-calculator me-2"></i>Consolidado Geral - ${monthName(mes)}/${ano}</h5>
-            <div class="row">
-              <div class="col-md-6">
-                <div class="summary-item"><span class="label">Total Horas Trabalhadas</span><span class="value">${grandTotalHoras.toFixed(2)}</span></div>
-                <div class="summary-item"><span class="label">Total Horas Extras</span><span class="value text-warning">${grandTotalHE.toFixed(2)}</span></div>
-              </div>
-              <div class="col-md-6">
-                <div class="summary-item"><span class="label">Total Pago HE</span><span class="value">${formatCurrency(grandTotalPgtoHE)}</span></div>
-                <div class="summary-item"><span class="label">Total Pago FDS/Feriado</span><span class="value">${formatCurrency(grandTotalPgtoFDS)}</span></div>
-                <hr>
-                <div class="summary-item"><span class="label fw-bold fs-5">TOTAL GERAL</span><span class="value text-primary fs-4">${formatCurrency(grandTotalMensal)}</span></div>
-              </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0"><i class="bi bi-calculator me-2"></i>Total Geral - ${monthName(mes)}/${ano}</h5>
+              <div class="fs-3 fw-bold text-primary">${formatCurrency(grandTotal)}</div>
             </div>
           </div>`;
       }
@@ -2717,19 +2785,25 @@
           <div class="col-6 mb-3"><label class="form-label">Valor Dia Extra (R$)</label><input type="number" class="form-control" id="cargo-val-dia-extra" step="0.01" min="0" value="0"></div>
         </div>
         <hr><h6 class="text-muted">Benefícios</h6>
-        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-vt"><label class="form-check-label" for="cargo-vt">Recebe Vale Transporte</label></div>
-        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-vr"><label class="form-check-label" for="cargo-vr">Recebe Vale Refeição</label></div>
-        <div class="row">
-          <div class="col-6 mb-3"><label class="form-label">Valor VT (R$)</label><input type="number" class="form-control" id="cargo-val-vt" step="0.01" min="0" value="0"></div>
-          <div class="col-6 mb-3"><label class="form-label">Valor VR (R$)</label><input type="number" class="form-control" id="cargo-val-vr" step="0.01" min="0" value="0"></div>
+        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-vt" onchange="document.getElementById('cargo-vt-fields').style.display=this.checked?'':'none'"><label class="form-check-label" for="cargo-vt">Recebe Vale Transporte</label></div>
+        <div id="cargo-vt-fields" style="display:none">
+          <div class="mb-3"><label class="form-label">Valor VT por dia - ida + volta somados (R$)</label><input type="number" class="form-control" id="cargo-val-vt" step="0.01" min="0" value="0"></div>
         </div>
-        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-combustivel"><label class="form-check-label" for="cargo-combustivel">Recebe Ajuda Combustível</label></div>
-        <div class="mb-3"><label class="form-label">Valor Combustível (R$)</label><input type="number" class="form-control" id="cargo-val-combustivel" step="0.01" min="0" value="0"></div>
+        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-vr" onchange="document.getElementById('cargo-vr-fields').style.display=this.checked?'':'none'"><label class="form-check-label" for="cargo-vr">Recebe Vale Refeição</label></div>
+        <div id="cargo-vr-fields" style="display:none">
+          <div class="mb-3"><label class="form-label">Valor VR por dia (R$)</label><input type="number" class="form-control" id="cargo-val-vr" step="0.01" min="0" value="0"></div>
+        </div>
+        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-combustivel" onchange="document.getElementById('cargo-combustivel-fields').style.display=this.checked?'':'none'"><label class="form-check-label" for="cargo-combustivel">Recebe Ajuda Combustível</label></div>
+        <div id="cargo-combustivel-fields" style="display:none">
+          <div class="mb-3"><label class="form-label">Valor Ajuda Combustível mensal (R$)</label><input type="number" class="form-control" id="cargo-val-combustivel" step="0.01" min="0" value="0"></div>
+        </div>
         <hr><h6 class="text-muted">Dormida</h6>
-        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-dorme"><label class="form-check-label" for="cargo-dorme">Dorme no local</label></div>
-        <div class="row">
-          <div class="col-6 mb-3"><label class="form-label">Dias de dormida</label><input type="number" class="form-control" id="cargo-dias-dormida" min="0" value="0"></div>
-          <div class="col-6 mb-3"><label class="form-label">Tipo</label><select class="form-select" id="cargo-tipo-dormida"><option value="semana">Dias/semana</option><option value="uteis">Úteis</option><option value="todos">Todos</option><option value="customizado">Customizado</option></select></div>
+        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-dorme" onchange="document.getElementById('cargo-dormida-fields').style.display=this.checked?'':'none'"><label class="form-check-label" for="cargo-dorme">Dorme no local</label></div>
+        <div id="cargo-dormida-fields" style="display:none">
+          <div class="row">
+            <div class="col-6 mb-3"><label class="form-label">Dias de dormida</label><input type="number" class="form-control" id="cargo-dias-dormida" min="0" value="0"></div>
+            <div class="col-6 mb-3"><label class="form-label">Tipo</label><select class="form-select" id="cargo-tipo-dormida"><option value="seg-sex">Segunda a Sexta</option><option value="sex-seg">Sexta a Segunda</option><option value="todos">Todos os dias</option><option value="customizado">Personalizado</option></select></div>
+          </div>
         </div>
       </form>`;
     const footer = `
@@ -2752,7 +2826,14 @@
         document.getElementById('cargo-val-combustivel').value = c.valor_ajuda_combustivel || 0;
         document.getElementById('cargo-dorme').checked = !!c.dorme_no_local;
         document.getElementById('cargo-dias-dormida').value = c.dias_dormida || 0;
-        document.getElementById('cargo-tipo-dormida').value = c.tipo_dias_dormida || 'semana';
+        // Map old values to new dropdown options
+        const tipoMap = { 'semana': 'seg-sex', 'uteis': 'seg-sex', 'todos': 'todos', 'customizado': 'customizado' };
+        document.getElementById('cargo-tipo-dormida').value = tipoMap[c.tipo_dias_dormida] || c.tipo_dias_dormida || 'seg-sex';
+        // Show/hide conditional fields based on checkbox state
+        document.getElementById('cargo-vt-fields').style.display = c.recebe_vale_transporte ? '' : 'none';
+        document.getElementById('cargo-vr-fields').style.display = c.recebe_vale_refeicao ? '' : 'none';
+        document.getElementById('cargo-combustivel-fields').style.display = c.recebe_ajuda_combustivel ? '' : 'none';
+        document.getElementById('cargo-dormida-fields').style.display = c.dorme_no_local ? '' : 'none';
       });
     }
   }
@@ -2773,7 +2854,7 @@
       valor_ajuda_combustivel: parseFloat(document.getElementById('cargo-val-combustivel').value) || 0,
       dorme_no_local: document.getElementById('cargo-dorme').checked ? 1 : 0,
       dias_dormida: parseInt(document.getElementById('cargo-dias-dormida').value) || 0,
-      tipo_dias_dormida: document.getElementById('cargo-tipo-dormida').value || 'semana'
+      tipo_dias_dormida: document.getElementById('cargo-tipo-dormida').value || 'seg-sex'
     };
     if (!data.nome) return showToast('Nome obrigatório', 'danger');
     try {
