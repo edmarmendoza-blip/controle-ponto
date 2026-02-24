@@ -357,7 +357,7 @@
                 <tr>
                   <td><strong>${f.nome}</strong></td>
                   <td>${f.cargo}</td>
-                  <td>${formatCurrency(f.salario_hora)}</td>
+                  <td>${formatCurrency(f.salario_hora || f.valor_hora_extra)}</td>
                   <td>${f.telefone || '-'}</td>
                   <td>${f.horario_entrada || '08:00'}</td>
                   <td><span class="badge-status badge-${f.status}">${f.status === 'ativo' ? 'Ativo' : 'Inativo'}</span></td>
@@ -1991,6 +1991,7 @@
                   <td>${formatDate(u.created_at ? u.created_at.split(' ')[0] || u.created_at.split('T')[0] : '')}</td>
                   <td class="text-nowrap">
                     <button class="btn btn-action btn-outline-primary" onclick="App.openUsuarioModal(${u.id})" title="Editar"><i class="bi bi-pencil"></i></button>
+                    ${u.id !== currentUser.id ? `<button class="btn btn-action btn-outline-warning ms-1" onclick="App.resetUsuarioPassword(${u.id}, '${u.email.replace(/'/g, "\\'")}')" title="Reenviar Senha"><i class="bi bi-key"></i></button>` : ''}
                     ${u.id !== currentUser.id && u.active ? `<button class="btn btn-action btn-outline-danger ms-1" onclick="App.deleteUsuario(${u.id}, '${u.name.replace(/'/g, "\\'")}')" title="Desativar"><i class="bi bi-person-x"></i></button>` : ''}
                   </td>
                 </tr>`).join('')}
@@ -2303,7 +2304,7 @@
   // ============================================================
   async function renderInsightsIA() {
     const content = document.getElementById('page-content');
-    const today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
 
     content.innerHTML = `
       <div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
@@ -2707,13 +2708,51 @@
     const body = `
       <form id="cargo-form">
         <div class="mb-3"><label class="form-label">Nome</label><input type="text" class="form-control" id="cargo-nome" required></div>
-        <div class="mb-3"><label class="form-label">Descrição</label><textarea class="form-control" id="cargo-descricao" rows="3"></textarea></div>
+        <hr><h6 class="text-muted">Configurações</h6>
+        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-ponto" checked><label class="form-check-label" for="cargo-ponto">Precisa bater ponto</label></div>
+        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-hora-extra" checked><label class="form-check-label" for="cargo-hora-extra">Permite hora extra</label></div>
+        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-dia-extra"><label class="form-check-label" for="cargo-dia-extra">Permite dia extra</label></div>
+        <div class="row">
+          <div class="col-6 mb-3"><label class="form-label">Valor Hora Extra (R$)</label><input type="number" class="form-control" id="cargo-val-hora-extra" step="0.01" min="0" value="0"></div>
+          <div class="col-6 mb-3"><label class="form-label">Valor Dia Extra (R$)</label><input type="number" class="form-control" id="cargo-val-dia-extra" step="0.01" min="0" value="0"></div>
+        </div>
+        <hr><h6 class="text-muted">Benefícios</h6>
+        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-vt"><label class="form-check-label" for="cargo-vt">Recebe Vale Transporte</label></div>
+        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-vr"><label class="form-check-label" for="cargo-vr">Recebe Vale Refeição</label></div>
+        <div class="row">
+          <div class="col-6 mb-3"><label class="form-label">Valor VT (R$)</label><input type="number" class="form-control" id="cargo-val-vt" step="0.01" min="0" value="0"></div>
+          <div class="col-6 mb-3"><label class="form-label">Valor VR (R$)</label><input type="number" class="form-control" id="cargo-val-vr" step="0.01" min="0" value="0"></div>
+        </div>
+        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-combustivel"><label class="form-check-label" for="cargo-combustivel">Recebe Ajuda Combustível</label></div>
+        <div class="mb-3"><label class="form-label">Valor Combustível (R$)</label><input type="number" class="form-control" id="cargo-val-combustivel" step="0.01" min="0" value="0"></div>
+        <hr><h6 class="text-muted">Dormida</h6>
+        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-dorme"><label class="form-check-label" for="cargo-dorme">Dorme no local</label></div>
+        <div class="row">
+          <div class="col-6 mb-3"><label class="form-label">Dias de dormida</label><input type="number" class="form-control" id="cargo-dias-dormida" min="0" value="0"></div>
+          <div class="col-6 mb-3"><label class="form-label">Tipo</label><select class="form-select" id="cargo-tipo-dormida"><option value="semana">Dias/semana</option><option value="uteis">Úteis</option><option value="todos">Todos</option><option value="customizado">Customizado</option></select></div>
+        </div>
       </form>`;
-    showModal(isEdit ? 'Editar Cargo' : 'Novo Cargo', body, () => saveCargo(id));
+    const footer = `
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      <button type="button" class="btn btn-primary" onclick="App.saveCargo(${id || 'null'})">Salvar</button>`;
+    openModal(isEdit ? 'Editar Cargo' : 'Novo Cargo', body, footer);
     if (isEdit) {
       api('/api/cargos/' + id).then(c => {
         document.getElementById('cargo-nome').value = c.nome || '';
-        document.getElementById('cargo-descricao').value = c.descricao || '';
+        document.getElementById('cargo-ponto').checked = !!c.precisa_bater_ponto;
+        document.getElementById('cargo-hora-extra').checked = !!c.permite_hora_extra;
+        document.getElementById('cargo-dia-extra').checked = !!c.permite_dia_extra;
+        document.getElementById('cargo-val-hora-extra').value = c.valor_hora_extra || 0;
+        document.getElementById('cargo-val-dia-extra').value = c.valor_dia_extra || 0;
+        document.getElementById('cargo-vt').checked = !!c.recebe_vale_transporte;
+        document.getElementById('cargo-vr').checked = !!c.recebe_vale_refeicao;
+        document.getElementById('cargo-val-vt').value = c.valor_vale_transporte || 0;
+        document.getElementById('cargo-val-vr').value = c.valor_vale_refeicao || 0;
+        document.getElementById('cargo-combustivel').checked = !!c.recebe_ajuda_combustivel;
+        document.getElementById('cargo-val-combustivel').value = c.valor_ajuda_combustivel || 0;
+        document.getElementById('cargo-dorme').checked = !!c.dorme_no_local;
+        document.getElementById('cargo-dias-dormida').value = c.dias_dormida || 0;
+        document.getElementById('cargo-tipo-dormida').value = c.tipo_dias_dormida || 'semana';
       });
     }
   }
@@ -2721,16 +2760,34 @@
   async function saveCargo(id) {
     const data = {
       nome: document.getElementById('cargo-nome').value,
-      descricao: document.getElementById('cargo-descricao').value
+      precisa_bater_ponto: document.getElementById('cargo-ponto').checked ? 1 : 0,
+      permite_hora_extra: document.getElementById('cargo-hora-extra').checked ? 1 : 0,
+      permite_dia_extra: document.getElementById('cargo-dia-extra').checked ? 1 : 0,
+      valor_hora_extra: parseFloat(document.getElementById('cargo-val-hora-extra').value) || 0,
+      valor_dia_extra: parseFloat(document.getElementById('cargo-val-dia-extra').value) || 0,
+      recebe_vale_transporte: document.getElementById('cargo-vt').checked ? 1 : 0,
+      recebe_vale_refeicao: document.getElementById('cargo-vr').checked ? 1 : 0,
+      valor_vale_transporte: parseFloat(document.getElementById('cargo-val-vt').value) || 0,
+      valor_vale_refeicao: parseFloat(document.getElementById('cargo-val-vr').value) || 0,
+      recebe_ajuda_combustivel: document.getElementById('cargo-combustivel').checked ? 1 : 0,
+      valor_ajuda_combustivel: parseFloat(document.getElementById('cargo-val-combustivel').value) || 0,
+      dorme_no_local: document.getElementById('cargo-dorme').checked ? 1 : 0,
+      dias_dormida: parseInt(document.getElementById('cargo-dias-dormida').value) || 0,
+      tipo_dias_dormida: document.getElementById('cargo-tipo-dormida').value || 'semana'
     };
-    if (!data.nome) return alert('Nome obrigatório');
-    if (id) {
-      await api('/api/cargos/' + id, { method: 'PUT', body: JSON.stringify(data) });
-    } else {
-      await api('/api/cargos', { method: 'POST', body: JSON.stringify(data) });
+    if (!data.nome) return showToast('Nome obrigatório', 'danger');
+    try {
+      if (id) {
+        await api('/api/cargos/' + id, { method: 'PUT', body: JSON.stringify(data) });
+      } else {
+        await api('/api/cargos', { method: 'POST', body: JSON.stringify(data) });
+      }
+      closeModal();
+      showToast(id ? 'Cargo atualizado' : 'Cargo criado');
+      renderCargos();
+    } catch (err) {
+      showToast('Erro: ' + err.message, 'danger');
     }
-    closeModal();
-    renderCargos();
   }
 
   // ============================================================
@@ -2883,6 +2940,15 @@
     openUsuarioModal: openUsuarioModal,
     saveUsuario: saveUsuario,
     deleteUsuario: deleteUsuario,
+    resetUsuarioPassword: async function(id, email) {
+      if (!confirm('Reenviar senha temporária para ' + email + '?')) return;
+      try {
+        await api('/api/auth/users/' + id + '/reset-password', { method: 'POST' });
+        showToast('Senha reenviada para ' + email);
+      } catch (err) {
+        showToast('Erro: ' + err.message, 'danger');
+      }
+    },
     loadAuditLog: loadAuditLog,
     showLocationMap: showLocationMap,
     syncFeriados: syncFeriados,

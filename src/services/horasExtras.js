@@ -50,7 +50,7 @@ class HorasExtrasService {
       }
     }
 
-    const salarioHora = registro.salario_hora || 0;
+    const salarioHora = registro.salario_hora || registro.func_valor_hora_extra || 0;
     const valorNormal = horasNormais * salarioHora;
     horasExtraValor = horasExtras * salarioHora * multiplicador;
 
@@ -189,7 +189,7 @@ class HorasExtrasService {
           funcionario_id: funcId,
           nome: registro.funcionario_nome,
           cargo: registro.cargo,
-          salario_hora: registro.salario_hora,
+          salario_hora: registro.salario_hora || registro.func_valor_hora_extra || 0,
           totalHorasTrabalhadas: 0,
           totalHorasNormais: 0,
           totalHorasExtras: 0,

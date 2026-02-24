@@ -305,7 +305,7 @@ Responda SOMENTE com JSON, sem texto adicional.`;
     const totalUsers = db.prepare('SELECT COUNT(*) as cnt FROM users').get()?.cnt || 0;
 
     // Recent activity (last 30 days)
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
     const recentRegistros = db.prepare('SELECT COUNT(*) as cnt FROM registros WHERE data >= ?').get(thirtyDaysAgo)?.cnt || 0;
     const recentMensagens = db.prepare("SELECT COUNT(*) as cnt FROM whatsapp_mensagens WHERE created_at >= ?").get(thirtyDaysAgo)?.cnt || 0;
 
@@ -400,7 +400,7 @@ Responda SOMENTE com JSON, sem texto adicional.`;
       }
     }
 
-    const key = `melhorias_${new Date().toISOString().split('T')[0]}`;
+    const key = `melhorias_${new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })}`;
     this.saveInsight(key, JSON.stringify(insights), 0, 'claude-sonnet-4-6');
 
     return {

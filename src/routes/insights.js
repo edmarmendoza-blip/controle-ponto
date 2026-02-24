@@ -3,6 +3,12 @@ const router = express.Router();
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const InsightsIA = require('../services/insightsIA');
 
+// Helper: current date in São Paulo timezone (YYYY-MM-DD)
+function spDate(offsetDays = 0) {
+  const d = new Date(Date.now() + offsetDays * 86400000);
+  return d.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+}
+
 // GET /api/insights - Lista paginada
 router.get('/', authenticateToken, requireAdmin, (req, res) => {
   try {
@@ -37,7 +43,7 @@ router.get('/:date', authenticateToken, requireAdmin, (req, res) => {
 // POST /api/insights/generate - Gerar insights para uma data
 router.post('/generate', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const date = req.body.date || new Date().toISOString().split('T')[0];
+    const date = req.body.date || spDate();
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return res.status(400).json({ error: 'Data inválida. Use formato YYYY-MM-DD' });
     }
@@ -55,10 +61,10 @@ router.post('/generate', authenticateToken, requireAdmin, async (req, res) => {
 // POST /api/insights/generate-period - Gerar insights para um período
 router.post('/generate-period', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const today = spDate();
     const endDate = req.body.endDate || today;
     // Default: 30 days back
-    const defaultStart = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const defaultStart = spDate(-30);
     const startDate = req.body.startDate || defaultStart;
 
     if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {

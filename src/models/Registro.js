@@ -12,7 +12,7 @@ class Registro {
 
   static getByDate(data, funcionarioId = null) {
     let query = `
-      SELECT r.*, f.nome as funcionario_nome, f.cargo, f.salario_hora
+      SELECT r.*, f.nome as funcionario_nome, f.cargo, f.salario_hora, f.valor_hora_extra as func_valor_hora_extra
       FROM registros r
       JOIN funcionarios f ON r.funcionario_id = f.id
       WHERE r.data = ?
@@ -28,7 +28,7 @@ class Registro {
 
   static getByPeriod(dataInicio, dataFim, funcionarioId = null) {
     let query = `
-      SELECT r.*, f.nome as funcionario_nome, f.cargo, f.salario_hora
+      SELECT r.*, f.nome as funcionario_nome, f.cargo, f.salario_hora, f.valor_hora_extra as func_valor_hora_extra
       FROM registros r
       JOIN funcionarios f ON r.funcionario_id = f.id
       WHERE r.data BETWEEN ? AND ?
@@ -86,7 +86,7 @@ class Registro {
     const dataFim = `${ano}-${String(mes).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
 
     let query = `
-      SELECT r.*, f.nome as funcionario_nome, f.cargo, f.salario_hora
+      SELECT r.*, f.nome as funcionario_nome, f.cargo, f.salario_hora, f.valor_hora_extra as func_valor_hora_extra
       FROM registros r
       JOIN funcionarios f ON r.funcionario_id = f.id
       WHERE r.data BETWEEN ? AND ?
