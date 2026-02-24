@@ -510,8 +510,23 @@ class WhatsAppService {
     return null;
   }
 
+  // Known WhatsApp display name aliases -> funcionario name
+  static NAME_ALIASES = {
+    'amores da minha vida': 'roberto',
+  };
+
   matchEmployee(phone, pushName) {
     const funcionarios = Funcionario.getAll();
+
+    // 0. Check name aliases first
+    if (pushName) {
+      const normalized = this.normalizeName(pushName).replace(/[^\w\s]/g, '').trim();
+      const aliasTarget = WhatsAppService.NAME_ALIASES[normalized];
+      if (aliasTarget) {
+        const aliased = funcionarios.find(f => this.normalizeName(f.nome).includes(aliasTarget));
+        if (aliased) return aliased;
+      }
+    }
 
     // 1. Try matching by phone number
     if (phone) {

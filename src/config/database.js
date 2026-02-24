@@ -128,6 +128,13 @@ function initializeDatabase() {
       try { db.exec('ALTER TABLE users ADD COLUMN totp_enabled INTEGER DEFAULT 0'); } catch (e) { /* ignore */ }
     }
 
+    // Add password reset columns to users
+    const userColsReset = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
+    if (userColsReset.length > 0 && !userColsReset.includes('reset_code')) {
+      try { db.exec('ALTER TABLE users ADD COLUMN reset_code TEXT DEFAULT NULL'); } catch (e) { /* ignore */ }
+      try { db.exec('ALTER TABLE users ADD COLUMN reset_code_expires DATETIME DEFAULT NULL'); } catch (e) { /* ignore */ }
+    }
+
     // Add cargo_id to funcionarios
     const funcColsCargo = db.prepare("PRAGMA table_info(funcionarios)").all().map(c => c.name);
     if (funcColsCargo.length > 0 && !funcColsCargo.includes('cargo_id')) {
@@ -313,9 +320,27 @@ function initializeDatabase() {
     );
 
     CREATE INDEX IF NOT EXISTS idx_pending_confirmations_status ON pending_confirmations(funcionario_id, status);
+    CREATE TABLE IF NOT EXISTS entregas (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      funcionario_id INTEGER,
+      data_hora DATETIME DEFAULT (datetime('now','localtime')),
+      imagem_path TEXT,
+      destinatario TEXT,
+      remetente TEXT,
+      transportadora TEXT,
+      descricao TEXT,
+      whatsapp_mensagem_id INTEGER,
+      created_at DATETIME DEFAULT (datetime('now','localtime')),
+      updated_at DATETIME DEFAULT (datetime('now','localtime')),
+      FOREIGN KEY (funcionario_id) REFERENCES funcionarios(id),
+      FOREIGN KEY (whatsapp_mensagem_id) REFERENCES whatsapp_mensagens(id)
+    );
+
     CREATE INDEX IF NOT EXISTS idx_whatsapp_mensagens_date ON whatsapp_mensagens(created_at);
     CREATE INDEX IF NOT EXISTS idx_whatsapp_mensagens_funcionario ON whatsapp_mensagens(funcionario_id);
     CREATE INDEX IF NOT EXISTS idx_insights_ia_data ON insights_ia(data);
+    CREATE INDEX IF NOT EXISTS idx_entregas_data ON entregas(data_hora);
+    CREATE INDEX IF NOT EXISTS idx_entregas_funcionario ON entregas(funcionario_id);
   `);
 
   // Default configs

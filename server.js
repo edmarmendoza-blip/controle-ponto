@@ -59,6 +59,9 @@ app.use('/api/dashboard/presenca', require('./src/routes/dashboardPresenca'));
 app.use('/api/insights', require('./src/routes/insights'));
 app.use('/api/holerites', require('./src/routes/holerites'));
 app.use('/api/cargos', require('./src/routes/cargos'));
+app.use('/api/entregas', require('./src/routes/entregas'));
+app.use('/api/users', require('./src/routes/users'));
+app.use('/api/audit-log', require('./src/routes/auditLog'));
 
 // Root redirect to dashboard
 app.get('/', (req, res) => {

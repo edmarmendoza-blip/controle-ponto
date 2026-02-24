@@ -405,17 +405,17 @@ router.post('/forgot-password', loginLimiter, [
     const user = User.findByEmail(req.body.email);
     // Always return success to prevent email enumeration
     if (!user || !user.active) {
-      return res.json({ message: 'Se o e-mail estiver cadastrado, você receberá uma nova senha.' });
+      return res.json({ message: 'Se o e-mail estiver cadastrado, você receberá um código de recuperação.' });
     }
     const crypto = require('crypto');
-    const newPassword = crypto.randomBytes(4).toString('hex');
-    const bcrypt = require('bcryptjs');
     const { db } = require('../config/database');
-    const hashed = await bcrypt.hash(newPassword, 12);
-    db.prepare("UPDATE users SET password = ?, updated_at = datetime('now','localtime') WHERE id = ?").run(hashed, user.id);
+    // Generate 6-digit code
+    const code = String(crypto.randomInt(100000, 999999));
+    // Store code with 30-minute expiry
+    db.prepare("UPDATE users SET reset_code = ?, reset_code_expires = datetime('now','localtime','+30 minutes'), updated_at = datetime('now','localtime') WHERE id = ?").run(code, user.id);
     await EmailService.send({
       to: user.email,
-      subject: '[Lar Digital] Recuperação de Senha',
+      subject: '[Lar Digital] Código de Recuperação de Senha',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: #1e40af; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
@@ -423,22 +423,62 @@ router.post('/forgot-password', loginLimiter, [
           </div>
           <div style="padding: 20px; background: #f8fafc; border-radius: 0 0 8px 8px;">
             <p>Olá <strong>${user.name}</strong>,</p>
-            <p>Sua nova senha temporária:</p>
+            <p>Seu código de recuperação de senha:</p>
             <div style="background: white; border: 2px solid #1e40af; border-radius: 8px; padding: 16px; text-align: center; margin: 20px 0;">
-              <p style="font-size: 24px; font-weight: bold; color: #1e40af; margin: 0; letter-spacing: 2px;">${newPassword}</p>
+              <p style="font-size: 32px; font-weight: bold; color: #1e40af; margin: 0; letter-spacing: 6px;">${code}</p>
             </div>
-            <p style="color: #dc2626; font-size: 14px;"><strong>Importante:</strong> Troque sua senha imediatamente após o login.</p>
+            <p style="color: #dc2626; font-size: 14px;"><strong>Importante:</strong> Este código expira em 30 minutos.</p>
             <hr style="border: none; border-top: 1px solid #e2e8f0;">
             <p style="color: #94a3b8; font-size: 12px;">Lar Digital - Gestão da Casa</p>
           </div>
         </div>
       `
     }).catch(err => console.error('[Email] Forgot password error:', err.message));
-    AuditLog.log(user.id, 'password_reset', 'user', user.id, { self_service: true }, req.ip);
-    res.json({ message: 'Se o e-mail estiver cadastrado, você receberá uma nova senha.' });
+    AuditLog.log(user.id, 'password_reset_request', 'user', user.id, { self_service: true }, req.ip);
+    res.json({ message: 'Se o e-mail estiver cadastrado, você receberá um código de recuperação.' });
   } catch (err) {
     console.error('Forgot password error:', err);
     res.status(500).json({ error: 'Erro ao processar solicitação' });
+  }
+});
+
+// POST /api/auth/reset-password
+router.post('/reset-password', loginLimiter, [
+  body('email').isEmail().normalizeEmail().withMessage('Email inválido'),
+  body('code').notEmpty().withMessage('Código obrigatório'),
+  body('newPassword').isLength({ min: 6 }).withMessage('Nova senha deve ter pelo menos 6 caracteres')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    const { email, code, newPassword } = req.body;
+    const { db } = require('../config/database');
+    const bcrypt = require('bcryptjs');
+
+    const user = db.prepare("SELECT * FROM users WHERE email = ? AND active = 1").get(email);
+    if (!user) {
+      return res.status(400).json({ error: 'Código inválido ou expirado' });
+    }
+    if (!user.reset_code || user.reset_code !== code) {
+      return res.status(400).json({ error: 'Código inválido ou expirado' });
+    }
+    // Check expiry
+    const now = new Date();
+    const expires = new Date(user.reset_code_expires);
+    if (now > expires) {
+      db.prepare("UPDATE users SET reset_code = NULL, reset_code_expires = NULL WHERE id = ?").run(user.id);
+      return res.status(400).json({ error: 'Código expirado. Solicite um novo.' });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 12);
+    db.prepare("UPDATE users SET password = ?, reset_code = NULL, reset_code_expires = NULL, updated_at = datetime('now','localtime') WHERE id = ?").run(hashed, user.id);
+    AuditLog.log(user.id, 'password_reset', 'user', user.id, { self_service: true }, req.ip);
+    res.json({ message: 'Senha alterada com sucesso! Faça login com a nova senha.' });
+  } catch (err) {
+    console.error('Reset password error:', err);
+    res.status(500).json({ error: 'Erro ao redefinir senha' });
   }
 });
 
