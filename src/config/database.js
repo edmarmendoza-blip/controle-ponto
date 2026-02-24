@@ -166,7 +166,7 @@ function initializeDatabase() {
       salario_hora REAL DEFAULT 0,
       telefone TEXT,
       foto TEXT,
-      status TEXT DEFAULT 'ativo' CHECK(status IN ('ativo', 'desligado')),
+      status TEXT DEFAULT 'ativo' CHECK(status IN ('ativo', 'inativo')),
       horario_entrada TEXT DEFAULT '08:00',
       valor_hora_extra REAL DEFAULT 43.25,
       valor_dia_especial REAL DEFAULT 320.00,

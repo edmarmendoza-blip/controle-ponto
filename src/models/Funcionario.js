@@ -83,12 +83,12 @@ class Funcionario {
   }
 
   static delete(id) {
-    return db.prepare("UPDATE funcionarios SET status = 'desligado', data_desligamento = date('now','localtime'), updated_at = datetime('now','localtime') WHERE id = ?").run(id);
+    return db.prepare("UPDATE funcionarios SET status = 'inativo', data_desligamento = date('now','localtime'), updated_at = datetime('now','localtime') WHERE id = ?").run(id);
   }
 
   static desligar(id, motivo) {
     return db.prepare(
-      "UPDATE funcionarios SET status = 'desligado', data_desligamento = date('now','localtime'), motivo_desligamento = ?, updated_at = datetime('now','localtime') WHERE id = ?"
+      "UPDATE funcionarios SET status = 'inativo', data_desligamento = date('now','localtime'), motivo_desligamento = ?, updated_at = datetime('now','localtime') WHERE id = ?"
     ).run(motivo || null, id);
   }
 

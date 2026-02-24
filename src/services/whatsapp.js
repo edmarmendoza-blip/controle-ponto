@@ -8,57 +8,6 @@ const Registro = require('../models/Registro');
 const Funcionario = require('../models/Funcionario');
 const EmailService = require('./emailService');
 
-// Portuguese keyword patterns for clock-in/out detection
-const ENTRADA_PATTERNS = [
-  /\b(cheguei|chegando|chegamos)\b/i,
-  /\b(entrada)\b/i,
-  /\b(bom\s*dia|bdia)\b/i,
-  /\b(inici(ar|ei|ando))\b/i,
-  /\b(come[cç](ar|ei|ando))\b/i,
-  /\bt[oô]\s*(chegando|aqui|no\s*trabalho)\b/i,
-  /\b(presente)\b/i,
-];
-
-const SAIDA_PATTERNS = [
-  /\b(saindo|sa[ií]da|sa[ií])\b/i,
-  /\b(tchau|xau|flw|falou)\b/i,
-  /\b(fui|vazei|vazando)\b/i,
-  /\b(indo\s*embora)\b/i,
-  /\b(finaliz(ar|ei|ando|ado))\b/i,
-  /\bt[oô]\s*(saindo|indo)\b/i,
-  /\b(vou\s*embora)\b/i,
-  /\b(at[eé]\s*(amanh[aã]|segunda|logo))\b/i,
-  /\b(encerr(ando|ei|ado))\b/i,
-  /\b(boa\s*noite)\b/i,
-  /\b(terminei|terminando)\b/i,
-];
-
-const SAIDA_ALMOCO_PATTERNS = [
-  /\b(saindo\s*(pro|para|pro)\s*almo[çc]o)\b/i,
-  /\b(indo\s*almo[çc]ar)\b/i,
-  /\b(pausa\s*(para|pro)\s*almo[çc]o)\b/i,
-  /\b(intervalo)\b/i,
-  /\b(hora\s*do\s*almo[çc]o)\b/i,
-  /\b(almo[çc]o)\b/i,
-];
-
-const RETORNO_ALMOCO_PATTERNS = [
-  /\b(voltei\s*(do)?\s*almo[çc]o)\b/i,
-  /\b(retorn(ei|ando)\s*(do)?\s*almo[çc]o)\b/i,
-  /\b(voltando\s*(do)?\s*almo[çc]o)\b/i,
-  /\b(cheguei\s*do\s*almo[çc]o)\b/i,
-  /\b(voltei\s*do\s*intervalo)\b/i,
-];
-
-// Time adjustment patterns - detect messages with explicit times
-const AJUSTE_PATTERNS = [
-  /\b(?:cheguei|entrada|chego)\s+(?:[àa]s?\s*)(\d{1,2}[:\.]?\d{2})\b/i,
-  /\b(?:sa[ií]|saida|sa[ií]da)\s+(?:[àa]s?\s*)(\d{1,2}[:\.]?\d{2})\b/i,
-  /\b(?:minha?\s+(?:entrada|saida|sa[ií]da))\s+(?:foi\s+)?(?:[àa]s?\s*)?(\d{1,2}[:\.]?\d{2})\b/i,
-  /\b(?:registr(?:a|e|ar))\s+(?:entrada|saida|sa[ií]da)\s+(?:[àa]s?\s*)(\d{1,2}[:\.]?\d{2})\b/i,
-  /\b(?:ajust(?:ar?|e))\s+(?:(?:minha?\s+)?entrada|saida|sa[ií]da)?\s*(?:para?\s+)?(\d{1,2}[:\.]?\d{2})\b/i,
-];
-
 // Confirmation response patterns
 const SIM_PATTERNS = [/\bsim\b/i, /\bconfirm(?:o|ar|a)\b/i, /\bss\b/i, /\byes\b/i, /\bisso\b/i];
 const NAO_PATTERNS = [/\bn[ãa]o\b/i, /\bnao\b/i, /\bcancel(?:a|ar)\b/i, /\bno\b/i, /\bnope\b/i];
@@ -315,7 +264,8 @@ class WhatsAppService {
     let funcionario = this.matchEmployee(senderPhone, senderName);
 
     // Prepare stored text (append vision analysis if available)
-    const storedText = visionAnalysis ? (text ? `${text}\n\n[Análise IA]: ${visionAnalysis}` : `[Análise IA]: ${visionAnalysis}`) : text;
+    const visionDesc = visionAnalysis?.descricao || null;
+    const storedText = visionDesc ? (text ? `${text}\n\n[Análise IA]: ${visionDesc}` : `[Análise IA]: ${visionDesc}`) : text;
 
     // Expire old pending confirmations
     this.expireOldConfirmations();
@@ -381,24 +331,48 @@ class WhatsAppService {
       }
     }
 
-    // Check for time adjustment request BEFORE regular intent processing
-    if (text && funcionario) {
-      const adjustment = this.parseTimeAdjustment(text);
-      if (adjustment) {
-        const today = new Date().toISOString().split('T')[0];
-        const tipoLabel = adjustment.tipo === 'entrada' ? 'entrada' : 'saída';
-        this.createPendingConfirmation(funcionario.id, adjustment.tipo, today, adjustment.horario, text);
-        await this.sendGroupMessage(
-          `${funcionario.nome}, deseja registrar ${tipoLabel} às ${adjustment.horario}? Responda *SIM* ou *NÃO*.`
-        );
-        // Store the message and return (don't register yet)
-        this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, storedText, 'other', mediaType, mediaPath);
-        return;
+    // AI-based intent detection (replaces regex parseIntent and parseTimeAdjustment)
+    let intent = null;
+    if (text) {
+      // Skip AI for very short non-alphanumeric messages (emoji, stickers)
+      const alphanumCount = (text.match(/[a-zA-Z0-9\u00C0-\u024F]/g) || []).length;
+      if (alphanumCount >= 2) {
+        const allFuncionarios = Funcionario.getAll();
+        const aiResult = await this.parseMessageWithAI(text, senderName, allFuncionarios);
+
+        if (aiResult && aiResult.tipo && aiResult.confianca >= 50) {
+          // If AI detected an explicit time (adjustment) -> ask for confirmation
+          if (aiResult.horario && funcionario) {
+            const today = new Date().toISOString().split('T')[0];
+            const tipoLabel = aiResult.tipo === 'entrada' ? 'entrada' : 'saída';
+            this.createPendingConfirmation(funcionario.id, aiResult.tipo, today, aiResult.horario, text);
+            await this.sendGroupMessage(
+              `${funcionario.nome}, deseja registrar ${tipoLabel} às ${aiResult.horario}? Responda *SIM* ou *NÃO*.`
+            );
+            this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, storedText, 'other', mediaType, mediaPath);
+            return;
+          }
+
+          if (aiResult.confianca >= 80) {
+            intent = aiResult.tipo; // High confidence -> auto register
+          } else {
+            // 50-79% confidence -> ask for confirmation with current time
+            if (funcionario) {
+              const today = new Date().toISOString().split('T')[0];
+              const currentTime = new Date().toTimeString().slice(0, 5);
+              const tipoLabel = aiResult.tipo === 'entrada' ? 'entrada' : 'saída';
+              this.createPendingConfirmation(funcionario.id, aiResult.tipo, today, currentTime, text);
+              await this.sendGroupMessage(
+                `${funcionario.nome}, deseja registrar ${tipoLabel} às ${currentTime}? Responda *SIM* ou *NÃO*.`
+              );
+              this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, storedText, 'other', mediaType, mediaPath);
+              return;
+            }
+          }
+        }
+        // confianca < 50 or null -> ignore (intent stays null)
       }
     }
-
-    // Detect intent (only from text)
-    const intent = text ? this.parseIntent(text) : null;
 
     // Auto-create employee if not found and has a clock intent
     if (!funcionario && intent && senderName) {
@@ -408,7 +382,26 @@ class WhatsAppService {
     // Store the message
     // Map lunch intents to 'other' for whatsapp_mensagens message_type (which only allows entrada/saida/other)
     const msgType = (intent === 'entrada' || intent === 'saida') ? intent : 'other';
-    this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, storedText, msgType, mediaType, mediaPath);
+    const msgDbId = this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, storedText, msgType, mediaType, mediaPath);
+
+    // Create entrega from Vision analysis if image is a delivery
+    if (visionAnalysis?.is_entrega && mediaPath) {
+      try {
+        const Entrega = require('../models/Entrega');
+        const entregaId = Entrega.create({
+          funcionario_id: funcionario?.id || null,
+          imagem_path: mediaPath,
+          destinatario: visionAnalysis.destinatario || null,
+          remetente: visionAnalysis.remetente || null,
+          transportadora: visionAnalysis.transportadora || null,
+          descricao: visionAnalysis.descricao,
+          whatsapp_mensagem_id: msgDbId
+        });
+        console.log(`[WhatsApp] Entrega #${entregaId} created from image by ${senderName}`);
+      } catch (err) {
+        console.error('[WhatsApp] Error creating entrega:', err.message);
+      }
+    }
 
     // If clock-in/out/lunch intent detected and employee found, register the punch
     if (intent && funcionario) {
@@ -416,32 +409,6 @@ class WhatsAppService {
     } else if (intent && !funcionario) {
       console.log(`[WhatsApp] Punch intent "${intent}" but could not create employee: ${senderName} (${senderPhone})`);
     }
-  }
-
-  parseTimeAdjustment(text) {
-    // Check if the message contains a time that suggests an adjustment
-    for (const pattern of AJUSTE_PATTERNS) {
-      const match = text.match(pattern);
-      if (match) {
-        let timeStr = match[1].replace('.', ':');
-        // Ensure HH:MM format
-        if (!timeStr.includes(':')) {
-          if (timeStr.length === 3) timeStr = '0' + timeStr.slice(0, 1) + ':' + timeStr.slice(1);
-          else if (timeStr.length === 4) timeStr = timeStr.slice(0, 2) + ':' + timeStr.slice(2);
-        }
-        // Pad hour
-        const parts = timeStr.split(':');
-        if (parts[0].length === 1) parts[0] = '0' + parts[0];
-        timeStr = parts.join(':');
-
-        // Determine intent type from text
-        let tipo = 'entrada'; // default
-        if (/sa[ií](?:da|r|ndo)?|saida/i.test(text)) tipo = 'saida';
-
-        return { horario: timeStr, tipo };
-      }
-    }
-    return null;
   }
 
   checkConfirmationResponse(text) {
@@ -452,6 +419,81 @@ class WhatsAppService {
       if (pattern.test(text)) return 'denied';
     }
     return null;
+  }
+
+  async parseMessageWithAI(text, senderName, funcionarios) {
+    if (!process.env.ANTHROPIC_API_KEY) return null;
+
+    try {
+      const Anthropic = require('@anthropic-ai/sdk');
+      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+      const now = new Date();
+      const currentTime = now.toTimeString().slice(0, 5);
+      const employeeNames = funcionarios.map(f => f.nome).join(', ');
+
+      const prompt = `Você é um parser de mensagens de WhatsApp para controle de ponto de funcionários domésticos.
+
+Horário atual: ${currentTime}
+Remetente: ${senderName}
+Funcionários cadastrados: ${employeeNames}
+
+Classifique a mensagem em um dos tipos:
+- "entrada": chegada ao trabalho (bom dia, cheguei, presente, começando, etc.)
+- "saida": saída do trabalho (tchau, fui, boa noite, terminei, saindo, encerrado, etc.)
+- "saida_almoco": saindo para almoço/intervalo
+- "retorno_almoco": voltando do almoço/intervalo
+- null: mensagem que NÃO é sobre registro de ponto (conversa, foto, pergunta, pedido, etc.)
+
+Se a mensagem mencionar um horário específico (ex: "cheguei às 8:30", "saí 17h"), extraia no campo "horario" em formato HH:MM.
+
+Responda APENAS com JSON, sem markdown:
+{"tipo": "entrada"|"saida"|"saida_almoco"|"retorno_almoco"|null, "funcionario_nome": "nome ou null", "horario": "HH:MM ou null", "confianca": 0-100}
+
+Mensagem: "${text}"`;
+
+      const response = await client.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 150,
+        messages: [{ role: 'user', content: prompt }]
+      });
+
+      const responseText = (response.content[0]?.text || '').trim();
+
+      // Parse JSON robustly (strip markdown code blocks if present)
+      let jsonStr = responseText;
+      const codeBlockMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (codeBlockMatch) jsonStr = codeBlockMatch[1].trim();
+
+      // Try direct parse first, then regex fallback
+      try {
+        const result = JSON.parse(jsonStr);
+        console.log(`[WhatsApp AI] "${text.substring(0, 50)}" -> tipo=${result.tipo}, confianca=${result.confianca}, horario=${result.horario}`);
+        return result;
+      } catch (parseErr) {
+        // Regex fallback for malformed JSON
+        const tipoMatch = jsonStr.match(/"tipo"\s*:\s*"([^"]+)"/);
+        const confiancaMatch = jsonStr.match(/"confianca"\s*:\s*(\d+)/);
+        const horarioMatch = jsonStr.match(/"horario"\s*:\s*"(\d{1,2}:\d{2})"/);
+
+        if (tipoMatch && confiancaMatch) {
+          const result = {
+            tipo: tipoMatch[1] === 'null' ? null : tipoMatch[1],
+            funcionario_nome: null,
+            horario: horarioMatch ? horarioMatch[1] : null,
+            confianca: parseInt(confiancaMatch[1])
+          };
+          console.log(`[WhatsApp AI] (regex fallback) "${text.substring(0, 50)}" -> tipo=${result.tipo}, confianca=${result.confianca}`);
+          return result;
+        }
+
+        console.error('[WhatsApp AI] Failed to parse response:', responseText);
+        return null;
+      }
+    } catch (err) {
+      console.error('[WhatsApp AI] Error:', err.message);
+      return null;
+    }
   }
 
   createPendingConfirmation(funcionarioId, tipo, data, horario, messageText) {
@@ -488,26 +530,6 @@ class WhatsAppService {
     db.prepare(
       "UPDATE pending_confirmations SET status = 'expired', resolved_at = datetime('now','localtime') WHERE status = 'pending' AND created_at < datetime('now', 'localtime', '-30 minutes')"
     ).run();
-  }
-
-  parseIntent(text) {
-    // Check retorno_almoco FIRST (before entrada, since "voltei" could match entrada)
-    for (const pattern of RETORNO_ALMOCO_PATTERNS) {
-      if (pattern.test(text)) return 'retorno_almoco';
-    }
-    // Check saida_almoco BEFORE general saida (since "almoço" is more specific)
-    for (const pattern of SAIDA_ALMOCO_PATTERNS) {
-      if (pattern.test(text)) return 'saida_almoco';
-    }
-    // Check entrada patterns
-    for (const pattern of ENTRADA_PATTERNS) {
-      if (pattern.test(text)) return 'entrada';
-    }
-    // Check saida patterns
-    for (const pattern of SAIDA_PATTERNS) {
-      if (pattern.test(text)) return 'saida';
-    }
-    return null;
   }
 
   // Known WhatsApp display name aliases -> funcionario name
@@ -615,13 +637,18 @@ class WhatsAppService {
 
   storeMessage(messageId, senderPhone, senderName, funcionarioId, text, messageType, mediaType = null, mediaPath = null) {
     try {
-      db.prepare(`
+      const result = db.prepare(`
         INSERT OR IGNORE INTO whatsapp_mensagens
           (message_id, sender_phone, sender_name, funcionario_id, message_text, message_type, processed, media_type, media_path)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(messageId, senderPhone, senderName, funcionarioId, text, messageType, messageType !== 'other' ? 1 : 0, mediaType, mediaPath);
+      if (result.changes > 0) return result.lastInsertRowid;
+      // INSERT OR IGNORE: message already existed, fetch its ID
+      const existing = db.prepare('SELECT id FROM whatsapp_mensagens WHERE message_id = ?').get(messageId);
+      return existing?.id || null;
     } catch (err) {
       console.error('[WhatsApp] Error storing message:', err.message);
+      return null;
     }
   }
 
@@ -743,11 +770,20 @@ Descreva brevemente:
 2. Se parece ser um registro de trabalho/entrega, descreva o que foi feito
 3. Qualquer detalhe relevante (quantidade, estado, marca, etc.)
 
-Responda em 2-3 frases curtas, direto ao ponto, em português.`;
+Responda em 2-3 frases curtas, direto ao ponto, em português.
+
+Ao final da sua resposta, inclua um bloco JSON no formato:
+\`\`\`json
+{"is_entrega": true/false, "destinatario": "nome ou null", "remetente": "empresa ou null", "transportadora": "empresa ou null"}
+\`\`\`
+- is_entrega: true se a foto mostra pacote, encomenda, caixa de entrega, correspondência ou similar
+- destinatario: nome do destinatário se visível na etiqueta
+- remetente: empresa/loja remetente se visível (Amazon, Mercado Livre, etc.)
+- transportadora: empresa de transporte se visível (Correios, Jadlog, etc.)`;
 
       const response = await client.messages.create({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 300,
+        max_tokens: 400,
         messages: [{
           role: 'user',
           content: [
@@ -759,7 +795,29 @@ Responda em 2-3 frases curtas, direto ao ponto, em português.`;
 
       const analysis = response.content[0]?.text || '';
       console.log(`[WhatsApp] Vision analysis: ${analysis.substring(0, 100)}...`);
-      return analysis;
+
+      // Parse structured JSON from end of response
+      let structured = { is_entrega: false, destinatario: null, remetente: null, transportadora: null };
+      try {
+        const jsonMatch = analysis.match(/```json\s*([\s\S]*?)```/) || analysis.match(/(\{[^{}]*"is_entrega"[^{}]*\})/);
+        if (jsonMatch) {
+          structured = JSON.parse(jsonMatch[1].trim());
+        }
+      } catch (parseErr) {
+        console.log('[WhatsApp] Vision JSON parse fallback, using defaults');
+      }
+
+      // Extract description text (everything before the JSON block)
+      let descricao = analysis.replace(/```json[\s\S]*?```/, '').replace(/\{[^{}]*"is_entrega"[^{}]*\}/, '').trim();
+      if (!descricao) descricao = analysis;
+
+      return {
+        descricao,
+        is_entrega: !!structured.is_entrega,
+        destinatario: structured.destinatario || null,
+        remetente: structured.remetente || null,
+        transportadora: structured.transportadora || null
+      };
     } catch (err) {
       console.error('[WhatsApp] Vision analysis error:', err.message);
       return null;

@@ -9,9 +9,11 @@ const router = express.Router();
 // GET /api/entregas
 router.get('/', authenticateToken, (req, res) => {
   try {
-    const { date, funcionario_id, page, limit } = req.query;
+    const { date, data_inicio, data_fim, funcionario_id, page, limit } = req.query;
     const result = Entrega.getAll({
       date,
+      data_inicio,
+      data_fim,
       funcionario_id: funcionario_id ? parseInt(funcionario_id) : undefined,
       page: parseInt(page) || 1,
       limit: parseInt(limit) || 50

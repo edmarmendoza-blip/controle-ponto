@@ -1,7 +1,7 @@
 const { db } = require('../config/database');
 
 class Entrega {
-  static getAll({ date, funcionario_id, page = 1, limit = 50 } = {}) {
+  static getAll({ date, data_inicio, data_fim, funcionario_id, page = 1, limit = 50 } = {}) {
     let query = `
       SELECT e.*, f.nome as funcionario_nome
       FROM entregas e
@@ -13,6 +13,14 @@ class Entrega {
     if (date) {
       query += " AND date(e.data_hora) = ?";
       params.push(date);
+    }
+    if (data_inicio) {
+      query += " AND date(e.data_hora) >= ?";
+      params.push(data_inicio);
+    }
+    if (data_fim) {
+      query += " AND date(e.data_hora) <= ?";
+      params.push(data_fim);
     }
     if (funcionario_id) {
       query += ' AND e.funcionario_id = ?';

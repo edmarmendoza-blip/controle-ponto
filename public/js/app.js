@@ -229,6 +229,8 @@
       case 'perfil': renderPerfil(); break;
       case 'auditlog': renderAuditLog(); break;
       case 'insights': renderInsightsIA(); break;
+      case 'cargos': renderCargos(); break;
+      case 'entregas': renderEntregas(); break;
       default: content.innerHTML = '<p>Página não encontrada</p>';
     }
   }
@@ -2654,6 +2656,210 @@
   }
 
   // ============================================================
+  // Cargos
+  // ============================================================
+  async function renderCargos() {
+    const content = document.getElementById('page-content');
+    try {
+      const cargos = await api('/api/cargos?includeInactive=true');
+      const canManage = currentUser.role === 'admin' || currentUser.role === 'gestor';
+      content.innerHTML = `
+        <div class="page-header">
+          <h3><i class="bi bi-briefcase me-2"></i>Cargos</h3>
+          ${canManage ? '<button class="btn btn-primary btn-sm" onclick="App.openCargoModal()"><i class="bi bi-plus-lg"></i> Novo Cargo</button>' : ''}
+        </div>
+        <div class="data-table">
+          <table class="table">
+            <thead><tr><th>Nome</th><th>Descrição</th><th>Status</th>${canManage ? '<th>Ações</th>' : ''}</tr></thead>
+            <tbody>
+              ${cargos.length === 0 ? '<tr><td colspan="4" class="text-center text-muted py-4">Nenhum cargo cadastrado</td></tr>' : ''}
+              ${cargos.map(c => `
+                <tr>
+                  <td><strong>${c.nome}</strong></td>
+                  <td>${c.descricao || '-'}</td>
+                  <td><span class="badge-status badge-${c.ativo !== 0 ? 'ativo' : 'inativo'}">${c.ativo !== 0 ? 'Ativo' : 'Inativo'}</span></td>
+                  ${canManage ? `<td>
+                    <button class="btn btn-action btn-outline-primary btn-edit-cargo" data-id="${c.id}" title="Editar"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-action btn-outline-danger ms-1 btn-del-cargo" data-id="${c.id}" data-nome="${(c.nome||'').replace(/"/g,'&quot;')}" title="Excluir"><i class="bi bi-trash"></i></button>
+                  </td>` : ''}
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+      content.querySelectorAll('.btn-edit-cargo').forEach(btn => {
+        btn.addEventListener('click', () => openCargoModal(parseInt(btn.dataset.id)));
+      });
+      content.querySelectorAll('.btn-del-cargo').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (confirm('Excluir cargo "' + btn.dataset.nome + '"?')) {
+            await api('/api/cargos/' + btn.dataset.id, { method: 'DELETE' });
+            renderCargos();
+          }
+        });
+      });
+    } catch (err) {
+      content.innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
+    }
+  }
+
+  function openCargoModal(id) {
+    const isEdit = !!id;
+    const body = `
+      <form id="cargo-form">
+        <div class="mb-3"><label class="form-label">Nome</label><input type="text" class="form-control" id="cargo-nome" required></div>
+        <div class="mb-3"><label class="form-label">Descrição</label><textarea class="form-control" id="cargo-descricao" rows="3"></textarea></div>
+      </form>`;
+    showModal(isEdit ? 'Editar Cargo' : 'Novo Cargo', body, () => saveCargo(id));
+    if (isEdit) {
+      api('/api/cargos/' + id).then(c => {
+        document.getElementById('cargo-nome').value = c.nome || '';
+        document.getElementById('cargo-descricao').value = c.descricao || '';
+      });
+    }
+  }
+
+  async function saveCargo(id) {
+    const data = {
+      nome: document.getElementById('cargo-nome').value,
+      descricao: document.getElementById('cargo-descricao').value
+    };
+    if (!data.nome) return alert('Nome obrigatório');
+    if (id) {
+      await api('/api/cargos/' + id, { method: 'PUT', body: JSON.stringify(data) });
+    } else {
+      await api('/api/cargos', { method: 'POST', body: JSON.stringify(data) });
+    }
+    closeModal();
+    renderCargos();
+  }
+
+  // ============================================================
+  // Entregas
+  // ============================================================
+  async function renderEntregas(dataInicio, dataFim) {
+    const content = document.getElementById('page-content');
+    try {
+      let url = '/api/entregas?limit=100';
+      if (dataInicio) url += '&data_inicio=' + dataInicio;
+      if (dataFim) url += '&data_fim=' + dataFim;
+      const result = await api(url);
+      const entregas = result.entregas || result.data || result;
+      const funcs = await api('/api/funcionarios?includeInactive=true');
+      const funcMap = {};
+      funcs.forEach(f => funcMap[f.id] = f.nome);
+
+      const hoje = new Date().toISOString().split('T')[0];
+      const mesPassado = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+      const filtroInicio = dataInicio || mesPassado;
+      const filtroFim = dataFim || hoje;
+
+      const escapeAttr = (s) => (s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;');
+
+      content.innerHTML = `
+        <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <h3><i class="bi bi-box-seam me-2"></i>Entregas</h3>
+          <span class="badge bg-primary">${entregas.length} registro${entregas.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="card mb-3">
+          <div class="card-body py-2">
+            <div class="row g-2 align-items-end">
+              <div class="col-auto">
+                <label class="form-label mb-0 small">De</label>
+                <input type="date" id="entrega-data-inicio" class="form-control form-control-sm" value="${filtroInicio}">
+              </div>
+              <div class="col-auto">
+                <label class="form-label mb-0 small">Até</label>
+                <input type="date" id="entrega-data-fim" class="form-control form-control-sm" value="${filtroFim}">
+              </div>
+              <div class="col-auto">
+                <button class="btn btn-sm btn-primary" onclick="App.filterEntregas()"><i class="bi bi-funnel me-1"></i>Filtrar</button>
+              </div>
+              <div class="col-auto">
+                <button class="btn btn-sm btn-outline-secondary" onclick="App.filterEntregas('clear')"><i class="bi bi-x-circle me-1"></i>Limpar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        ${(!entregas || entregas.length === 0)
+          ? '<div class="text-center text-muted py-5"><i class="bi bi-box-seam" style="font-size:3rem"></i><p class="mt-2">Nenhuma entrega registrada no período</p></div>'
+          : '<div class="row g-3">' + entregas.map(e => {
+              const df = new Date(e.data_hora).toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo'});
+              const desc = e.descricao || '';
+              const descT = desc.length > 100 ? desc.substring(0, 100) + '...' : desc;
+              return '<div class="col-12 col-md-6 col-lg-4">' +
+                '<div class="card h-100 shadow-sm"><div class="card-body p-3"><div class="d-flex gap-3">' +
+                (e.imagem_path
+                  ? '<img src="' + escapeAttr(e.imagem_path) + '" alt="Entrega" class="rounded" style="width:80px;height:80px;object-fit:cover;cursor:pointer;flex-shrink:0" onclick="App.openEntregaImage(\'' + escapeAttr(e.imagem_path) + '\',' + e.id + ',\'' + escapeAttr(df) + '\')">'
+                  : '<div class="rounded bg-light d-flex align-items-center justify-content-center" style="width:80px;height:80px;flex-shrink:0"><i class="bi bi-box-seam text-muted" style="font-size:2rem"></i></div>') +
+                '<div class="flex-grow-1" style="min-width:0">' +
+                  '<div class="d-flex justify-content-between align-items-start">' +
+                    '<small class="text-muted"><i class="bi bi-clock me-1"></i>' + df + '</small>' +
+                    '<button class="btn btn-sm btn-link p-0 text-muted" onclick="App.editEntrega(' + e.id + ')" title="Editar"><i class="bi bi-pencil"></i></button>' +
+                  '</div>' +
+                  (e.destinatario ? '<div class="mt-1"><small class="fw-bold"><i class="bi bi-person me-1"></i>' + escapeAttr(e.destinatario) + '</small></div>' : '') +
+                  (e.remetente ? '<div><small><i class="bi bi-shop me-1"></i>' + escapeAttr(e.remetente) + '</small></div>' : '') +
+                  (e.transportadora ? '<div><small><i class="bi bi-truck me-1"></i>' + escapeAttr(e.transportadora) + '</small></div>' : '') +
+                  '<div><small class="text-muted"><i class="bi bi-person-check me-1"></i>' + escapeAttr(funcMap[e.funcionario_id] || 'Não identificado') + '</small></div>' +
+                  (descT ? '<div class="mt-1"><small class="text-muted fst-italic" title="' + escapeAttr(desc) + '">' + escapeAttr(descT) + '</small></div>' : '') +
+                '</div>' +
+                '</div></div></div></div>';
+            }).join('') + '</div>'}
+
+        <!-- Modal Imagem -->
+        <div class="modal fade" id="entregaImageModal" tabindex="-1">
+          <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="entregaImageModalTitle">Foto da Entrega</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body text-center p-2">
+                <img id="entregaImageFull" src="" alt="Entrega" class="img-fluid rounded" style="max-height:70vh">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Edição -->
+        <div class="modal fade" id="entregaEditModal" tabindex="-1">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Editar Entrega</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <input type="hidden" id="editEntregaId">
+                <div class="mb-3">
+                  <label class="form-label">Destinatário</label>
+                  <input type="text" id="editEntregaDestinatario" class="form-control">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Remetente</label>
+                  <input type="text" id="editEntregaRemetente" class="form-control">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Transportadora</label>
+                  <input type="text" id="editEntregaTransportadora" class="form-control">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Descrição</label>
+                  <textarea id="editEntregaDescricao" class="form-control" rows="3"></textarea>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="App.saveEntrega()"><i class="bi bi-check-lg me-1"></i>Salvar</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    } catch (err) {
+      content.innerHTML = '<div class="alert alert-danger">Erro: ' + err.message + '</div>';
+    }
+  }
+
+  // ============================================================
   // Public API (for onclick handlers in HTML)
   // ============================================================
   window.App = {
@@ -2683,7 +2889,57 @@
     loadGraficos: loadGraficos,
     loadPresencaMensal: loadPresencaMensal,
     loadInsights: loadInsights,
-    generateInsights: generateInsights
+    generateInsights: generateInsights,
+    openCargoModal: openCargoModal,
+    saveCargo: saveCargo,
+    filterEntregas: function(action) {
+      if (action === 'clear') {
+        renderEntregas();
+      } else {
+        const di = document.getElementById('entrega-data-inicio')?.value;
+        const df = document.getElementById('entrega-data-fim')?.value;
+        renderEntregas(di || undefined, df || undefined);
+      }
+    },
+    openEntregaImage: function(imgPath, id, dataStr) {
+      document.getElementById('entregaImageFull').src = imgPath;
+      document.getElementById('entregaImageModalTitle').textContent = 'Entrega #' + id + ' - ' + dataStr;
+      new bootstrap.Modal(document.getElementById('entregaImageModal')).show();
+    },
+    editEntrega: async function(id) {
+      try {
+        const e = await api('/api/entregas/' + id);
+        document.getElementById('editEntregaId').value = e.id;
+        document.getElementById('editEntregaDestinatario').value = e.destinatario || '';
+        document.getElementById('editEntregaRemetente').value = e.remetente || '';
+        document.getElementById('editEntregaTransportadora').value = e.transportadora || '';
+        document.getElementById('editEntregaDescricao').value = e.descricao || '';
+        new bootstrap.Modal(document.getElementById('entregaEditModal')).show();
+      } catch (err) {
+        showToast('Erro ao carregar entrega: ' + err.message, 'danger');
+      }
+    },
+    saveEntrega: async function() {
+      const id = document.getElementById('editEntregaId').value;
+      try {
+        await api('/api/entregas/' + id, {
+          method: 'PUT',
+          body: JSON.stringify({
+            destinatario: document.getElementById('editEntregaDestinatario').value || null,
+            remetente: document.getElementById('editEntregaRemetente').value || null,
+            transportadora: document.getElementById('editEntregaTransportadora').value || null,
+            descricao: document.getElementById('editEntregaDescricao').value || null
+          })
+        });
+        bootstrap.Modal.getInstance(document.getElementById('entregaEditModal'))?.hide();
+        showToast('Entrega atualizada com sucesso');
+        const di = document.getElementById('entrega-data-inicio')?.value;
+        const df = document.getElementById('entrega-data-fim')?.value;
+        renderEntregas(di || undefined, df || undefined);
+      } catch (err) {
+        showToast('Erro ao salvar: ' + err.message, 'danger');
+      }
+    }
   };
 
   // --- Init ---

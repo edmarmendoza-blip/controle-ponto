@@ -1,35 +1,161 @@
 # CLAUDE.md - Lar Digital
 
-## Projeto
-**Lar Digital** - Sistema completo de gestão de funcionários domésticos da Casa dos Bull.
-- **Domínio:** lardigital.app
-- **Servidor:** Digital Ocean Droplet (IP: 137.184.124.137)
-- **Usuário deploy:** claude (/home/claude/controle-ponto)
-- **Proprietário:** Edmar Mendoza Bull (edmarmbull@gmail.com)
+## REGRAS DE OURO - NUNCA VIOLAR
 
-## Stack Tecnológica
+### Proteção do Sistema
+1. **LAYOUT É SAGRADO** - O CSS, estrutura HTML e visual atual são APROVADOS pelo dono. NUNCA reescreva style.css, index.html ou app.js inteiros. Faça edições cirúrgicas: adicione, não substitua.
+2. **ZERO REGRESSÃO** - Antes de implementar qualquer mudança, liste mentalmente tudo que pode quebrar. Ao adicionar algo novo, GARANTA que TUDO que já existe continua funcionando. Se uma feature parar de funcionar por causa da sua mudança, você falhou.
+3. **BANCO É IRREVERSÍVEL** - NUNCA use DROP TABLE, DELETE sem WHERE, ou ALTER TABLE DROP COLUMN. Apenas ALTER TABLE ADD COLUMN. Migrações devem ser idempotentes (rodar 2x sem erro).
+4. **ARQUIVOS EXISTENTES** - NUNCA reescreva um arquivo inteiro. Use inserções cirúrgicas. Se precisar mudar 5 linhas num arquivo de 500, mude apenas as 5 linhas.
+5. **ESTRUTURA DE PASTAS** - NUNCA mude sem autorização explícita do usuário.
+
+### Ambiente de Trabalho
+6. **SANDBOX SEMPRE** - Trabalhe APENAS em `~/controle-ponto-sandbox`. NUNCA toque em `~/controle-ponto` (produção). O usuário faz o deploy quando aprovar.
+7. **TESTE ANTES DE REPORTAR** - Após cada mudança, teste com `curl`. Nunca diga "pronto" sem testar.
+8. **RESTART OBRIGATÓRIO** - Após qualquer alteração de código: `pm2 restart lardigital-sandbox`
+9. **SEM SUDO** - O usuário `claude` não tem sudo. Se precisar de algo com sudo, gere um script e instrua o usuário.
+10. **SEM PLAYWRIGHT** - Não use Playwright para testar a menos que explicitamente pedido. Use `curl` para testar APIs e `grep` para verificar HTML.
+
+### Comunicação
+11. **PORTUGUÊS SEMPRE** - Reporte status, erros e progresso em português brasileiro.
+12. **SEJA ESPECÍFICO** - Não diga "ajustei o código". Diga "adicionei endpoint GET /api/cargos no arquivo routes/cargos.js, linha 45".
+13. **REPORTE CHECKLIST** - Ao finalizar, mostre: ✅ feito e testado, ⚠️ parcial, ❌ não consegui (e por quê).
+
+## PROCESSO DE MUDANÇA (OBRIGATÓRIO)
+
+```
+1. Recebo pedido de ajuste/feature
+2. Leio o CLAUDE.md inteiro para contexto
+3. Identifico quais arquivos serão afetados
+4. Implemento no SANDBOX (~/controle-ponto-sandbox)
+5. Testo CADA alteração com curl
+6. Faço pm2 restart lardigital-sandbox
+7. Reporto o que fiz em formato checklist
+8. Usuário testa em https://sandbox.lardigital.app
+9. Usuário aprova → ele faz o sync para produção
+```
+
+## REGRA DE DOCUMENTAÇÃO AUTOMÁTICA
+TODA vez que implementar uma nova funcionalidade, melhoria ou correção significativa:
+
+1. **ATUALIZAR O CLAUDE.md** imediatamente após implementar
+2. Adicionar na seção correspondente (PÁGINAS, TABELAS, API ENDPOINTS, CRON JOBS, etc)
+3. Se for feature nova, criar seção própria com:
+   - Nome da feature
+   - Fluxo de funcionamento
+   - Tabelas/campos envolvidos
+   - Endpoints criados
+   - Regras de negócio
+4. Se for melhoria de feature existente, atualizar a seção existente
+5. Se criou nova tabela → adicionar em TABELAS DO BANCO
+6. Se criou novo endpoint → adicionar em API ENDPOINTS
+7. Se criou nova página → adicionar em PÁGINAS DO SISTEMA
+8. Se criou novo cron job → adicionar em CRON JOBS
+
+**O CLAUDE.md deve SEMPRE refletir o estado atual do sistema.**
+**Se o código faz algo que o CLAUDE.md não descreve, o CLAUDE.md está desatualizado e deve ser corrigido.**
+**Nunca diga "pronto" sem ter atualizado o CLAUDE.md.**
+
+## PADRÕES DE CÓDIGO
+
+### Backend (Node.js + Express)
+```javascript
+// SEMPRE: try/catch em toda rota async
+router.get('/api/exemplo', auth, async (req, res) => {
+  try {
+    const resultado = await db.all('SELECT * FROM tabela');
+    res.json({ success: true, data: resultado });
+  } catch (error) {
+    console.error('[Exemplo] Erro:', error.message);
+    res.status(500).json({ success: false, error: 'Erro ao processar' });
+  }
+});
+
+// SEMPRE: validar inputs
+if (!nome || !email) {
+  return res.status(400).json({ success: false, error: 'Nome e email são obrigatórios' });
+}
+
+// SEMPRE: audit log em ações importantes
+await db.run(`INSERT INTO audit_log (user_id, acao, detalhes, ip, created_at)
+  VALUES (?, ?, ?, ?, datetime('now','localtime'))`,
+  [req.user.id, 'criar_funcionario', JSON.stringify({ nome }), req.ip]);
+
+// NUNCA: datetime('now') → SEMPRE: datetime('now', 'localtime')
+// NUNCA: expor senhas ou tokens no response
+// NUNCA: confiar só no frontend para validação
+```
+
+### Frontend (JavaScript Vanilla + Bootstrap 5)
+```javascript
+// SEMPRE: funções em camelCase
+// SEMPRE: mensagens de erro em português
+// SEMPRE: usar showToast() para feedback ao usuário
+// SEMPRE: usar showConfirmModal() para ações destrutivas
+// SEMPRE: usar o sistema de páginas existente (data-page="nomePagina")
+
+// Para adicionar nova página:
+// 1. Adicionar <li> na sidebar do index.html
+// 2. Adicionar case no switch de renderização em app.js
+// 3. Criar função renderNomePagina() em app.js
+// NUNCA: criar arquivos HTML separados para páginas
+```
+
+### CSS
+```css
+/* NUNCA reescrever style.css inteiro */
+/* Adicionar novos estilos NO FINAL do arquivo */
+/* Usar as variáveis CSS existentes */
+/* Manter responsividade (mobile-first) */
+```
+
+### Banco de Dados (SQLite)
+```sql
+-- SEMPRE: migrações idempotentes
+CREATE TABLE IF NOT EXISTS nova_tabela (...);
+
+-- NUNCA: DROP TABLE, DELETE sem WHERE
+-- SEMPRE: datetime('now', 'localtime') para timestamps
+-- SEMPRE: foreign keys referenciando tabelas existentes
+```
+
+## PROJETO
+
+**Lar Digital** - Sistema completo de gestão de funcionários domésticos da Casa dos Bull.
+- **Domínio produção:** https://lardigital.app
+- **Domínio sandbox:** https://sandbox.lardigital.app
+- **Servidor:** Digital Ocean Droplet (IP: 137.184.124.137)
+- **Usuário deploy:** claude
+- **Pasta produção:** /home/claude/controle-ponto (porta 3000) - NÃO MEXER
+- **Pasta sandbox:** /home/claude/controle-ponto-sandbox (porta 3001) - TRABALHAR AQUI
+- **Proprietário:** Edmar Mendoza Bull (edmarmbull@gmail.com)
+- **PM2 produção:** controle-ponto
+- **PM2 sandbox:** lardigital-sandbox
+
+## STACK TECNOLÓGICA
 - **Backend:** Node.js 20 + Express + SQLite3
-- **Frontend:** HTML + Bootstrap 5 + Bootstrap Icons + JavaScript vanilla
+- **Frontend:** HTML + Bootstrap 5 + Bootstrap Icons + JavaScript vanilla (SPA single file)
 - **Mapas:** Leaflet.js + OpenStreetMap
 - **Gráficos:** Chart.js
 - **WhatsApp:** whatsapp-web.js
 - **Process Manager:** PM2
 - **Reverse Proxy:** Nginx + Let's Encrypt SSL
-- **E-mail:** Brevo SMTP (smtp-relay.brevo.com:587)
+- **E-mail SMTP:** Brevo (smtp-relay.brevo.com:587)
+- **IMAP:** Gmail (imap.gmail.com:993)
 
-## Variáveis de Ambiente (.env)
+## VARIÁVEIS DE AMBIENTE (.env)
 ```
-PORT=3000
+PORT=3001  # sandbox (produção=3000)
 TZ=America/Sao_Paulo
-JWT_SECRET=casadosbull_jwt_secret_2026_super_seguro
+JWT_SECRET=*** (ver .env)
 JWT_EXPIRATION=24h
-DB_PATH=./database.sqlite
+DB_PATH=./database-sandbox.sqlite  # sandbox (produção=database.sqlite)
 NODE_ENV=production
 WHATSAPP_GROUP_NAME=Casa dos Bull
 SMTP_HOST=smtp-relay.brevo.com
 SMTP_PORT=587
 SMTP_USER=edmarmbull@gmail.com
-SMTP_PASS=TROCAR_PELA_CHAVE_BREVO
+SMTP_PASS=*** (ver .env)
 ALERT_EMAIL_TO=edmarmbull@gmail.com
 HOLERITE_IMAP_HOST=imap.gmail.com
 HOLERITE_IMAP_PORT=993
@@ -41,186 +167,118 @@ APP_URL=https://lardigital.app
 APP_NAME=Lar Digital
 ```
 
-## Fuso Horário
-**SEMPRE** America/Sao_Paulo (UTC-3). Em todo lugar:
+## FUSO HORÁRIO - CRÍTICO
+**SEMPRE** America/Sao_Paulo (UTC-3) em todo lugar:
 - `process.env.TZ = 'America/Sao_Paulo'` no início do server.js
-- SQLite: usar `datetime('now', 'localtime')` nunca `datetime('now')`
+- SQLite: `datetime('now', 'localtime')` NUNCA `datetime('now')`
 - Cron jobs: `{ timezone: "America/Sao_Paulo" }`
 - Frontend: `toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })`
 
-## Idioma
-- Todo o frontend em **português brasileiro**
-- Mensagens de erro, labels, botões, tudo em pt-BR
-- API responses podem ser em inglês (status codes padrão)
+## AUTENTICAÇÃO
+- JWT + bcrypt | 3 roles: admin, gestor, viewer
+- Admin: edmarmbull@gmail.com / Admin@2026!
+- 2FA via speakeasy (opcional)
+- Esqueci senha: botão no login → email com código → reset
+- Reenviar senha: botão na pág. usuários (admin) → gera temporária → email
 
-## Autenticação e Autorização
-- JWT com bcrypt para senhas
-- 3 roles: **admin** (acesso total), **gestor** (dashboard/registros/relatórios), **viewer** (somente leitura)
-- Admin padrão: edmarmbull@gmail.com / Admin@2026!
-- 2FA opcional via speakeasy (TOTP - Google Authenticator/Authy)
-- "Lembrar dispositivo 30 dias" via cookie httpOnly
-- **Esqueci minha senha:** botão na tela de login → envia código por e-mail → tela de reset
+## PÁGINAS DO SISTEMA (sidebar - ordem exata)
+1. **Dashboard** - Resumo do dia, presentes/ausentes, últimos registros
+2. **Funcionários** - CRUD, todos os campos, benefícios, dropdown cargo
+3. **Cargos** - CRUD com config de benefícios e regras por cargo
+4. **Registros** - Ponto com geo, filtros, edição, tipos: entrada/saída/almoço
+5. **Relatórios** - Mensal, export Excel/PDF
+6. **Presença** - Calendário visual mensal
+7. **Gráficos** - Chart.js: barras, linha, pizza
+8. **Feriados** - SP 2026, sync auto, CRUD manual (manual=true prevalece)
+9. **WhatsApp** - QR Code, status, reconectar, parser inteligente
+10. **Entregas** - Fotos WhatsApp, cards com thumbnail e detalhes
+11. **Insights IA** - Operacional + Melhorias (admin only)
+12. **Usuários** - CRUD, roles, excluir com confirmação, reenviar senha (admin only)
+13. **Audit Log** - Log de ações (admin only)
+14. **Perfil** - Editar dados, trocar senha, 2FA
 
-## Páginas do Sistema (sidebar)
-1. **Dashboard** - Resumo do dia, funcionários presentes/ausentes, últimos registros
-2. **Funcionários** - CRUD completo com todos os campos (ver seção abaixo)
-3. **Registros** - Gestão de ponto com geolocalização, filtros, edição manual
-4. **Relatórios** - Relatório mensal, exportação Excel e PDF
-5. **Presença** - Calendário visual de presença
-6. **Gráficos** - Chart.js: barras (horas/mês), linha (extras), pizza (tipos)
-7. **Feriados** - Lista feriados SP 2026, sync Google Calendar, CRUD manual
-8. **WhatsApp** - Conexão com QR Code, status, reconectar
-9. **Insights IA** - (admin only)
-10. **Usuários** - CRUD com roles (admin only)
-11. **Audit Log** - Log de ações dos usuários (admin only)
-12. **Perfil** - Editar dados, trocar senha, configurar 2FA
+## CADASTRO DE CARGOS
+nome, precisa_bater_ponto, permite_hora_extra, permite_dia_extra,
+valor_hora_extra, valor_dia_extra, recebe_vale_transporte, valor_vale_transporte,
+recebe_vale_refeicao, valor_vale_refeicao, recebe_ajuda_combustivel,
+valor_ajuda_combustivel, dorme_no_local, dias_dormida (JSON), tipo_dias_dormida (uteis|todos|customizado),
+ativo, created_at, updated_at
 
-## Cadastro de Funcionário - Campos Completos
+## CADASTRO DE FUNCIONÁRIO
 ### Dados Pessoais
-- nome, cargo, telefone, email_pessoal, foto
+nome, cargo_id (FK→cargos), telefone, email_pessoal, foto
+### Status
+classificacao, status (ativo|desligado), data_admissao, data_desligamento
+### Benefícios (herda do cargo, editável)
+contabiliza_hora_extra, recebe_vt, recebe_va, contabiliza_feriado,
+valor_hora_extra, valor_dia_extra, recebe_ajuda_combustivel, valor_ajuda_combustivel
+### Jornada
+Texto livre ou JSON: dias_semana, entrada, saída, carga diária
+### VT: tipo (diario|pernoite|fixo), múltiplos transportes
+### VA: tem_vale_alimentacao, valor_va_dia
+### PIX: pix_tipo, pix_chave, pix_banco
+### Férias: período aquisitivo auto, status, alertas 60/30/7 dias
 
-### Classificação e Status
-- classificacao: operacional | assistente_pessoal | dono_casa | outro
-- status: ativo | desligado
-- data_admissao, data_desligamento, motivo_desligamento
+## TABELAS DO BANCO
+users, funcionarios, cargos, registros, feriados (com manual boolean),
+funcionario_transportes, entregas, holerites, email_logs,
+audit_log, ferias, pending_confirmations
 
-### Benefícios (checkboxes)
-- contabiliza_hora_extra, recebe_vt, recebe_va, contabiliza_feriado
-- Pré-configurados por classificação mas customizáveis
+## ENTREGAS - FLUXO COMPLETO
+1. Foto chega no grupo WhatsApp
+2. whatsapp-web.js salva foto em /uploads/whatsapp/{data}/
+3. Vision AI (claude-haiku-4-5-20251001) analisa a imagem em português
+4. Se identificada como entrega → Entrega.create() automaticamente
+5. Extrai: destinatário, remetente, transportadora, descrição
+6. Vincula whatsapp_mensagem_id como FK
+7. Frontend exibe cards com thumbnail clicável, data/hora, detalhes
+8. Admin pode editar detalhes manualmente
 
-### Jornada de Trabalho
-- Campo texto livre em português (ex: "Sexta a segunda, 08:00-17:00")
-- Pode usar Claude API para converter em JSON estruturado
-- Campos: dias_semana, horario_entrada, horario_saida, carga_horaria_diaria
+### Regras:
+- Fotos que NÃO são entregas (selfies, prints, etc) são ignoradas
+- Cada foto gera no máximo 1 registro de entrega
+- Campo descricao guarda a análise completa da Vision AI
+- Thumbnails servidos via GET /uploads/whatsapp/{data}/{arquivo}
 
-### Vale-Transporte
-- Tipo: diario | pernoite | fixo
-- Múltiplos transportes por funcionário (tabela funcionario_transportes)
-- Cada transporte: tipo_transporte, nome_linha, valor_trecho
-- Cálculo diário: soma trechos × 2 × dias trabalhados
-- Cálculo pernoite: soma trechos × 2 (só entrada/saída do período)
-- Cálculo fixo: valor_fixo_transporte mensal
+## WHATSAPP + INTELIGÊNCIA ARTIFICIAL
+As mensagens do grupo "Casa dos Bull" são interpretadas pela API Claude (Anthropic).
+NÃO usar parser manual de palavras-chave. Usar IA para interpretar.
 
-### Vale-Alimentação
-- tem_vale_alimentacao (boolean), valor_va_dia (decimal)
-- Cálculo: valor × dias trabalhados no mês
+### Fluxo:
+1. Mensagem chega no grupo WhatsApp
+2. Enviar para API Claude com prompt de interpretação
+3. API retorna JSON: {tipo, funcionario, horario, ajuste, confianca}
+4. Se confiança > 80%: registrar automaticamente
+5. Se confiança 50-80%: pedir confirmação SIM/NÃO no WhatsApp
+6. Se confiança < 50%: ignorar
 
-### Chave PIX
-- pix_tipo: cpf | telefone | email | aleatoria
-- pix_chave, pix_banco
-- Validação formato conforme tipo
+### Config API:
+- Endpoint: https://api.anthropic.com/v1/messages
+- Model: claude-sonnet-4-20250514
+- API Key: ANTHROPIC_API_KEY do .env
 
-### Férias
-- Período aquisitivo calculado automaticamente pela data_admissao
-- Status: sem_direito | direito_adquirido | agendada | em_ferias | gozada
-- Alertas e-mail: 60/30/7 dias antes do vencimento
+## CRON JOBS
+- 5min: Health check WhatsApp → email se offline
+- 30min: IMAP holerites
+- Dia 01 08:00: Email fechamento mês
+- Dia 05 08:00: Email holerites pendentes
+- Mensal: Sync feriados via Google Calendar (respeitar manual=true)
+- Diário: Alertas férias
 
-### Comunicação
-- notificacoes_ativas (boolean)
-- Config por tipo: resumo_semanal, aviso_holerite, comprovante_pagamento, lembrete_ponto
+## FERIADOS - SYNC GOOGLE CALENDAR
+- Sincronizar feriados do Google Calendar API (calendário público brasileiro)
+- Cron mensal automático + botão manual "Sincronizar"
+- Feriados com manual=true NUNCA são sobrescritos pelo sync
+- Incluir feriados nacionais + estaduais SP + municipais SP
 
-## Tabelas do Banco (SQLite)
-- **users** - id, email, password_hash, nome, role, two_factor_secret, two_factor_enabled, created_at
-- **funcionarios** - todos os campos acima
-- **registros** - id, funcionario_id, tipo, data_hora, latitude, longitude, fonte, observacao
-- **feriados** - id, data, nome, tipo (nacional/estadual/municipal), created_at
-- **funcionario_transportes** - id, funcionario_id, tipo_transporte, nome_linha, valor_trecho
-- **entregas** - id, funcionario_id, data_hora, imagem_path, destinatario, remetente, transportadora
-- **holerites** - id, funcionario_id, mes_referencia, valor_liquido, pdf_path, status
-- **email_logs** - id, funcionario_id, tipo, assunto, enviado_em, aberto_em, status
-- **audit_log** - id, user_id, acao, detalhes, ip, created_at
-- **ferias** - id, funcionario_id, inicio, fim, status, created_at
+## FERIADOS SP 2026
+01/01, 25/01, 17/02, 03/04, 21/04, 01/05, 04/06, 09/07, 07/09, 12/10, 02/11, 15/11, 20/11, 25/12
 
-## API Endpoints
-### Auth
-- POST /api/auth/login
-- POST /api/auth/register
-- POST /api/auth/forgot-password
-- POST /api/auth/reset-password
-- POST /api/auth/verify-2fa
-
-### Users
-- GET/POST/PUT/DELETE /api/users
-- PUT /api/users/me/password
-- GET /api/audit-log
-
-### Funcionários
-- GET/POST/PUT/DELETE /api/funcionarios
-
-### Registros
-- GET/POST/PUT/DELETE /api/registros
-
-### Relatórios
-- GET /api/relatorios/mensal
-- GET /api/relatorios/feriados
-- GET /api/relatorios/vale-transporte
-- GET /api/relatorios/vale-alimentacao
-
-### Export
-- GET /api/export/excel
-- GET /api/export/pdf
-
-### Feriados
-- GET /api/feriados
-- POST /api/feriados/sync
-
-### Entregas
-- GET /api/entregas
-- PUT /api/entregas/:id
-
-### Holerites
-- GET /api/holerites
-- PUT /api/holerites/:id
-- POST /api/holerites/check-email
-
-### Comunicação
-- GET /api/comunicacao/engajamento
-- POST /api/comunicacao/enviar-teste/:id
-
-### WhatsApp
-- GET /api/whatsapp/status
-- GET /api/whatsapp/qr
-
-### Férias
-- GET /api/ferias
-- POST /api/ferias
-
-## Cron Jobs
-- **A cada 5 min:** Health check WhatsApp → alerta e-mail se offline
-- **A cada 30 min:** Verificar IMAP para holerites
-- **Dia 01 às 08:00:** E-mail fechamento mês + previsão próximo mês
-- **Dia 05 às 08:00:** E-mail admin com holerites pendentes
-- **Mensal:** Sync feriados Google Calendar
-- **Diário:** Verificar alertas de férias (60/30/7 dias)
-
-## Feriados São Paulo 2026
-01/01 Confraternização, 25/01 Aniversário SP, 17/02 Carnaval, 03/04 Sexta Santa, 21/04 Tiradentes, 01/05 Trabalho, 04/06 Corpus Christi, 09/07 Revolução Constitucionalista, 07/09 Independência, 12/10 Aparecida, 02/11 Finados, 15/11 Proclamação, 20/11 Consciência Negra, 25/12 Natal.
-
-## Regras Importantes
-1. **NUNCA** apagar dados - sempre soft delete (status: desligado)
-2. **NUNCA** expor senhas ou tokens no frontend
-3. **SEMPRE** validar inputs no backend (não confiar só no frontend)
-4. **SEMPRE** registrar ações no audit_log
-5. **SEMPRE** usar try/catch em rotas async
-6. **NUNCA** usar datetime('now') no SQLite - usar datetime('now', 'localtime')
-7. **SEMPRE** retornar mensagens de erro em português
-8. **SEMPRE** testar com pm2 restart após alterações
-9. **NÃO** precisa de sudo - o usuário claude não tem sudo
-10. Para comandos sudo, gerar script e instruir para rodar como root
-
-## Infraestrutura
-- **Nginx:** /etc/nginx/sites-available/controle-ponto
-- **PM2:** ecosystem.config.js na raiz do projeto
-- **SSL:** Let's Encrypt via certbot
-- **Firewall:** UFW - portas 22, 80, 443 abertas; 3000 bloqueada (acesso só via Nginx)
-- **Uploads:** /home/claude/controle-ponto/uploads/ (entregas, holerites, fotos)
-
-## Comandos Úteis
+## COMANDOS ÚTEIS
 ```bash
-pm2 list                    # Ver status do app
-pm2 logs --lines 50         # Ver logs recentes
-pm2 restart all             # Reiniciar app
-pm2 save                    # Salvar config PM2
-sqlite3 database.sqlite     # Acessar banco
-curl http://localhost:3000   # Testar app
+cd ~/controle-ponto-sandbox
+pm2 restart lardigital-sandbox
+pm2 logs lardigital-sandbox --lines 50
+curl http://localhost:3001
+sqlite3 database-sandbox.sqlite ".tables"
 ```
