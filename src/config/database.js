@@ -70,6 +70,12 @@ function initializeDatabase() {
       db.exec('ALTER TABLE feriados ADD COLUMN recorrente INTEGER DEFAULT 1');
     }
 
+    // Add manual column to feriados (manual edits prevail over sync)
+    const ferColsManual = db.prepare("PRAGMA table_info(feriados)").all().map(c => c.name);
+    if (ferColsManual.length > 0 && !ferColsManual.includes('manual')) {
+      db.exec('ALTER TABLE feriados ADD COLUMN manual INTEGER DEFAULT 0');
+    }
+
     // Migrate status 'inativo' -> 'desligado' and update CHECK constraint
     try {
       db.exec("UPDATE funcionarios SET status = 'desligado' WHERE status = 'inativo'");
@@ -120,6 +126,12 @@ function initializeDatabase() {
     if (userCols2FA.length > 0 && !userCols2FA.includes('totp_secret')) {
       try { db.exec('ALTER TABLE users ADD COLUMN totp_secret TEXT DEFAULT NULL'); } catch (e) { /* ignore */ }
       try { db.exec('ALTER TABLE users ADD COLUMN totp_enabled INTEGER DEFAULT 0'); } catch (e) { /* ignore */ }
+    }
+
+    // Add cargo_id to funcionarios
+    const funcColsCargo = db.prepare("PRAGMA table_info(funcionarios)").all().map(c => c.name);
+    if (funcColsCargo.length > 0 && !funcColsCargo.includes('cargo_id')) {
+      try { db.exec('ALTER TABLE funcionarios ADD COLUMN cargo_id INTEGER REFERENCES cargos(id)'); } catch (e) { /* ignore */ }
     }
   } catch (migrationErr) {
     console.error('Migration warning:', migrationErr.message);
@@ -213,7 +225,8 @@ function initializeDatabase() {
       descricao TEXT NOT NULL,
       tipo TEXT DEFAULT 'nacional' CHECK(tipo IN ('nacional', 'estadual', 'municipal', 'facultativo')),
       ano INTEGER NOT NULL,
-      recorrente INTEGER DEFAULT 1
+      recorrente INTEGER DEFAULT 1,
+      manual INTEGER DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS audit_log (
@@ -249,6 +262,28 @@ function initializeDatabase() {
       FOREIGN KEY (funcionario_id) REFERENCES funcionarios(id)
     );
 
+    CREATE TABLE IF NOT EXISTS cargos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome TEXT NOT NULL UNIQUE,
+      precisa_bater_ponto INTEGER DEFAULT 1,
+      permite_hora_extra INTEGER DEFAULT 1,
+      permite_dia_extra INTEGER DEFAULT 0,
+      valor_hora_extra REAL DEFAULT 0,
+      valor_dia_extra REAL DEFAULT 0,
+      recebe_vale_transporte INTEGER DEFAULT 1,
+      valor_vale_transporte REAL DEFAULT 0,
+      recebe_vale_refeicao INTEGER DEFAULT 0,
+      valor_vale_refeicao REAL DEFAULT 0,
+      recebe_ajuda_combustivel INTEGER DEFAULT 0,
+      valor_ajuda_combustivel REAL DEFAULT 0,
+      dorme_no_local INTEGER DEFAULT 0,
+      dias_dormida INTEGER DEFAULT 0,
+      tipo_dias_dormida TEXT DEFAULT 'semana' CHECK(tipo_dias_dormida IN ('semana', 'mes', 'escala')),
+      ativo INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT (datetime('now','localtime')),
+      updated_at DATETIME DEFAULT (datetime('now','localtime'))
+    );
+
     CREATE INDEX IF NOT EXISTS idx_registros_data ON registros(data);
     CREATE INDEX IF NOT EXISTS idx_registros_funcionario ON registros(funcionario_id);
     CREATE INDEX IF NOT EXISTS idx_feriados_data ON feriados(data);
@@ -264,6 +299,20 @@ function initializeDatabase() {
       created_at DATETIME DEFAULT (datetime('now','localtime'))
     );
 
+    CREATE TABLE IF NOT EXISTS pending_confirmations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      funcionario_id INTEGER NOT NULL,
+      tipo TEXT NOT NULL CHECK(tipo IN ('entrada', 'saida', 'saida_almoco', 'retorno_almoco')),
+      data DATE NOT NULL,
+      horario TEXT NOT NULL,
+      message_text TEXT,
+      status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'confirmed', 'denied', 'expired')),
+      created_at DATETIME DEFAULT (datetime('now','localtime')),
+      resolved_at DATETIME,
+      FOREIGN KEY (funcionario_id) REFERENCES funcionarios(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_pending_confirmations_status ON pending_confirmations(funcionario_id, status);
     CREATE INDEX IF NOT EXISTS idx_whatsapp_mensagens_date ON whatsapp_mensagens(created_at);
     CREATE INDEX IF NOT EXISTS idx_whatsapp_mensagens_funcionario ON whatsapp_mensagens(funcionario_id);
     CREATE INDEX IF NOT EXISTS idx_insights_ia_data ON insights_ia(data);
@@ -286,6 +335,9 @@ function initializeDatabase() {
 
   // Seed São Paulo 2026 holidays
   seedFeriados2026();
+
+  // Seed default cargos
+  seedCargos();
 }
 
 function seedFeriados2026() {
@@ -315,6 +367,24 @@ function seedFeriados2026() {
     if (!existing) {
       insertFeriado.run(f.data, f.descricao, f.tipo, f.ano, f.recorrente);
     }
+  }
+}
+
+function seedCargos() {
+  const cargos = [
+    { nome: 'Motorista', precisa_bater_ponto: 1, permite_hora_extra: 1, permite_dia_extra: 1, valor_hora_extra: 43.25, valor_dia_extra: 320, recebe_vale_transporte: 0, valor_vale_transporte: 0, recebe_vale_refeicao: 1, valor_vale_refeicao: 35, recebe_ajuda_combustivel: 1, valor_ajuda_combustivel: 500, dorme_no_local: 0, dias_dormida: 0, tipo_dias_dormida: 'semana' },
+    { nome: 'Empregada Doméstica', precisa_bater_ponto: 1, permite_hora_extra: 1, permite_dia_extra: 0, valor_hora_extra: 25, valor_dia_extra: 0, recebe_vale_transporte: 1, valor_vale_transporte: 0, recebe_vale_refeicao: 0, valor_vale_refeicao: 0, recebe_ajuda_combustivel: 0, valor_ajuda_combustivel: 0, dorme_no_local: 1, dias_dormida: 5, tipo_dias_dormida: 'semana' },
+    { nome: 'Cozinheira', precisa_bater_ponto: 1, permite_hora_extra: 1, permite_dia_extra: 0, valor_hora_extra: 30, valor_dia_extra: 0, recebe_vale_transporte: 1, valor_vale_transporte: 0, recebe_vale_refeicao: 0, valor_vale_refeicao: 0, recebe_ajuda_combustivel: 0, valor_ajuda_combustivel: 0, dorme_no_local: 0, dias_dormida: 0, tipo_dias_dormida: 'semana' },
+    { nome: 'Assistente Pessoal', precisa_bater_ponto: 0, permite_hora_extra: 0, permite_dia_extra: 0, valor_hora_extra: 0, valor_dia_extra: 0, recebe_vale_transporte: 1, valor_vale_transporte: 0, recebe_vale_refeicao: 1, valor_vale_refeicao: 40, recebe_ajuda_combustivel: 0, valor_ajuda_combustivel: 0, dorme_no_local: 0, dias_dormida: 0, tipo_dias_dormida: 'semana' },
+    { nome: 'Jardineiro', precisa_bater_ponto: 1, permite_hora_extra: 0, permite_dia_extra: 1, valor_hora_extra: 0, valor_dia_extra: 250, recebe_vale_transporte: 1, valor_vale_transporte: 0, recebe_vale_refeicao: 1, valor_vale_refeicao: 30, recebe_ajuda_combustivel: 0, valor_ajuda_combustivel: 0, dorme_no_local: 0, dias_dormida: 0, tipo_dias_dormida: 'semana' },
+  ];
+
+  const insertCargo = db.prepare(`
+    INSERT OR IGNORE INTO cargos (nome, precisa_bater_ponto, permite_hora_extra, permite_dia_extra, valor_hora_extra, valor_dia_extra, recebe_vale_transporte, valor_vale_transporte, recebe_vale_refeicao, valor_vale_refeicao, recebe_ajuda_combustivel, valor_ajuda_combustivel, dorme_no_local, dias_dormida, tipo_dias_dormida)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  for (const c of cargos) {
+    insertCargo.run(c.nome, c.precisa_bater_ponto, c.permite_hora_extra, c.permite_dia_extra, c.valor_hora_extra, c.valor_dia_extra, c.recebe_vale_transporte, c.valor_vale_transporte, c.recebe_vale_refeicao, c.valor_vale_refeicao, c.recebe_ajuda_combustivel, c.valor_ajuda_combustivel, c.dorme_no_local, c.dias_dormida, c.tipo_dias_dormida);
   }
 }
 

@@ -1,7 +1,7 @@
 const { db } = require('../config/database');
 
 const ALL_FIELDS = [
-  'nome', 'cargo', 'salario_hora', 'telefone', 'foto', 'status', 'horario_entrada',
+  'nome', 'cargo', 'cargo_id', 'salario_hora', 'telefone', 'foto', 'status', 'horario_entrada',
   'valor_hora_extra', 'valor_dia_especial', 'jornada_diaria',
   'classificacao', 'email_pessoal', 'data_admissao', 'data_desligamento', 'motivo_desligamento',
   'contabiliza_hora_extra', 'recebe_vt', 'recebe_va', 'contabiliza_feriado',

@@ -31,6 +31,9 @@
       <a href="/funcionarios.html" data-page="funcionarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
         <i class="bi bi-people"></i><span>Funcionários</span>
       </a>
+      <a href="/cargos.html" data-page="cargos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-briefcase"></i><span>Cargos</span>
+      </a>
       <a href="/registros.html" data-page="registros" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
         <i class="bi bi-clock"></i><span>Registros</span>
       </a>
@@ -162,7 +165,7 @@
           <button type="button" onclick="switchTab('pessoais')" data-tab="pessoais" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-primary text-primary whitespace-nowrap">Dados Pessoais</button>
           <button type="button" onclick="switchTab('classificacao')" data-tab="classificacao" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">Classificacao</button>
           <button type="button" onclick="switchTab('jornada')" data-tab="jornada" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">Jornada</button>
-          <button type="button" onclick="switchTab('beneficios')" data-tab="beneficios" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">Beneficios</button>
+          <button type="button" onclick="switchTab('beneficios')" data-tab="beneficios" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">Beneficios e Extras</button>
           <button type="button" onclick="switchTab('transporte')" data-tab="transporte" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">Vale-Transporte</button>
           <button type="button" onclick="switchTab('alimentacao')" data-tab="alimentacao" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">Vale-Alimentacao</button>
           <button type="button" onclick="switchTab('pix')" data-tab="pix" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">PIX</button>
@@ -181,8 +184,12 @@
               <input type="text" id="func-nome" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
             </div>
             <div>
-              <label class="block text-sm font-medium mb-1">Cargo</label>
-              <input type="text" id="func-cargo" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <label class="block text-sm font-medium mb-1">Cargo (selecione ou digite)</label>
+              <select id="func-cargo-id" onchange="onCargoIdChange()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition mb-2">
+                <option value="">-- Selecionar cargo cadastrado --</option>
+              </select>
+              <input type="text" id="func-cargo" placeholder="Ou digite o cargo manualmente" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Selecionar um cargo preenche automaticamente os beneficios.</p>
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
@@ -275,37 +282,69 @@
             <input type="hidden" id="func-jornada-json">
           </div>
 
-          <!-- Tab: Beneficios -->
+          <!-- Tab: Beneficios e Extras -->
           <div id="tab-beneficios" class="tab-content space-y-4 hidden">
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Selecione os beneficios aplicaveis ao funcionario.</p>
-            <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition">
-              <input type="checkbox" id="func-contabiliza-hora-extra" checked class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
-              <div>
-                <span class="text-sm font-medium">Contabiliza Hora Extra</span>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Horas extras serao calculadas automaticamente</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Configure os beneficios e valores extras do funcionario.</p>
+
+            <!-- Recebe Vale Transporte -->
+            <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" id="func-recebe-vt" checked onchange="toggleBeneficio('vt')" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                <div class="flex-1">
+                  <span class="text-sm font-medium">Recebe Vale-Transporte</span>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">VT sera incluido nos calculos</p>
+                </div>
+              </label>
+              <div id="beneficio-vt-valor" class="mt-3 ml-7 hidden">
+                <label class="block text-xs font-medium text-gray-500 mb-1">Valor fixo VT mensal (R$) <span class="text-gray-400">(se aplicavel)</span></label>
+                <input type="number" step="0.01" id="func-beneficio-vt-valor" placeholder="0.00" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
               </div>
-            </label>
-            <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition">
-              <input type="checkbox" id="func-recebe-vt" checked class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
-              <div>
-                <span class="text-sm font-medium">Recebe Vale-Transporte</span>
-                <p class="text-xs text-gray-500 dark:text-gray-400">VT sera incluido nos calculos</p>
+            </div>
+
+            <!-- Recebe Vale Alimentacao -->
+            <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" id="func-recebe-va" checked onchange="toggleBeneficio('va')" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                <div class="flex-1">
+                  <span class="text-sm font-medium">Recebe Vale-Alimentacao</span>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">VA sera incluido nos calculos</p>
+                </div>
+              </label>
+              <div id="beneficio-va-valor" class="mt-3 ml-7 hidden">
+                <label class="block text-xs font-medium text-gray-500 mb-1">Valor VA por dia (R$)</label>
+                <input type="number" step="0.01" id="func-beneficio-va-valor" placeholder="0.00" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
               </div>
-            </label>
-            <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition">
-              <input type="checkbox" id="func-recebe-va" checked class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
-              <div>
-                <span class="text-sm font-medium">Recebe Vale-Alimentacao</span>
-                <p class="text-xs text-gray-500 dark:text-gray-400">VA sera incluido nos calculos</p>
+            </div>
+
+            <!-- Recebe Hora Extra -->
+            <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" id="func-contabiliza-hora-extra" checked onchange="toggleBeneficio('he')" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                <div class="flex-1">
+                  <span class="text-sm font-medium">Recebe Hora Extra</span>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">Horas extras serao calculadas automaticamente</p>
+                </div>
+              </label>
+              <div id="beneficio-he-valor" class="mt-3 ml-7 hidden">
+                <label class="block text-xs font-medium text-gray-500 mb-1">Valor hora extra (R$)</label>
+                <input type="number" step="0.01" id="func-beneficio-he-valor" placeholder="43.25" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
               </div>
-            </label>
-            <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition">
-              <input type="checkbox" id="func-contabiliza-feriado" checked class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
-              <div>
-                <span class="text-sm font-medium">Contabiliza Feriado</span>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Feriados serao considerados como dia especial</p>
+            </div>
+
+            <!-- Recebe por Dia Extra -->
+            <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" id="func-contabiliza-feriado" checked onchange="toggleBeneficio('de')" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                <div class="flex-1">
+                  <span class="text-sm font-medium">Recebe por Dia Extra (Feriado/Especial)</span>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">Feriados e dias especiais serao pagos com valor diferenciado</p>
+                </div>
+              </label>
+              <div id="beneficio-de-valor" class="mt-3 ml-7 hidden">
+                <label class="block text-xs font-medium text-gray-500 mb-1">Valor dia extra (R$)</label>
+                <input type="number" step="0.01" id="func-beneficio-de-valor" placeholder="320.00" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
               </div>
-            </label>
+            </div>
           </div>
 
           <!-- Tab: Vale-Transporte -->
@@ -422,7 +461,69 @@
   <script src="/js/shared.js"></script>
   <script>
     let allFuncionarios = [];
+    let allCargos = [];
     let transporteRowIndex = 0;
+
+    // Load cargos for dropdown
+    async function loadCargos() {
+      try {
+        const data = await Shared.api('/api/cargos');
+        allCargos = Array.isArray(data) ? data : [];
+        const select = document.getElementById('func-cargo-id');
+        // Keep the first empty option
+        select.innerHTML = '<option value="">-- Selecionar cargo cadastrado --</option>';
+        allCargos.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.id;
+          opt.textContent = c.nome;
+          select.appendChild(opt);
+        });
+      } catch (err) {
+        console.error('Erro ao carregar cargos:', err);
+      }
+    }
+
+    function onCargoIdChange() {
+      const cargoId = document.getElementById('func-cargo-id').value;
+      if (!cargoId) return;
+      const cargo = allCargos.find(c => c.id === parseInt(cargoId));
+      if (!cargo) return;
+
+      // Auto-fill the text cargo field
+      document.getElementById('func-cargo').value = cargo.nome;
+
+      // Auto-fill benefit checkboxes and values
+      document.getElementById('func-contabiliza-hora-extra').checked = !!cargo.permite_hora_extra;
+      document.getElementById('func-recebe-vt').checked = !!cargo.recebe_vale_transporte;
+      document.getElementById('func-recebe-va').checked = !!cargo.recebe_vale_refeicao;
+      document.getElementById('func-contabiliza-feriado').checked = !!cargo.permite_dia_extra;
+
+      // Auto-fill values
+      if (cargo.valor_hora_extra) {
+        document.getElementById('func-hora-extra').value = cargo.valor_hora_extra;
+        document.getElementById('func-beneficio-he-valor').value = cargo.valor_hora_extra;
+      }
+      if (cargo.valor_dia_extra) {
+        document.getElementById('func-dia-especial').value = cargo.valor_dia_extra;
+        document.getElementById('func-beneficio-de-valor').value = cargo.valor_dia_extra;
+      }
+      if (cargo.valor_vale_transporte) {
+        document.getElementById('func-beneficio-vt-valor').value = cargo.valor_vale_transporte;
+      }
+      if (cargo.valor_vale_refeicao) {
+        document.getElementById('func-beneficio-va-valor').value = cargo.valor_vale_refeicao;
+        document.getElementById('func-tem-va').checked = true;
+        document.getElementById('func-valor-va-dia').value = cargo.valor_vale_refeicao;
+        document.getElementById('valor-va-dia-field').classList.remove('hidden');
+      }
+
+      // Toggle benefit value visibility
+      ['vt', 'va', 'he', 'de'].forEach(tipo => toggleBeneficio(tipo));
+
+      if (typeof showToast === 'function') {
+        showToast('Beneficios preenchidos pelo cargo "' + cargo.nome + '"', 'success');
+      }
+    }
 
     function formatCurrency(val) {
       if (val == null) return '-';
@@ -477,6 +578,16 @@
           notifCheck.disabled = false;
         }
       }
+    }
+
+    // ===== Beneficio Toggle =====
+    function toggleBeneficio(tipo) {
+      const checkMap = { vt: 'func-recebe-vt', va: 'func-recebe-va', he: 'func-contabiliza-hora-extra', de: 'func-contabiliza-feriado' };
+      const valMap = { vt: 'beneficio-vt-valor', va: 'beneficio-va-valor', he: 'beneficio-he-valor', de: 'beneficio-de-valor' };
+      const checked = document.getElementById(checkMap[tipo]).checked;
+      const valEl = document.getElementById(valMap[tipo]);
+      if (checked) valEl.classList.remove('hidden');
+      else valEl.classList.add('hidden');
     }
 
     // ===== Classificacao Change Handler =====
@@ -652,6 +763,7 @@
       document.getElementById('func-id').value = '';
 
       // Reset defaults after form.reset()
+      document.getElementById('func-cargo-id').value = '';
       document.getElementById('func-hora-extra').value = '43.25';
       document.getElementById('func-dia-especial').value = '320';
       document.getElementById('func-jornada').value = '9.8';
@@ -679,6 +791,16 @@
       document.getElementById('sub-notificacoes').classList.add('hidden');
       document.getElementById('comunicacao-aviso').classList.add('hidden');
 
+      // Reset benefit value fields
+      document.getElementById('beneficio-vt-valor').classList.add('hidden');
+      document.getElementById('beneficio-va-valor').classList.add('hidden');
+      document.getElementById('beneficio-he-valor').classList.add('hidden');
+      document.getElementById('beneficio-de-valor').classList.add('hidden');
+      document.getElementById('func-beneficio-vt-valor').value = '';
+      document.getElementById('func-beneficio-va-valor').value = '';
+      document.getElementById('func-beneficio-he-valor').value = '';
+      document.getElementById('func-beneficio-de-valor').value = '';
+
       // Clear transportes list
       document.getElementById('transportes-list').innerHTML = '';
       transporteRowIndex = 0;
@@ -697,6 +819,7 @@
         // Dados Pessoais
         document.getElementById('func-id').value = func.id;
         document.getElementById('func-nome').value = func.nome || '';
+        document.getElementById('func-cargo-id').value = func.cargo_id || '';
         document.getElementById('func-cargo').value = func.cargo || '';
         document.getElementById('func-telefone').value = func.telefone || '';
         document.getElementById('func-email-pessoal').value = func.email_pessoal || '';
@@ -731,6 +854,24 @@
         document.getElementById('func-recebe-vt').checked = func.recebe_vt !== false;
         document.getElementById('func-recebe-va').checked = func.recebe_va !== false;
         document.getElementById('func-contabiliza-feriado').checked = func.contabiliza_feriado !== false;
+
+        // Benefit values
+        if (func.recebe_vt !== false) {
+          document.getElementById('beneficio-vt-valor').classList.remove('hidden');
+          document.getElementById('func-beneficio-vt-valor').value = func.valor_fixo_transporte || '';
+        }
+        if (func.recebe_va !== false) {
+          document.getElementById('beneficio-va-valor').classList.remove('hidden');
+          document.getElementById('func-beneficio-va-valor').value = func.valor_va_dia || '';
+        }
+        if (func.contabiliza_hora_extra !== false) {
+          document.getElementById('beneficio-he-valor').classList.remove('hidden');
+          document.getElementById('func-beneficio-he-valor').value = func.valor_hora_extra != null ? func.valor_hora_extra : '';
+        }
+        if (func.contabiliza_feriado !== false) {
+          document.getElementById('beneficio-de-valor').classList.remove('hidden');
+          document.getElementById('func-beneficio-de-valor').value = func.valor_dia_especial != null ? func.valor_dia_especial : '';
+        }
 
         // Vale-Transporte
         document.getElementById('func-tipo-transporte').value = func.tipo_transporte || 'diario';
@@ -794,6 +935,7 @@
         // Dados Pessoais
         nome: document.getElementById('func-nome').value,
         cargo: document.getElementById('func-cargo').value,
+        cargo_id: document.getElementById('func-cargo-id').value ? parseInt(document.getElementById('func-cargo-id').value) : null,
         telefone: document.getElementById('func-telefone').value,
         email_pessoal: document.getElementById('func-email-pessoal').value,
         salario_hora: parseFloat(document.getElementById('func-salario').value) || 0,
@@ -816,18 +958,26 @@
         recebe_va: document.getElementById('func-recebe-va').checked ? 1 : 0,
         contabiliza_feriado: document.getElementById('func-contabiliza-feriado').checked ? 1 : 0,
 
-        // Vale-Transporte
+        // Benefit values from Beneficios tab
+        valor_hora_extra: document.getElementById('func-contabiliza-hora-extra').checked
+          ? (parseFloat(document.getElementById('func-beneficio-he-valor').value) || parseFloat(document.getElementById('func-hora-extra').value) || 43.25)
+          : (parseFloat(document.getElementById('func-hora-extra').value) || 43.25),
+        valor_dia_especial: document.getElementById('func-contabiliza-feriado').checked
+          ? (parseFloat(document.getElementById('func-beneficio-de-valor').value) || parseFloat(document.getElementById('func-dia-especial').value) || 320)
+          : (parseFloat(document.getElementById('func-dia-especial').value) || 320),
+
+        // Vale-Transporte (use beneficios tab value if set, otherwise VT tab value)
         tipo_transporte: document.getElementById('func-tipo-transporte').value,
         valor_fixo_transporte: document.getElementById('func-tipo-transporte').value === 'fixo'
           ? (parseFloat(document.getElementById('func-valor-fixo-transporte').value) || 0)
-          : null,
+          : (parseFloat(document.getElementById('func-beneficio-vt-valor').value) || null),
         transportes: getTransportes(),
 
-        // Vale-Alimentacao
+        // Vale-Alimentacao (use beneficios tab value if set, otherwise VA tab value)
         tem_vale_alimentacao: document.getElementById('func-tem-va').checked ? 1 : 0,
-        valor_va_dia: document.getElementById('func-tem-va').checked
-          ? (parseFloat(document.getElementById('func-valor-va-dia').value) || 0)
-          : null,
+        valor_va_dia: document.getElementById('func-recebe-va').checked
+          ? (parseFloat(document.getElementById('func-beneficio-va-valor').value) || parseFloat(document.getElementById('func-valor-va-dia').value) || 0)
+          : (parseFloat(document.getElementById('func-valor-va-dia').value) || null),
 
         // PIX
         pix_tipo: document.getElementById('func-pix-tipo').value,
@@ -974,6 +1124,7 @@
     }
 
     window.onAuthReady = function() {
+      loadCargos();
       loadFuncionarios();
     };
   </script>

@@ -24,12 +24,44 @@ const SAIDA_PATTERNS = [
   /\b(tchau|xau|flw|falou)\b/i,
   /\b(fui|vazei|vazando)\b/i,
   /\b(indo\s*embora)\b/i,
-  /\b(finaliz(ar|ei|ando))\b/i,
+  /\b(finaliz(ar|ei|ando|ado))\b/i,
   /\bt[oô]\s*(saindo|indo)\b/i,
   /\b(vou\s*embora)\b/i,
   /\b(at[eé]\s*(amanh[aã]|segunda|logo))\b/i,
-  /\b(encerrando)\b/i,
+  /\b(encerr(ando|ei|ado))\b/i,
+  /\b(boa\s*noite)\b/i,
+  /\b(terminei|terminando)\b/i,
 ];
+
+const SAIDA_ALMOCO_PATTERNS = [
+  /\b(saindo\s*(pro|para|pro)\s*almo[çc]o)\b/i,
+  /\b(indo\s*almo[çc]ar)\b/i,
+  /\b(pausa\s*(para|pro)\s*almo[çc]o)\b/i,
+  /\b(intervalo)\b/i,
+  /\b(hora\s*do\s*almo[çc]o)\b/i,
+  /\b(almo[çc]o)\b/i,
+];
+
+const RETORNO_ALMOCO_PATTERNS = [
+  /\b(voltei\s*(do)?\s*almo[çc]o)\b/i,
+  /\b(retorn(ei|ando)\s*(do)?\s*almo[çc]o)\b/i,
+  /\b(voltando\s*(do)?\s*almo[çc]o)\b/i,
+  /\b(cheguei\s*do\s*almo[çc]o)\b/i,
+  /\b(voltei\s*do\s*intervalo)\b/i,
+];
+
+// Time adjustment patterns - detect messages with explicit times
+const AJUSTE_PATTERNS = [
+  /\b(?:cheguei|entrada|chego)\s+(?:[àa]s?\s*)(\d{1,2}[:\.]?\d{2})\b/i,
+  /\b(?:sa[ií]|saida|sa[ií]da)\s+(?:[àa]s?\s*)(\d{1,2}[:\.]?\d{2})\b/i,
+  /\b(?:minha?\s+(?:entrada|saida|sa[ií]da))\s+(?:foi\s+)?(?:[àa]s?\s*)?(\d{1,2}[:\.]?\d{2})\b/i,
+  /\b(?:registr(?:a|e|ar))\s+(?:entrada|saida|sa[ií]da)\s+(?:[àa]s?\s*)(\d{1,2}[:\.]?\d{2})\b/i,
+  /\b(?:ajust(?:ar?|e))\s+(?:(?:minha?\s+)?entrada|saida|sa[ií]da)?\s*(?:para?\s+)?(\d{1,2}[:\.]?\d{2})\b/i,
+];
+
+// Confirmation response patterns
+const SIM_PATTERNS = [/\bsim\b/i, /\bconfirm(?:o|ar|a)\b/i, /\bss\b/i, /\byes\b/i, /\bisso\b/i];
+const NAO_PATTERNS = [/\bn[ãa]o\b/i, /\bnao\b/i, /\bcancel(?:a|ar)\b/i, /\bno\b/i, /\bnope\b/i];
 
 class WhatsAppService {
   constructor() {
@@ -282,6 +314,89 @@ class WhatsAppService {
     // Match employee
     let funcionario = this.matchEmployee(senderPhone, senderName);
 
+    // Prepare stored text (append vision analysis if available)
+    const storedText = visionAnalysis ? (text ? `${text}\n\n[Análise IA]: ${visionAnalysis}` : `[Análise IA]: ${visionAnalysis}`) : text;
+
+    // Expire old pending confirmations
+    this.expireOldConfirmations();
+
+    // Check if this is a confirmation response (SIM/NÃO)
+    if (text && funcionario) {
+      const pending = this.getPendingConfirmation(funcionario.id);
+      if (pending) {
+        const response = this.checkConfirmationResponse(text);
+        if (response === 'confirmed') {
+          this.resolvePendingConfirmation(pending.id, 'confirmed');
+          // Register with the adjusted time
+          try {
+            if (pending.tipo === 'entrada') {
+              const existing = db.prepare(
+                'SELECT id FROM registros WHERE funcionario_id = ? AND data = ? AND entrada IS NOT NULL'
+              ).get(funcionario.id, pending.data);
+              if (!existing) {
+                Registro.create({
+                  funcionario_id: funcionario.id,
+                  data: pending.data,
+                  entrada: pending.horario,
+                  saida: null,
+                  tipo: 'whatsapp',
+                  observacao: `Via WhatsApp (ajuste confirmado): "${pending.message_text || ''}"`,
+                });
+                await this.sendGroupMessage(`✅ Entrada registrada para ${funcionario.nome} às ${pending.horario} (ajuste confirmado)`);
+              } else {
+                await this.sendGroupMessage(`${funcionario.nome}, sua entrada de hoje já foi registrada.`);
+              }
+            } else if (pending.tipo === 'saida') {
+              const openRecord = db.prepare(
+                'SELECT id FROM registros WHERE funcionario_id = ? AND data = ? AND entrada IS NOT NULL AND saida IS NULL'
+              ).get(funcionario.id, pending.data);
+              if (openRecord) {
+                Registro.update(openRecord.id, { saida: pending.horario }, null);
+                await this.sendGroupMessage(`✅ Saída registrada para ${funcionario.nome} às ${pending.horario} (ajuste confirmado)`);
+              } else {
+                Registro.create({
+                  funcionario_id: funcionario.id,
+                  data: pending.data,
+                  entrada: null,
+                  saida: pending.horario,
+                  tipo: 'whatsapp',
+                  observacao: `Via WhatsApp (ajuste confirmado, sem entrada): "${pending.message_text || ''}"`,
+                });
+                await this.sendGroupMessage(`✅ Saída registrada para ${funcionario.nome} às ${pending.horario} (ajuste confirmado, sem entrada)`);
+              }
+            }
+          } catch (err) {
+            console.error(`[WhatsApp] Error registering adjusted punch:`, err.message);
+            await this.sendGroupMessage(`❌ Erro ao registrar ajuste para ${funcionario.nome}: ${err.message}`);
+          }
+          // Store confirmation message and return (don't process further)
+          this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, storedText, 'other', mediaType, mediaPath);
+          return;
+        } else if (response === 'denied') {
+          this.resolvePendingConfirmation(pending.id, 'denied');
+          await this.sendGroupMessage(`❌ Ajuste cancelado para ${funcionario.nome}.`);
+          this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, storedText, 'other', mediaType, mediaPath);
+          return;
+        }
+      }
+    }
+
+    // Check for time adjustment request BEFORE regular intent processing
+    if (text && funcionario) {
+      const adjustment = this.parseTimeAdjustment(text);
+      if (adjustment) {
+        const today = new Date().toISOString().split('T')[0];
+        const tipoLabel = adjustment.tipo === 'entrada' ? 'entrada' : 'saída';
+        this.createPendingConfirmation(funcionario.id, adjustment.tipo, today, adjustment.horario, text);
+        await this.sendGroupMessage(
+          `${funcionario.nome}, deseja registrar ${tipoLabel} às ${adjustment.horario}? Responda *SIM* ou *NÃO*.`
+        );
+        // Store the message and return (don't register yet)
+        this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, storedText, 'other', mediaType, mediaPath);
+        return;
+      }
+    }
+
     // Detect intent (only from text)
     const intent = text ? this.parseIntent(text) : null;
 
@@ -290,11 +405,12 @@ class WhatsAppService {
       funcionario = this.autoCreateEmployee(senderPhone, senderName);
     }
 
-    // Store the message (append vision analysis to text if available)
-    const storedText = visionAnalysis ? (text ? `${text}\n\n[Análise IA]: ${visionAnalysis}` : `[Análise IA]: ${visionAnalysis}`) : text;
-    this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, storedText, intent || 'other', mediaType, mediaPath);
+    // Store the message
+    // Map lunch intents to 'other' for whatsapp_mensagens message_type (which only allows entrada/saida/other)
+    const msgType = (intent === 'entrada' || intent === 'saida') ? intent : 'other';
+    this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, storedText, msgType, mediaType, mediaPath);
 
-    // If clock-in/out intent detected and employee found, register the punch
+    // If clock-in/out/lunch intent detected and employee found, register the punch
     if (intent && funcionario) {
       await this.registerPunch(funcionario, intent, msg);
     } else if (intent && !funcionario) {
@@ -302,7 +418,87 @@ class WhatsAppService {
     }
   }
 
+  parseTimeAdjustment(text) {
+    // Check if the message contains a time that suggests an adjustment
+    for (const pattern of AJUSTE_PATTERNS) {
+      const match = text.match(pattern);
+      if (match) {
+        let timeStr = match[1].replace('.', ':');
+        // Ensure HH:MM format
+        if (!timeStr.includes(':')) {
+          if (timeStr.length === 3) timeStr = '0' + timeStr.slice(0, 1) + ':' + timeStr.slice(1);
+          else if (timeStr.length === 4) timeStr = timeStr.slice(0, 2) + ':' + timeStr.slice(2);
+        }
+        // Pad hour
+        const parts = timeStr.split(':');
+        if (parts[0].length === 1) parts[0] = '0' + parts[0];
+        timeStr = parts.join(':');
+
+        // Determine intent type from text
+        let tipo = 'entrada'; // default
+        if (/sa[ií](?:da|r|ndo)?|saida/i.test(text)) tipo = 'saida';
+
+        return { horario: timeStr, tipo };
+      }
+    }
+    return null;
+  }
+
+  checkConfirmationResponse(text) {
+    for (const pattern of SIM_PATTERNS) {
+      if (pattern.test(text)) return 'confirmed';
+    }
+    for (const pattern of NAO_PATTERNS) {
+      if (pattern.test(text)) return 'denied';
+    }
+    return null;
+  }
+
+  createPendingConfirmation(funcionarioId, tipo, data, horario, messageText) {
+    try {
+      // Cancel any existing pending for this employee
+      db.prepare(
+        "UPDATE pending_confirmations SET status = 'expired', resolved_at = datetime('now','localtime') WHERE funcionario_id = ? AND status = 'pending'"
+      ).run(funcionarioId);
+
+      const result = db.prepare(
+        'INSERT INTO pending_confirmations (funcionario_id, tipo, data, horario, message_text) VALUES (?, ?, ?, ?, ?)'
+      ).run(funcionarioId, tipo, data, horario, messageText || null);
+      return result.lastInsertRowid;
+    } catch (err) {
+      console.error('[WhatsApp] Error creating pending confirmation:', err.message);
+      return null;
+    }
+  }
+
+  getPendingConfirmation(funcionarioId) {
+    return db.prepare(
+      "SELECT * FROM pending_confirmations WHERE funcionario_id = ? AND status = 'pending' ORDER BY created_at DESC LIMIT 1"
+    ).get(funcionarioId);
+  }
+
+  resolvePendingConfirmation(id, status) {
+    db.prepare(
+      "UPDATE pending_confirmations SET status = ?, resolved_at = datetime('now','localtime') WHERE id = ?"
+    ).run(status, id);
+  }
+
+  expireOldConfirmations() {
+    // Expire confirmations older than 30 minutes
+    db.prepare(
+      "UPDATE pending_confirmations SET status = 'expired', resolved_at = datetime('now','localtime') WHERE status = 'pending' AND created_at < datetime('now', 'localtime', '-30 minutes')"
+    ).run();
+  }
+
   parseIntent(text) {
+    // Check retorno_almoco FIRST (before entrada, since "voltei" could match entrada)
+    for (const pattern of RETORNO_ALMOCO_PATTERNS) {
+      if (pattern.test(text)) return 'retorno_almoco';
+    }
+    // Check saida_almoco BEFORE general saida (since "almoço" is more specific)
+    for (const pattern of SAIDA_ALMOCO_PATTERNS) {
+      if (pattern.test(text)) return 'saida_almoco';
+    }
     // Check entrada patterns
     for (const pattern of ENTRADA_PATTERNS) {
       if (pattern.test(text)) return 'entrada';
@@ -476,6 +672,37 @@ class WhatsAppService {
             `Saida registrada para ${funcionario.nome} - ${currentTime} (sem entrada registrada hoje)`
           );
         }
+      } else if (intent === 'saida_almoco') {
+        // Register lunch break start
+        Registro.create({
+          funcionario_id: funcionario.id,
+          data: today,
+          entrada: null,
+          saida: currentTime,
+          tipo: 'whatsapp',
+          observacao: `Via WhatsApp (saída almoço): "${msg.body.trim().substring(0, 100)}"`,
+        });
+
+        console.log(`[WhatsApp] Saida almoco registered: ${funcionario.nome} at ${currentTime}`);
+        await this.sendGroupMessage(
+          `Saída para almoço registrada para ${funcionario.nome} - ${currentTime}`
+        );
+
+      } else if (intent === 'retorno_almoco') {
+        // Register lunch break return
+        Registro.create({
+          funcionario_id: funcionario.id,
+          data: today,
+          entrada: currentTime,
+          saida: null,
+          tipo: 'whatsapp',
+          observacao: `Via WhatsApp (retorno almoço): "${msg.body.trim().substring(0, 100)}"`,
+        });
+
+        console.log(`[WhatsApp] Retorno almoco registered: ${funcionario.nome} at ${currentTime}`);
+        await this.sendGroupMessage(
+          `Retorno do almoço registrado para ${funcionario.nome} - ${currentTime}`
+        );
       }
     } catch (err) {
       if (err.message.includes('Ja existe') || err.message.includes('Já existe')) {

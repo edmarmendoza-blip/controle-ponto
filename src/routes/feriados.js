@@ -73,7 +73,7 @@ router.post('/', authenticateToken, requireAdmin, [
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-    const id = Feriado.create(req.body);
+    const id = Feriado.create({ ...req.body, manual: 1 });
     AuditLog.log(req.user.id, 'create', 'feriado', id, { data: req.body.data, descricao: req.body.descricao }, req.ip);
     res.status(201).json({ id, message: 'Feriado criado com sucesso' });
   } catch (err) {

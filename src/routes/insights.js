@@ -75,4 +75,18 @@ router.post('/generate-period', authenticateToken, requireAdmin, async (req, res
   }
 });
 
+// POST /api/insights/generate-melhorias - Gerar insights de melhorias do sistema
+router.post('/generate-melhorias', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const result = await InsightsIA.generateMelhoriasInsights();
+    if (!result.success) {
+      return res.status(404).json({ error: result.message });
+    }
+    res.json(result);
+  } catch (err) {
+    console.error('[Insights] Generate melhorias error:', err.message);
+    res.status(500).json({ error: 'Erro ao gerar insights de melhorias: ' + err.message });
+  }
+});
+
 module.exports = router;

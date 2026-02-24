@@ -31,6 +31,9 @@
       <a href="/funcionarios.html" data-page="funcionarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
         <i class="bi bi-people"></i><span>Funcionários</span>
       </a>
+      <a href="/cargos.html" data-page="cargos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-briefcase"></i><span>Cargos</span>
+      </a>
       <a href="/registros.html" data-page="registros" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
         <i class="bi bi-clock"></i><span>Registros</span>
       </a>
@@ -118,6 +121,10 @@
           <button onclick="showPeriodModal()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium">
             <i class="bi bi-calendar-range mr-1"></i>
             Gerar por Periodo
+          </button>
+          <button onclick="generateMelhorias()" id="btn-melhorias" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-sm font-medium">
+            <i class="bi bi-lightbulb-fill mr-1"></i>
+            Insights de Melhorias
           </button>
         </div>
       </div>
@@ -212,6 +219,32 @@
         <button onclick="generatePeriod()" id="btn-gen-period" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
           <i class="bi bi-stars mr-1"></i> Gerar
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Melhorias Modal -->
+  <div id="melhorias-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+            <i class="bi bi-lightbulb-fill text-emerald-600 dark:text-emerald-400 text-lg"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold">Insights de Melhorias</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Sugestoes de melhorias geradas por IA</p>
+          </div>
+        </div>
+        <button onclick="closeMelhoriasModal()" class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="p-5 overflow-y-auto" id="melhorias-content">
+        <p class="text-gray-400 text-center">Carregando...</p>
+      </div>
+      <div class="flex justify-end p-5 border-t border-gray-100 dark:border-gray-700 shrink-0">
+        <button onclick="closeMelhoriasModal()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium">Fechar</button>
       </div>
     </div>
   </div>
@@ -375,6 +408,90 @@
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-stars mr-1"></i> Gerar';
       }
+    }
+
+    async function generateMelhorias() {
+      const btn = document.getElementById('btn-melhorias');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin mr-1"></i> Analisando...';
+
+      try {
+        const data = await Shared.api('/api/insights/generate-melhorias', {
+          method: 'POST',
+          body: JSON.stringify({})
+        });
+        showMelhoriasModal(data.insights);
+        showToast('Insights de melhorias gerados com sucesso!');
+        await loadInsights(1);
+      } catch (err) {
+        showToast('Erro: ' + err.message, 'danger');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-lightbulb-fill mr-1"></i> Insights de Melhorias';
+      }
+    }
+
+    function showMelhoriasModal(insights) {
+      const modal = document.getElementById('melhorias-modal');
+      const content = document.getElementById('melhorias-content');
+
+      const prioridadeBadge = (p) => {
+        const map = { alta: 'bg-red-100 text-red-700', media: 'bg-yellow-100 text-yellow-700', baixa: 'bg-green-100 text-green-700' };
+        return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${map[p] || map.media}">${p || 'media'}</span>`;
+      };
+
+      let html = '';
+
+      if (insights.resumo) {
+        html += `<div class="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800 mb-4">
+          <p class="text-sm text-emerald-700 dark:text-emerald-300">${escapeHtml(insights.resumo)}</p>
+        </div>`;
+      }
+
+      if (insights.dados_incompletos?.length) {
+        html += `<h4 class="font-semibold text-sm mb-2 flex items-center gap-2"><i class="bi bi-exclamation-triangle text-yellow-500"></i> Dados Incompletos</h4>
+          <div class="space-y-2 mb-4">${insights.dados_incompletos.map(d => `
+            <div class="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+              <div class="flex items-center justify-between mb-1"><span class="text-sm font-medium">${escapeHtml(d.problema)}</span>${prioridadeBadge(d.impacto)}</div>
+              <p class="text-xs text-gray-600 dark:text-gray-400">${escapeHtml(d.solucao)}</p>
+            </div>`).join('')}</div>`;
+      }
+
+      if (insights.melhorias_existentes?.length) {
+        html += `<h4 class="font-semibold text-sm mb-2 flex items-center gap-2"><i class="bi bi-tools text-blue-500"></i> Melhorias em Funcionalidades</h4>
+          <div class="space-y-2 mb-4">${insights.melhorias_existentes.map(m => `
+            <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div class="flex items-center justify-between mb-1"><span class="text-sm font-medium">${escapeHtml(m.funcionalidade)}</span>${prioridadeBadge(m.prioridade)}</div>
+              <p class="text-xs text-gray-600 dark:text-gray-400">${escapeHtml(m.melhoria)}</p>
+            </div>`).join('')}</div>`;
+      }
+
+      if (insights.novas_features?.length) {
+        html += `<h4 class="font-semibold text-sm mb-2 flex items-center gap-2"><i class="bi bi-lightbulb text-emerald-500"></i> Novas Features Sugeridas</h4>
+          <div class="space-y-2 mb-4">${insights.novas_features.map(f => `
+            <div class="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
+              <div class="flex items-center justify-between mb-1"><span class="text-sm font-medium">${escapeHtml(f.titulo)}</span>${prioridadeBadge(f.prioridade)}</div>
+              <p class="text-xs text-gray-600 dark:text-gray-400">${escapeHtml(f.descricao)}</p>
+              <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-1"><i class="bi bi-check-circle mr-1"></i>${escapeHtml(f.beneficio)}</p>
+            </div>`).join('')}</div>`;
+      }
+
+      if (insights.automacoes?.length) {
+        html += `<h4 class="font-semibold text-sm mb-2 flex items-center gap-2"><i class="bi bi-gear text-purple-500"></i> Automações Sugeridas</h4>
+          <div class="space-y-2 mb-4">${insights.automacoes.map(a => `
+            <div class="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+              <span class="text-sm font-medium">${escapeHtml(a.titulo)}</span>
+              <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">${escapeHtml(a.descricao)}</p>
+              <p class="text-xs text-purple-600 dark:text-purple-400 mt-1"><i class="bi bi-clock mr-1"></i>${escapeHtml(a.gatilho)}</p>
+            </div>`).join('')}</div>`;
+      }
+
+      content.innerHTML = html;
+      modal.classList.remove('hidden');
+    }
+
+    function closeMelhoriasModal() {
+      document.getElementById('melhorias-modal').classList.add('hidden');
     }
 
     window.onAuthReady = function(user) {

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cargos - Lar Digital</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+    }
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen bg-blue-800 text-white transition-transform -translate-x-full md:translate-x-0">
+    <div class="p-4 border-b border-blue-700">
+      <a href="/dashboard.html" class="flex items-center gap-2">
+        <i class="bi bi-clock-history text-2xl"></i>
+        <span class="text-xl font-bold">Lar Digital</span>
+      </a>
+      <p class="text-blue-200 text-xs mt-1">Gestao da Casa</p>
+    </div>
+    <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-180px)]">
+      <a href="/dashboard.html" data-page="dashboard" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+      </a>
+      <a href="/funcionarios.html" data-page="funcionarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-people"></i><span>Funcionários</span>
+      </a>
+      <a href="/cargos.html" data-page="cargos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-briefcase"></i><span>Cargos</span>
+      </a>
+      <a href="/registros.html" data-page="registros" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-clock"></i><span>Registros</span>
+      </a>
+      <a href="/relatorios.html" data-page="relatorios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-file-earmark-text"></i><span>Relatórios</span>
+      </a>
+      <a href="/relatorios-graficos.html" data-page="relatorios-graficos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-bar-chart-line"></i><span>Gráficos</span>
+      </a>
+      <a href="/presenca.html" data-page="presenca" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-calendar-check"></i><span>Presença</span>
+      </a>
+      <a href="/entregas.html" data-page="entregas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-box-seam"></i><span>Entregas</span>
+      </a>
+      <a href="/holerites.html" data-page="holerites" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-receipt"></i><span>Holerites</span>
+      </a>
+      <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-calendar-heart"></i><span>Férias</span>
+      </a>
+      <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-shield-lock"></i><span>Usuários</span>
+      </a>
+      <a href="/feriados.html" data-page="feriados" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-calendar-event"></i><span>Feriados</span>
+      </a>
+      <a href="/insights.html" data-page="insights" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-stars"></i><span>Insights IA</span>
+      </a>
+      <a href="/whatsapp.html" data-page="whatsapp" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
+      </a>
+      <a href="/audit-log.html" data-page="audit-log" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-journal-text"></i><span>Audit Log</span>
+      </a>
+    </nav>
+    <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-blue-700 bg-blue-800">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2 text-sm">
+          <i class="bi bi-person-circle"></i>
+          <div>
+            <div id="user-name" class="font-medium">-</div>
+            <div id="user-role" class="text-blue-300 text-xs">-</div>
+          </div>
+        </div>
+        <button id="theme-toggle" class="p-1.5 rounded-lg hover:bg-blue-700 transition-colors">
+          <i id="theme-icon" class="bi bi-moon-fill"></i>
+        </button>
+      </div>
+      <button id="logout-btn" class="w-full py-1.5 text-sm bg-blue-700 hover:bg-blue-600 rounded-lg transition-colors">Sair</button>
+    </div>
+  </aside>
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+
+  <!-- Main Content -->
+  <main class="md:ml-64 min-h-screen">
+    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+      <div class="flex items-center gap-3">
+        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300">
+          <i class="bi bi-list text-xl"></i>
+        </button>
+        <h1 class="text-xl font-semibold">Cargos</h1>
+      </div>
+      <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
+    </header>
+
+    <div class="p-4 md:p-6" id="page-content">
+      <!-- Action Bar -->
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div class="flex items-center gap-3">
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <input type="checkbox" id="toggle-inativos" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary" onchange="loadCargos()">
+            <span>Mostrar inativos</span>
+          </label>
+          <span class="text-sm text-gray-500 dark:text-gray-400">
+            Total: <span id="total-count" class="font-semibold">0</span> cargos
+          </span>
+        </div>
+        <button onclick="openModal()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
+          <i class="bi bi-plus-lg mr-1"></i>
+          Novo Cargo
+        </button>
+      </div>
+
+      <!-- Cargos Table -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="bg-gray-50 dark:bg-gray-700/50">
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nome</th>
+                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ponto?</th>
+                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Hora Extra?</th>
+                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Dia Extra?</th>
+                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">VT?</th>
+                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">VR?</th>
+                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Combustivel?</th>
+                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Dorme?</th>
+                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acoes</th>
+              </tr>
+            </thead>
+            <tbody id="cargos-table" class="divide-y divide-gray-100 dark:divide-gray-700">
+              <tr>
+                <td colspan="10" class="px-5 py-8 text-center text-gray-400">
+                  <i class="bi bi-arrow-repeat animate-spin text-2xl"></i>
+                  <p class="mt-2">Carregando cargos...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add/Edit Modal -->
+  <div id="cargo-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700 shrink-0">
+        <h3 class="text-lg font-semibold" id="modal-title">Novo Cargo</h3>
+        <button onclick="closeModal()" class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="p-5 space-y-5 overflow-y-auto flex-1">
+        <input type="hidden" id="cargo-id">
+
+        <!-- Nome -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="cargo-nome">Nome do Cargo *</label>
+          <input type="text" id="cargo-nome" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Ex: Motorista, Cozinheira..." required>
+        </div>
+
+        <!-- Ponto e Extras -->
+        <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+          <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Ponto e Extras</h4>
+          <div class="space-y-3">
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" id="cargo-precisa-ponto" checked class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+              <span class="text-sm">Precisa bater ponto</span>
+            </label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="flex items-center gap-3 cursor-pointer mb-2">
+                  <input type="checkbox" id="cargo-permite-hora-extra" checked onchange="toggleField('hora-extra')" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                  <span class="text-sm">Permite hora extra</span>
+                </label>
+                <div id="field-hora-extra">
+                  <input type="number" step="0.01" id="cargo-valor-hora-extra" placeholder="Valor R$" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                </div>
+              </div>
+              <div>
+                <label class="flex items-center gap-3 cursor-pointer mb-2">
+                  <input type="checkbox" id="cargo-permite-dia-extra" onchange="toggleField('dia-extra')" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                  <span class="text-sm">Permite dia extra</span>
+                </label>
+                <div id="field-dia-extra" class="hidden">
+                  <input type="number" step="0.01" id="cargo-valor-dia-extra" placeholder="Valor R$" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Beneficios -->
+        <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+          <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Beneficios</h4>
+          <div class="space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <!-- Vale-Transporte -->
+              <div>
+                <label class="flex items-center gap-3 cursor-pointer mb-2">
+                  <input type="checkbox" id="cargo-recebe-vt" checked onchange="toggleField('vt')" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                  <span class="text-sm">Vale-Transporte</span>
+                </label>
+                <div id="field-vt">
+                  <input type="number" step="0.01" id="cargo-valor-vt" placeholder="Valor R$" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                </div>
+              </div>
+              <!-- Vale-Refeicao -->
+              <div>
+                <label class="flex items-center gap-3 cursor-pointer mb-2">
+                  <input type="checkbox" id="cargo-recebe-vr" onchange="toggleField('vr')" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                  <span class="text-sm">Vale-Refeicao</span>
+                </label>
+                <div id="field-vr" class="hidden">
+                  <input type="number" step="0.01" id="cargo-valor-vr" placeholder="Valor R$" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                </div>
+              </div>
+              <!-- Ajuda Combustivel -->
+              <div>
+                <label class="flex items-center gap-3 cursor-pointer mb-2">
+                  <input type="checkbox" id="cargo-recebe-combustivel" onchange="toggleField('combustivel')" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                  <span class="text-sm">Ajuda Combustivel</span>
+                </label>
+                <div id="field-combustivel" class="hidden">
+                  <input type="number" step="0.01" id="cargo-valor-combustivel" placeholder="Valor R$" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dormida -->
+        <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+          <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Dormida no Local</h4>
+          <label class="flex items-center gap-3 cursor-pointer mb-3">
+            <input type="checkbox" id="cargo-dorme-local" onchange="toggleField('dormida')" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+            <span class="text-sm">Dorme no local de trabalho</span>
+          </label>
+          <div id="field-dormida" class="hidden grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Dias de dormida</label>
+              <input type="number" id="cargo-dias-dormida" min="0" max="31" placeholder="0" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Tipo</label>
+              <select id="cargo-tipo-dormida" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                <option value="semana">Por semana</option>
+                <option value="mes">Por mes</option>
+                <option value="escala">Por escala</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 p-5 border-t border-gray-100 dark:border-gray-700 shrink-0">
+        <button onclick="closeModal()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium">Cancelar</button>
+        <button onclick="saveCargo()" id="btn-save" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
+          <i class="bi bi-check-lg mr-1"></i> Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+  <script src="/js/shared.js"></script>
+  <script>
+    let cargos = [];
+
+    function boolBadge(val) {
+      if (val) return '<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"><i class="bi bi-check-lg text-xs"></i></span>';
+      return '<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500"><i class="bi bi-x-lg text-xs"></i></span>';
+    }
+
+    function statusBadge(ativo) {
+      if (ativo) return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Ativo</span>';
+      return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">Inativo</span>';
+    }
+
+    function toggleField(name) {
+      const checkMap = {
+        'hora-extra': 'cargo-permite-hora-extra',
+        'dia-extra': 'cargo-permite-dia-extra',
+        'vt': 'cargo-recebe-vt',
+        'vr': 'cargo-recebe-vr',
+        'combustivel': 'cargo-recebe-combustivel',
+        'dormida': 'cargo-dorme-local'
+      };
+      const checked = document.getElementById(checkMap[name]).checked;
+      const field = document.getElementById('field-' + name);
+      if (checked) field.classList.remove('hidden');
+      else field.classList.add('hidden');
+    }
+
+    async function loadCargos() {
+      const includeInactive = document.getElementById('toggle-inativos').checked;
+      const tbody = document.getElementById('cargos-table');
+      tbody.innerHTML = '<tr><td colspan="10" class="px-5 py-8 text-center text-gray-400"><i class="bi bi-arrow-repeat animate-spin text-2xl"></i><p class="mt-2">Carregando cargos...</p></td></tr>';
+
+      try {
+        const url = '/api/cargos' + (includeInactive ? '?includeInactive=true' : '');
+        cargos = await Shared.api(url);
+        if (!Array.isArray(cargos)) cargos = [];
+
+        document.getElementById('total-count').textContent = cargos.length;
+
+        if (cargos.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="10" class="px-5 py-12 text-center text-gray-400"><i class="bi bi-briefcase text-3xl"></i><p class="mt-2 font-medium">Nenhum cargo cadastrado</p><p class="text-xs mt-1">Clique em "Novo Cargo" para adicionar.</p></td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = cargos.map(c => `
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+            <td class="px-5 py-3 font-medium">${c.nome}</td>
+            <td class="px-5 py-3 text-center">${boolBadge(c.precisa_bater_ponto)}</td>
+            <td class="px-5 py-3 text-center">${boolBadge(c.permite_hora_extra)}${c.permite_hora_extra && c.valor_hora_extra ? '<br><span class="text-xs text-gray-500">R$ ' + Number(c.valor_hora_extra).toFixed(2) + '</span>' : ''}</td>
+            <td class="px-5 py-3 text-center">${boolBadge(c.permite_dia_extra)}${c.permite_dia_extra && c.valor_dia_extra ? '<br><span class="text-xs text-gray-500">R$ ' + Number(c.valor_dia_extra).toFixed(2) + '</span>' : ''}</td>
+            <td class="px-5 py-3 text-center">${boolBadge(c.recebe_vale_transporte)}${c.recebe_vale_transporte && c.valor_vale_transporte ? '<br><span class="text-xs text-gray-500">R$ ' + Number(c.valor_vale_transporte).toFixed(2) + '</span>' : ''}</td>
+            <td class="px-5 py-3 text-center">${boolBadge(c.recebe_vale_refeicao)}${c.recebe_vale_refeicao && c.valor_vale_refeicao ? '<br><span class="text-xs text-gray-500">R$ ' + Number(c.valor_vale_refeicao).toFixed(2) + '</span>' : ''}</td>
+            <td class="px-5 py-3 text-center">${boolBadge(c.recebe_ajuda_combustivel)}${c.recebe_ajuda_combustivel && c.valor_ajuda_combustivel ? '<br><span class="text-xs text-gray-500">R$ ' + Number(c.valor_ajuda_combustivel).toFixed(2) + '</span>' : ''}</td>
+            <td class="px-5 py-3 text-center">${boolBadge(c.dorme_no_local)}${c.dorme_no_local && c.dias_dormida ? '<br><span class="text-xs text-gray-500">' + c.dias_dormida + ' dias/' + c.tipo_dias_dormida + '</span>' : ''}</td>
+            <td class="px-5 py-3 text-center">${statusBadge(c.ativo)}</td>
+            <td class="px-5 py-3">
+              <div class="flex items-center justify-center gap-1">
+                <button onclick="editCargo(${c.id})" class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors" title="Editar">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button onclick="deleteCargo(${c.id}, '${(c.nome || '').replace(/'/g, "\\'")}')" class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors" title="Desativar">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="10" class="px-5 py-8 text-center text-red-400"><i class="bi bi-exclamation-circle text-3xl"></i><p class="mt-2">${err.message}</p></td></tr>`;
+      }
+    }
+
+    function openModal(cargo) {
+      document.getElementById('modal-title').textContent = cargo ? 'Editar Cargo' : 'Novo Cargo';
+      document.getElementById('cargo-id').value = cargo ? cargo.id : '';
+      document.getElementById('cargo-nome').value = cargo ? cargo.nome : '';
+
+      // Ponto and Extras
+      document.getElementById('cargo-precisa-ponto').checked = cargo ? !!cargo.precisa_bater_ponto : true;
+      document.getElementById('cargo-permite-hora-extra').checked = cargo ? !!cargo.permite_hora_extra : true;
+      document.getElementById('cargo-valor-hora-extra').value = cargo ? (cargo.valor_hora_extra || '') : '';
+      document.getElementById('cargo-permite-dia-extra').checked = cargo ? !!cargo.permite_dia_extra : false;
+      document.getElementById('cargo-valor-dia-extra').value = cargo ? (cargo.valor_dia_extra || '') : '';
+
+      // Benefits
+      document.getElementById('cargo-recebe-vt').checked = cargo ? !!cargo.recebe_vale_transporte : true;
+      document.getElementById('cargo-valor-vt').value = cargo ? (cargo.valor_vale_transporte || '') : '';
+      document.getElementById('cargo-recebe-vr').checked = cargo ? !!cargo.recebe_vale_refeicao : false;
+      document.getElementById('cargo-valor-vr').value = cargo ? (cargo.valor_vale_refeicao || '') : '';
+      document.getElementById('cargo-recebe-combustivel').checked = cargo ? !!cargo.recebe_ajuda_combustivel : false;
+      document.getElementById('cargo-valor-combustivel').value = cargo ? (cargo.valor_ajuda_combustivel || '') : '';
+
+      // Dormida
+      document.getElementById('cargo-dorme-local').checked = cargo ? !!cargo.dorme_no_local : false;
+      document.getElementById('cargo-dias-dormida').value = cargo ? (cargo.dias_dormida || '') : '';
+      document.getElementById('cargo-tipo-dormida').value = cargo ? (cargo.tipo_dias_dormida || 'semana') : 'semana';
+
+      // Toggle visibility of conditional fields
+      toggleField('hora-extra');
+      toggleField('dia-extra');
+      toggleField('vt');
+      toggleField('vr');
+      toggleField('combustivel');
+      toggleField('dormida');
+
+      document.getElementById('cargo-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('cargo-modal').classList.add('hidden');
+    }
+
+    function editCargo(id) {
+      const c = cargos.find(x => x.id === id);
+      if (c) openModal(c);
+    }
+
+    async function saveCargo() {
+      const id = document.getElementById('cargo-id').value;
+      const nome = document.getElementById('cargo-nome').value.trim();
+
+      if (!nome) {
+        showToast('Nome do cargo e obrigatorio.', 'warning');
+        return;
+      }
+
+      const body = {
+        nome,
+        precisa_bater_ponto: document.getElementById('cargo-precisa-ponto').checked ? 1 : 0,
+        permite_hora_extra: document.getElementById('cargo-permite-hora-extra').checked ? 1 : 0,
+        permite_dia_extra: document.getElementById('cargo-permite-dia-extra').checked ? 1 : 0,
+        valor_hora_extra: parseFloat(document.getElementById('cargo-valor-hora-extra').value) || 0,
+        valor_dia_extra: parseFloat(document.getElementById('cargo-valor-dia-extra').value) || 0,
+        recebe_vale_transporte: document.getElementById('cargo-recebe-vt').checked ? 1 : 0,
+        valor_vale_transporte: parseFloat(document.getElementById('cargo-valor-vt').value) || 0,
+        recebe_vale_refeicao: document.getElementById('cargo-recebe-vr').checked ? 1 : 0,
+        valor_vale_refeicao: parseFloat(document.getElementById('cargo-valor-vr').value) || 0,
+        recebe_ajuda_combustivel: document.getElementById('cargo-recebe-combustivel').checked ? 1 : 0,
+        valor_ajuda_combustivel: parseFloat(document.getElementById('cargo-valor-combustivel').value) || 0,
+        dorme_no_local: document.getElementById('cargo-dorme-local').checked ? 1 : 0,
+        dias_dormida: parseInt(document.getElementById('cargo-dias-dormida').value) || 0,
+        tipo_dias_dormida: document.getElementById('cargo-tipo-dormida').value || 'semana'
+      };
+
+      const btn = document.getElementById('btn-save');
+      btn.disabled = true;
+
+      try {
+        if (id) {
+          await Shared.api(`/api/cargos/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+          showToast('Cargo atualizado!');
+        } else {
+          await Shared.api('/api/cargos', { method: 'POST', body: JSON.stringify(body) });
+          showToast('Cargo criado!');
+        }
+        closeModal();
+        await loadCargos();
+      } catch (err) {
+        showToast('Erro: ' + err.message, 'danger');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function deleteCargo(id, nome) {
+      if (!confirm(`Desativar o cargo "${nome}"? Funcionarios com este cargo nao serao afetados.`)) return;
+      try {
+        await Shared.api(`/api/cargos/${id}`, { method: 'DELETE' });
+        showToast('Cargo desativado.');
+        await loadCargos();
+      } catch (err) {
+        showToast('Erro: ' + err.message, 'danger');
+      }
+    }
+
+    // Close modal on backdrop click
+    document.getElementById('cargo-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    window.onAuthReady = function(user) {
+      if (user.role !== 'admin') {
+        window.location.href = '/dashboard.html';
+        return;
+      }
+      loadCargos();
+    };
+  </script>
+</body>
+</html>

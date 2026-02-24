@@ -53,13 +53,15 @@ class GoogleCalendarService {
     let added = 0;
     let updated = 0;
 
-    const findStmt = db.prepare('SELECT id FROM feriados WHERE data = ?');
-    const insertStmt = db.prepare('INSERT INTO feriados (data, descricao, tipo, ano) VALUES (?, ?, ?, ?)');
+    const findStmt = db.prepare('SELECT id, manual FROM feriados WHERE data = ?');
+    const insertStmt = db.prepare('INSERT INTO feriados (data, descricao, tipo, ano, manual) VALUES (?, ?, ?, ?, 0)');
     const updateStmt = db.prepare('UPDATE feriados SET descricao = ? WHERE id = ?');
 
     for (const holiday of relevantHolidays) {
       const existing = findStmt.get(holiday.date);
       if (existing) {
+        // Never overwrite manually edited holidays
+        if (existing.manual) continue;
         updateStmt.run(holiday.name, existing.id);
         updated++;
       } else {

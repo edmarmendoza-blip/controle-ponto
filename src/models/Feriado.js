@@ -16,10 +16,10 @@ class Feriado {
     return db.prepare('SELECT * FROM feriados WHERE data = ?').get(data) || null;
   }
 
-  static create({ data, descricao, tipo, ano, recorrente = 1 }) {
+  static create({ data, descricao, tipo, ano, recorrente = 1, manual = 1 }) {
     const result = db.prepare(
-      'INSERT INTO feriados (data, descricao, tipo, ano, recorrente) VALUES (?, ?, ?, ?, ?)'
-    ).run(data, descricao, tipo, ano, recorrente ? 1 : 0);
+      'INSERT INTO feriados (data, descricao, tipo, ano, recorrente, manual) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(data, descricao, tipo, ano, recorrente ? 1 : 0, manual ? 1 : 0);
     return result.lastInsertRowid;
   }
 
@@ -33,6 +33,9 @@ class Feriado {
         values.push(value);
       }
     }
+    // Mark as manual when user edits
+    fields.push('manual = ?');
+    values.push(1);
     if (fields.length === 0) return null;
     values.push(id);
     return db.prepare(`UPDATE feriados SET ${fields.join(', ')} WHERE id = ?`).run(...values);

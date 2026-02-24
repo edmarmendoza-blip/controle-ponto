@@ -30,6 +30,9 @@
       <a href="/funcionarios.html" data-page="funcionarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
         <i class="bi bi-people"></i><span>Funcionários</span>
       </a>
+      <a href="/cargos.html" data-page="cargos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-briefcase"></i><span>Cargos</span>
+      </a>
       <a href="/registros.html" data-page="registros" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
         <i class="bi bi-clock"></i><span>Registros</span>
       </a>
@@ -179,7 +182,7 @@
       </div>
 
       <!-- Gallery View -->
-      <div id="entregas-gallery" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div id="entregas-gallery" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div class="col-span-full text-center py-12 text-gray-400">
           <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
             <i class="bi bi-box-seam text-3xl text-gray-400 dark:text-gray-500"></i>
@@ -266,40 +269,63 @@
         gallery.innerHTML = messages.map(m => {
           const time = (m.created_at || '').split(' ')[1] || '';
           const timeStr = time ? time.substring(0, 5) : '';
+          const dateStr = (m.created_at || '').split(' ')[0] || '';
           const sender = m.funcionario_nome || m.sender_name || 'Desconhecido';
-          const text = m.message_text && m.message_text !== '<Mídia oculta>' ? m.message_text : '';
+          const rawText = m.message_text && m.message_text !== '<Mídia oculta>' ? m.message_text : '';
           const isImage = m.media_type === 'image' && m.media_path;
-          const isVideo = m.media_type === 'video';
-          const isAudio = m.media_type === 'audio';
+
+          // Extract AI analysis if present
+          const aiMatch = rawText.match(/\[Análise IA\]:\s*(.*)/s);
+          const aiText = aiMatch ? aiMatch[1].trim() : '';
+          const userText = rawText.replace(/\n?\n?\[Análise IA\]:.*$/s, '').trim();
 
           const mediaBadge = m.media_type === 'image' ? '<i class="bi bi-image text-blue-500"></i>'
             : m.media_type === 'video' ? '<i class="bi bi-camera-video text-red-500"></i>'
             : m.media_type === 'audio' ? '<i class="bi bi-mic text-green-500"></i>'
             : '<i class="bi bi-file-earmark text-gray-500"></i>';
 
+          const escapedSender = sender.replace(/'/g, "\\'");
           return `
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
               ${isImage ? `
-                <div class="relative cursor-pointer group" onclick="openLightbox('${m.media_path}', '${sender} - ${timeStr}')">
-                  <img src="${m.media_path}" alt="Foto de ${sender}" class="w-full h-48 object-cover" loading="lazy">
+                <div class="relative cursor-pointer group" onclick="openLightbox('${m.media_path}', '${escapedSender} - ${dateStr} ${timeStr}')">
+                  <img src="${m.media_path}" alt="Foto de ${sender}" class="w-full h-52 object-cover" loading="lazy">
                   <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                     <i class="bi bi-zoom-in text-white text-2xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
                   </div>
+                  <div class="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full">${timeStr}</div>
                 </div>
               ` : `
-                <div class="w-full h-48 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                <div class="w-full h-52 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
                   <div class="text-center">
                     <div class="text-4xl mb-2">${mediaBadge}</div>
                     <span class="text-sm text-gray-500">${m.media_type || 'mídia'}</span>
                   </div>
                 </div>
               `}
-              <div class="p-3">
-                <div class="flex items-center justify-between mb-1">
-                  <span class="text-sm font-medium">${sender}</span>
-                  <span class="text-xs text-gray-500 dark:text-gray-400">${timeStr}</span>
+              <div class="p-4">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                      <i class="bi bi-person-fill text-blue-600 dark:text-blue-400 text-xs"></i>
+                    </div>
+                    <span class="text-sm font-medium">${sender}</span>
+                  </div>
+                  <span class="text-xs text-gray-400">${dateStr}</span>
                 </div>
-                ${text ? `<p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mt-1">${text}</p>` : ''}
+                ${userText ? `<p class="text-xs text-gray-600 dark:text-gray-400 mb-2">${userText}</p>` : ''}
+                ${aiText ? `
+                  <div class="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-100 dark:border-purple-800 mb-2">
+                    <p class="text-xs text-purple-700 dark:text-purple-300"><i class="bi bi-stars mr-1"></i>${aiText}</p>
+                  </div>
+                ` : ''}
+                <div id="entrega-info-${m.id}" class="entrega-info"></div>
+                ${isImage ? `
+                  <button onclick="analyzeEntrega(${m.id})" id="btn-analyze-${m.id}" class="w-full mt-2 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 rounded-lg transition-colors border border-emerald-200 dark:border-emerald-800">
+                    <i class="bi bi-search"></i>
+                    <span>Extrair Detalhes (OCR)</span>
+                  </button>
+                ` : ''}
               </div>
             </div>`;
         }).join('');
@@ -326,6 +352,36 @@
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') closeLightbox();
     });
+
+    async function analyzeEntrega(msgId) {
+      const btn = document.getElementById('btn-analyze-' + msgId);
+      if (!btn) return;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> <span>Analisando...</span>';
+
+      try {
+        const data = await Shared.api(`/api/whatsapp/messages/${msgId}/analyze-entrega`, { method: 'POST' });
+        const info = data.entrega;
+        const infoEl = document.getElementById('entrega-info-' + msgId);
+        if (infoEl && info) {
+          let html = '<div class="space-y-1 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">';
+          if (info.destinatario) html += `<div class="flex items-center gap-2 text-xs"><i class="bi bi-person text-blue-500"></i><span class="text-gray-500">Para:</span><span class="font-medium">${info.destinatario}</span></div>`;
+          if (info.remetente) html += `<div class="flex items-center gap-2 text-xs"><i class="bi bi-send text-green-500"></i><span class="text-gray-500">De:</span><span class="font-medium">${info.remetente}</span></div>`;
+          if (info.transportadora) html += `<div class="flex items-center gap-2 text-xs"><i class="bi bi-truck text-orange-500"></i><span class="text-gray-500">Transp.:</span><span class="font-medium">${info.transportadora}</span></div>`;
+          if (info.descricao) html += `<div class="text-xs text-gray-600 dark:text-gray-400 mt-1">${info.descricao}</div>`;
+          html += '</div>';
+          infoEl.innerHTML = html;
+        }
+        btn.innerHTML = '<i class="bi bi-check-lg"></i> <span>Analisado</span>';
+        btn.classList.remove('text-emerald-700', 'bg-emerald-50', 'hover:bg-emerald-100', 'border-emerald-200');
+        btn.classList.add('text-gray-500', 'bg-gray-50', 'border-gray-200');
+      } catch (err) {
+        btn.innerHTML = '<i class="bi bi-exclamation-circle"></i> <span>Erro</span>';
+        Shared.showToast('Erro ao analisar: ' + err.message, 'danger');
+      } finally {
+        btn.disabled = false;
+      }
+    }
 
     window.onAuthReady = function(user) {
       if (user.role !== 'admin') {

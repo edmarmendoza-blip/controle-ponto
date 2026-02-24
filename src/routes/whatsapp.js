@@ -162,4 +162,69 @@ router.post('/messages/:id/analyze', authenticateToken, async (req, res) => {
   }
 });
 
+// POST /api/whatsapp/messages/:id/analyze-entrega - Analyze image for delivery info (OCR/Vision)
+router.post('/messages/:id/analyze-entrega', authenticateToken, async (req, res) => {
+  try {
+    const msg = db.prepare('SELECT * FROM whatsapp_mensagens WHERE id = ?').get(req.params.id);
+    if (!msg) return res.status(404).json({ error: 'Mensagem não encontrada' });
+    if (msg.media_type !== 'image') return res.status(400).json({ error: 'Apenas imagens podem ser analisadas' });
+    if (!msg.media_path) return res.status(400).json({ error: 'Arquivo de mídia não encontrado' });
+
+    const filePath = require('path').join(__dirname, '..', '..', 'public', msg.media_path);
+    const fs = require('fs');
+    if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Arquivo não existe no disco' });
+
+    if (!process.env.ANTHROPIC_API_KEY) return res.status(500).json({ error: 'ANTHROPIC_API_KEY não configurada' });
+
+    const imageData = fs.readFileSync(filePath).toString('base64');
+    const ext = msg.media_path.split('.').pop().toLowerCase();
+    const mimeMap = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp' };
+    const mimetype = mimeMap[ext] || 'image/jpeg';
+
+    const Anthropic = require('@anthropic-ai/sdk');
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+    const response = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 500,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: mimetype, data: imageData } },
+          { type: 'text', text: `Analise esta foto de entrega/encomenda recebida em uma residência.
+${msg.message_text ? `Legenda: "${msg.message_text}"` : ''}
+
+Extraia as seguintes informações se visíveis na foto ou embalagem:
+- Destinatário (para quem é)
+- Remetente (quem enviou)
+- Transportadora (empresa de entrega: Correios, Sedex, Jadlog, Mercado Livre, Amazon, etc.)
+- Descrição do que aparece na foto
+
+Retorne APENAS JSON válido (sem markdown):
+{"destinatario": "nome ou null", "remetente": "nome ou null", "transportadora": "nome ou null", "descricao": "descrição breve da foto"}` }
+        ]
+      }]
+    });
+
+    const content = response.content[0]?.text || '';
+    let entregaInfo;
+    try {
+      const cleaned = content.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+      entregaInfo = JSON.parse(cleaned);
+    } catch (e) {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        entregaInfo = JSON.parse(jsonMatch[0]);
+      } else {
+        entregaInfo = { destinatario: null, remetente: null, transportadora: null, descricao: content.substring(0, 200) };
+      }
+    }
+
+    res.json({ success: true, entrega: entregaInfo });
+  } catch (err) {
+    console.error('[WhatsApp] Analyze entrega error:', err.message);
+    res.status(500).json({ error: 'Erro ao analisar entrega: ' + err.message });
+  }
+});
+
 module.exports = router;

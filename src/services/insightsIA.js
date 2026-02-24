@@ -293,6 +293,123 @@ Responda SOMENTE com JSON, sem texto adicional.`;
     };
   }
 
+  static async generateMelhoriasInsights() {
+    const client = this.getClient();
+
+    // Gather system usage stats
+    const totalFuncionarios = db.prepare('SELECT COUNT(*) as cnt FROM funcionarios WHERE status = ?').get('ativo')?.cnt || 0;
+    const totalRegistros = db.prepare('SELECT COUNT(*) as cnt FROM registros').get()?.cnt || 0;
+    const totalMensagens = db.prepare('SELECT COUNT(*) as cnt FROM whatsapp_mensagens').get()?.cnt || 0;
+    const totalInsights = db.prepare('SELECT COUNT(*) as cnt FROM insights_ia').get()?.cnt || 0;
+    const totalFeriados = db.prepare('SELECT COUNT(*) as cnt FROM feriados').get()?.cnt || 0;
+    const totalUsers = db.prepare('SELECT COUNT(*) as cnt FROM users').get()?.cnt || 0;
+
+    // Recent activity (last 30 days)
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const recentRegistros = db.prepare('SELECT COUNT(*) as cnt FROM registros WHERE data >= ?').get(thirtyDaysAgo)?.cnt || 0;
+    const recentMensagens = db.prepare("SELECT COUNT(*) as cnt FROM whatsapp_mensagens WHERE created_at >= ?").get(thirtyDaysAgo)?.cnt || 0;
+
+    // Employees with incomplete data
+    const withoutPhone = db.prepare("SELECT COUNT(*) as cnt FROM funcionarios WHERE status = 'ativo' AND (telefone IS NULL OR telefone = '')").get()?.cnt || 0;
+    const withoutAdmissao = db.prepare("SELECT COUNT(*) as cnt FROM funcionarios WHERE status = 'ativo' AND data_admissao IS NULL").get()?.cnt || 0;
+    const withoutJornada = db.prepare("SELECT COUNT(*) as cnt FROM funcionarios WHERE status = 'ativo' AND (jornada_texto IS NULL OR jornada_texto = '')").get()?.cnt || 0;
+
+    // Registros without saída
+    const openRegistros = db.prepare("SELECT COUNT(*) as cnt FROM registros WHERE saida IS NULL AND entrada IS NOT NULL AND data >= ?").get(thirtyDaysAgo)?.cnt || 0;
+
+    // WhatsApp status
+    const whatsappEnabled = db.prepare("SELECT valor FROM configuracoes WHERE chave = 'whatsapp_enabled'").get();
+
+    const employees = Funcionario.getAll();
+    const employeeList = employees.map(e => `${e.nome} (${e.cargo || 'sem cargo'}, classificacao: ${e.classificacao || 'N/A'})`).join(', ');
+
+    const prompt = `Você é um consultor de sistemas de gestão de RH. Analise o uso do sistema "Lar Digital" (gestão de funcionários domésticos) e sugira melhorias de funcionalidades e novas features.
+
+DADOS DO SISTEMA:
+- Funcionários ativos: ${totalFuncionarios}
+- Funcionários: ${employeeList}
+- Total de registros de ponto: ${totalRegistros} (${recentRegistros} nos últimos 30 dias)
+- Total de mensagens WhatsApp: ${totalMensagens} (${recentMensagens} nos últimos 30 dias)
+- Insights IA gerados: ${totalInsights}
+- Feriados cadastrados: ${totalFeriados}
+- Usuários do sistema: ${totalUsers}
+- WhatsApp integração: ${whatsappEnabled?.valor === 'true' ? 'Ativa' : 'Inativa'}
+
+PROBLEMAS DETECTADOS:
+- Funcionários sem telefone cadastrado: ${withoutPhone}
+- Funcionários sem data de admissão: ${withoutAdmissao}
+- Funcionários sem jornada definida: ${withoutJornada}
+- Registros de ponto sem saída (últimos 30 dias): ${openRegistros}
+
+FUNCIONALIDADES ATUAIS:
+- Dashboard com resumo do dia
+- CRUD de funcionários (8 abas: dados pessoais, classificação, jornada, benefícios, VT, VA, PIX, comunicação)
+- Registros de ponto (manual + WhatsApp)
+- Relatórios mensais
+- Feriados (SP 2026 + sync Google Calendar)
+- WhatsApp bot (detecção de entrada/saída)
+- Insights IA diários e por período
+- Gráficos (horas, extras, presença)
+- Holerites
+- Férias
+- Audit log
+- 2FA
+
+Retorne APENAS JSON válido (sem markdown) com esta estrutura:
+{
+  "resumo": "Avaliação geral do uso do sistema em 2-3 frases",
+  "dados_incompletos": [
+    {"problema": "descrição", "impacto": "alto|medio|baixo", "solucao": "como resolver"}
+  ],
+  "melhorias_existentes": [
+    {"funcionalidade": "nome", "melhoria": "descrição da melhoria", "prioridade": "alta|media|baixa", "esforco": "baixo|medio|alto"}
+  ],
+  "novas_features": [
+    {"titulo": "nome da feature", "descricao": "descrição detalhada", "beneficio": "como ajuda o usuario", "prioridade": "alta|media|baixa"}
+  ],
+  "automacoes": [
+    {"titulo": "nome", "descricao": "o que automatizar", "gatilho": "quando executar"}
+  ]
+}
+
+Máximo 5 itens por array. Foque em melhorias práticas para gestão doméstica.
+Responda SOMENTE com JSON, sem texto adicional.`;
+
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 4096,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const content = response.content[0].text.trim();
+    let insights;
+    let cleaned = content.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+    try {
+      insights = JSON.parse(cleaned);
+    } catch (e) {
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          insights = JSON.parse(jsonMatch[0]);
+        } catch (e2) {
+          let fixed = jsonMatch[0].replace(/,\s*([\]}])/g, '$1').replace(/[\x00-\x1f]/g, ' ');
+          insights = JSON.parse(fixed);
+        }
+      } else {
+        throw new Error('Resposta da IA não é um JSON válido');
+      }
+    }
+
+    const key = `melhorias_${new Date().toISOString().split('T')[0]}`;
+    this.saveInsight(key, JSON.stringify(insights), 0, 'claude-sonnet-4-6');
+
+    return {
+      success: true,
+      tipo: 'melhorias',
+      insights,
+    };
+  }
+
   static getAll(page = 1, limit = 10) {
     const offset = (page - 1) * limit;
     const total = db.prepare('SELECT COUNT(*) as count FROM insights_ia').get().count;
