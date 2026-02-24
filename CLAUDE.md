@@ -192,11 +192,12 @@ APP_NAME=Lar Digital
 8. **Feriados** - SP 2026, sync auto, CRUD manual (manual=true prevalece)
 9. **WhatsApp** - QR Code, status, reconectar, parser inteligente
 10. **Entregas** - Cards com thumbnail, upload manual com foto, confirmação WhatsApp (SIM/NÃO)
-11. **Insights IA** - Operacional + Melhorias (admin only)
-12. **Usuários** - CRUD, roles, excluir com confirmação, reenviar senha (admin only)
-13. **Audit Log** - Log de ações (admin only)
-14. **Log de Acessos** - Login/logout/falhas com IP e navegador (admin only, bi-door-open)
-15. **Perfil** - Editar dados, trocar senha, 2FA
+11. **Tarefas** - CRUD, multi-assign funcionários, prioridade/prazo, integração WhatsApp
+12. **Insights IA** - Operacional + Melhorias (admin only)
+13. **Usuários** - CRUD, roles, permissões tarefas, excluir com confirmação, reenviar senha (admin only)
+14. **Audit Log** - Log de ações (admin only)
+15. **Log de Acessos** - Login/logout/falhas com IP e navegador (admin only, bi-door-open)
+16. **Perfil** - Editar dados, trocar senha, 2FA
 
 ## CADASTRO DE CARGOS
 nome, precisa_bater_ponto, permite_hora_extra, permite_dia_extra,
@@ -208,8 +209,17 @@ ativo, created_at, updated_at
 ## CADASTRO DE FUNCIONÁRIO
 ### Dados Pessoais
 nome, cargo_id (FK→cargos), telefone, email_pessoal, foto
+### Documentos
+cpf, rg, data_nascimento
 ### Status
 classificacao, status (ativo|desligado), data_admissao, data_desligamento
+### Datas de Trabalho
+data_inicio_trabalho, data_inicio_registro_carteira
+### Endereço
+endereco_cep, endereco_rua, endereco_numero, endereco_complemento,
+endereco_bairro, endereco_cidade, endereco_estado
+### Contatos Adicionais
+telefone_contato2, telefone_emergencia, nome_contato_emergencia
 ### Benefícios (herda do cargo, editável)
 contabiliza_hora_extra, recebe_vt, recebe_va, contabiliza_feriado,
 valor_hora_extra, valor_dia_extra, recebe_ajuda_combustivel, valor_ajuda_combustivel
@@ -219,11 +229,13 @@ Texto livre ou JSON: dias_semana, entrada, saída, carga diária
 ### VA: tem_vale_alimentacao, valor_va_dia
 ### PIX: pix_tipo, pix_chave, pix_banco
 ### Férias: período aquisitivo auto, status, alertas 60/30/7 dias
+### Foto: upload via POST /api/funcionarios/:id/foto (multer, max 10MB, salva em /public/uploads/funcionarios/)
 
 ## TABELAS DO BANCO
 users, funcionarios, cargos, registros, feriados (com manual boolean),
 funcionario_transportes, entregas, holerites, email_logs,
-audit_log, access_log, ferias, pending_confirmations
+audit_log, access_log, ferias, pending_confirmations,
+tarefas, tarefa_funcionarios, whatsapp_chats
 
 ## ENTREGAS - FLUXO COMPLETO
 ### Via WhatsApp (automático com confirmação):
@@ -334,6 +346,70 @@ NÃO usar parser manual de palavras-chave. Usar IA para interpretar.
 
 ## FERIADOS SP 2026
 01/01, 25/01, 17/02, 03/04, 21/04, 01/05, 04/06, 09/07, 07/09, 12/10, 02/11, 15/11, 20/11, 25/12
+
+## VERSÃO DO SISTEMA
+- Arquivo: `version.json` na raiz do projeto
+- Endpoint: GET `/api/version` (retorna {version, date, env})
+- Exibida no rodapé do index.html (canto inferior direito) e no copyright do login.html
+- Formato de exibição: "v2.0.0 | Sandbox | 24/02/2026" (versão | ambiente capitalizado | data DD/MM/YYYY)
+- Versão atual: 2.0.0
+
+## REGISTROS DE PONTO - FILTROS
+- Filtro por mês/ano (dropdown) ou período manual (data início/fim)
+- Toggle automático: ao selecionar mês, desabilita inputs manuais e vice-versa
+- Filtro por funcionário (dropdown)
+- Filtro por tipo: Todos | Entrada/Saída | Almoço (filtra client-side pela observação)
+- Badges coloridos: Saída Almoço (amarelo), Retorno Almoço (amarelo), Entrada (verde), Saída (vermelho), Completo (azul)
+- Badge secundário de fonte: WA (whatsapp) ou Manual
+
+## FOLHA DE PAGAMENTO - LABELS
+- "Total extras do mês" (não "Total a pagar") — indica que são valores adicionais ao salário base
+- Nota explicativa: "Valores adicionais ao salário base. Não inclui salário fixo."
+- "Total Extras Geral" para soma de todos funcionários
+
+## TAREFAS
+### Tabelas
+- `tarefas` (id, titulo, descricao, prioridade [alta|media|baixa], prazo, criado_por FK→users, status [pendente|em_andamento|concluida|cancelada], fonte [web|whatsapp], created_at, updated_at)
+- `tarefa_funcionarios` (id, tarefa_id FK→tarefas, funcionario_id FK→funcionarios, status [pendente|em_andamento|concluida], concluida_em)
+
+### API Endpoints
+- GET /api/tarefas — lista com filtros (status, prioridade, funcionarioId)
+- GET /api/tarefas/:id — detalhes com funcionários
+- POST /api/tarefas — criar (requer admin/gestor ou pode_criar_tarefas)
+- PUT /api/tarefas/:id — editar
+- DELETE /api/tarefas/:id — excluir
+- PUT /api/tarefas/:id/funcionario/:funcId/status — atualizar status individual
+
+### Regras
+- Tarefa auto-marca "concluida" quando todos os funcionários completam
+- WhatsApp: notifica funcionários ao criar (mensagem privada)
+- WhatsApp: detecta "tarefa concluída/terminei tarefa" no grupo → marca pendente mais antiga
+- WhatsApp: usuários com pode_criar_tarefas_whatsapp podem criar tarefas por msg privada
+- Permissões: admin/gestor sempre podem; viewers precisam flag pode_criar_tarefas
+
+### Frontend
+- Página com filtros (status, prioridade, funcionário), cards com prioridade colorida
+- Modal CRUD: titulo, descrição, prioridade, prazo, status, funcionários (multi-select)
+- Ações inline: marcar concluída, editar, excluir
+
+## CHAT WHATSAPP DIRETO
+### Tabela
+- `whatsapp_chats` (id, funcionario_id FK→funcionarios, direcao [enviada|recebida], tipo [text|image|audio|video|document], conteudo, media_path, whatsapp_msg_id, created_at)
+
+### API Endpoints
+- GET /api/whatsapp/chat/:funcionario_id — histórico de mensagens
+- POST /api/whatsapp/chat/:funcionario_id/send — enviar texto
+- POST /api/whatsapp/chat/:funcionario_id/send-media — enviar mídia (multer upload)
+
+### Frontend
+- Botão "Chat" nos cards de funcionários (bi-chat-dots-fill)
+- Modal de chat: histórico de mensagens, input de texto, botão enviar, upload de mídia
+- Normalização de telefone: adiciona 55 se necessário, @c.us suffix
+
+## PERMISSÕES DE TAREFAS (tabela users)
+- telefone TEXT — telefone do usuário para matching WhatsApp
+- pode_criar_tarefas INTEGER DEFAULT 0 — permite criar tarefas via web
+- pode_criar_tarefas_whatsapp INTEGER DEFAULT 0 — permite criar tarefas via WhatsApp DM
 
 ## COMANDOS ÚTEIS
 ```bash

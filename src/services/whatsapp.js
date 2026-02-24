@@ -217,11 +217,18 @@ class WhatsAppService {
   }
 
   async onMessage(msg) {
-    // Only process messages from our target group
-    if (!this.groupId || msg.from !== this.groupId) return;
-
     // Ignore messages from the bot itself
     if (msg.fromMe) return;
+
+    // Handle private messages (for task creation and chat)
+    const isPrivate = !msg.from.endsWith('@g.us');
+    if (isPrivate) {
+      await this.onPrivateMessage(msg);
+      return;
+    }
+
+    // Only process group messages from our target group
+    if (!this.groupId || msg.from !== this.groupId) return;
 
     const contact = await msg.getContact();
     const senderPhone = contact.number || '';
@@ -438,6 +445,28 @@ class WhatsAppService {
         console.log(`[WhatsApp] Delivery confirmation requested from ${senderName}`);
       } catch (err) {
         console.error('[WhatsApp] Error requesting entrega confirmation:', err.message);
+      }
+    }
+
+    // Check for task completion messages in group
+    if (text && funcionario) {
+      const taskDoneMatch = /tarefa\s+conclu[ií]da|terminei\s+(?:a\s+)?tarefa|tarefa\s+(?:feita|pronta|finalizada)/i.test(text);
+      if (taskDoneMatch) {
+        try {
+          const pendingTasks = db.prepare(`
+            SELECT tf.tarefa_id, t.titulo FROM tarefa_funcionarios tf
+            JOIN tarefas t ON tf.tarefa_id = t.id
+            WHERE tf.funcionario_id = ? AND tf.status != 'concluida' AND t.status != 'cancelada'
+            ORDER BY t.prazo ASC NULLS LAST LIMIT 1
+          `).get(funcionario.id);
+          if (pendingTasks) {
+            const Tarefa = require('../models/Tarefa');
+            Tarefa.updateFuncionarioStatus(pendingTasks.tarefa_id, funcionario.id, 'concluida');
+            await this.sendGroupMessage(`✅ Tarefa "${pendingTasks.titulo}" marcada como concluída para ${funcionario.nome}!`);
+          }
+        } catch (e) {
+          console.error('[WhatsApp] Task completion error:', e.message);
+        }
       }
     }
 
@@ -859,6 +888,171 @@ Ao final da sua resposta, inclua um bloco JSON no formato:
     } catch (err) {
       console.error('[WhatsApp] Vision analysis error:', err.message);
       return null;
+    }
+  }
+
+  // Handle private messages (task creation + chat storage)
+  async onPrivateMessage(msg) {
+    try {
+      const contact = await msg.getContact();
+      const senderPhone = contact.number || '';
+      const senderName = contact.pushname || contact.name || '';
+      const text = (msg.body || '').trim();
+
+      // Find matching user by phone
+      const user = db.prepare("SELECT * FROM users WHERE telefone IS NOT NULL AND telefone != '' AND ? LIKE '%' || REPLACE(REPLACE(REPLACE(telefone, '(', ''), ')', ''), '-', '') || '%'").get(senderPhone);
+
+      // Find matching funcionario for chat storage
+      const func = this.matchEmployee(senderPhone, senderName);
+
+      // Store as chat message if we can match a funcionario
+      if (func) {
+        let tipo = 'texto';
+        let mediaPath = null;
+        if (msg.hasMedia) {
+          try {
+            const media = await msg.downloadMedia();
+            if (media) {
+              const fs = require('fs');
+              const path = require('path');
+              const uploadDir = path.join(__dirname, '..', '..', 'public', 'uploads', 'chat');
+              fs.mkdirSync(uploadDir, { recursive: true });
+              const ext = media.mimetype.split('/')[1]?.split(';')[0] || 'bin';
+              const filename = `recv-${func.id}-${Date.now()}.${ext}`;
+              fs.writeFileSync(path.join(uploadDir, filename), Buffer.from(media.data, 'base64'));
+              mediaPath = `/uploads/chat/${filename}`;
+              tipo = media.mimetype.startsWith('image') ? 'foto' : media.mimetype.startsWith('audio') ? 'audio' : 'arquivo';
+            }
+          } catch (e) {
+            console.error('[WhatsApp] Private media download error:', e.message);
+          }
+        }
+        db.prepare(`
+          INSERT INTO whatsapp_chats (funcionario_id, direcao, tipo, conteudo, media_path)
+          VALUES (?, 'recebida', ?, ?, ?)
+        `).run(func.id, tipo, text || '', mediaPath);
+      }
+
+      // Check if user has task creation permission
+      const canCreate = user && (user.role === 'admin' || user.pode_criar_tarefas_whatsapp);
+      if (!canCreate) {
+        if (text && text.length > 3) {
+          // Only reply about permissions if it looks like a task command
+          const looksLikeTask = /\btarefa\b|faz|levar?|comprar?|limpar?|arrumar?|amanhã|hoje/i.test(text);
+          if (looksLikeTask) {
+            await msg.reply('Você não tem permissão para criar tarefas via WhatsApp.');
+          }
+        }
+        return;
+      }
+
+      // Process task creation via AI
+      if (!text && !msg.hasMedia) return;
+
+      let taskContent = text;
+      let fonte = 'whatsapp_texto';
+
+      // Handle audio: describe it
+      if (msg.hasMedia && !text) {
+        const media = msg.hasMedia ? await msg.downloadMedia().catch(() => null) : null;
+        if (media && media.mimetype.startsWith('audio')) {
+          fonte = 'whatsapp_audio';
+          taskContent = '[Áudio recebido - transcrição não disponível]';
+        } else if (media && media.mimetype.startsWith('image')) {
+          fonte = 'whatsapp_foto';
+          // Use Vision API if available
+          if (process.env.ANTHROPIC_API_KEY && media) {
+            try {
+              const Anthropic = require('@anthropic-ai/sdk');
+              const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+              const resp = await client.messages.create({
+                model: 'claude-haiku-4-5-20251001',
+                max_tokens: 300,
+                messages: [{ role: 'user', content: [
+                  { type: 'image', source: { type: 'base64', media_type: media.mimetype, data: media.data } },
+                  { type: 'text', text: 'Descreva brevemente esta imagem em português para criar uma tarefa. Máx 1 frase.' }
+                ]}]
+              });
+              taskContent = resp.content[0]?.text || 'Tarefa com foto';
+            } catch (e) {
+              taskContent = 'Tarefa com foto anexada';
+            }
+          } else {
+            taskContent = 'Tarefa com foto anexada';
+          }
+        }
+      }
+
+      if (!taskContent || taskContent.length < 3) return;
+
+      // Use AI to parse the task
+      if (!process.env.ANTHROPIC_API_KEY) {
+        await msg.reply('API de IA não configurada. Não é possível interpretar tarefas.');
+        return;
+      }
+
+      const allFuncionarios = Funcionario.getAll();
+      const funcNames = allFuncionarios.map(f => f.nome).join(', ');
+
+      const Anthropic = require('@anthropic-ai/sdk');
+      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+      const resp = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 300,
+        messages: [{ role: 'user', content: `Interprete esta mensagem como uma tarefa doméstica. Funcionários disponíveis: ${funcNames}.
+Hoje é ${new Date().toISOString().split('T')[0]}.
+
+Mensagem: "${taskContent}"
+
+Retorne APENAS JSON válido (sem markdown):
+{"titulo": "título curto da tarefa", "descricao": "descrição ou null", "funcionario": "nome do funcionário ou null", "prazo": "YYYY-MM-DD ou null", "prioridade": "alta|media|baixa"}` }]
+      });
+
+      let parsed;
+      try {
+        const raw = resp.content[0]?.text || '';
+        const cleaned = raw.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+        parsed = JSON.parse(cleaned);
+      } catch (e) {
+        await msg.reply('Não consegui interpretar a tarefa. Tente ser mais específico.');
+        return;
+      }
+
+      // Find matching funcionario
+      let assignedFunc = null;
+      if (parsed.funcionario) {
+        assignedFunc = allFuncionarios.find(f =>
+          f.nome.toLowerCase().includes(parsed.funcionario.toLowerCase()) ||
+          parsed.funcionario.toLowerCase().includes(f.nome.toLowerCase().split(' ')[0])
+        );
+      }
+
+      // Create the task
+      const Tarefa = require('../models/Tarefa');
+      const tarefaId = Tarefa.create({
+        titulo: parsed.titulo || taskContent.substring(0, 100),
+        descricao: parsed.descricao || null,
+        prioridade: parsed.prioridade || 'media',
+        prazo: parsed.prazo || null,
+        criado_por: user.id,
+        fonte: fonte,
+        funcionario_ids: assignedFunc ? [assignedFunc.id] : []
+      });
+
+      const funcLabel = assignedFunc ? assignedFunc.nome : 'Ninguém atribuído';
+      const prazoLabel = parsed.prazo ? parsed.prazo.split('-').reverse().join('/') : 'Sem prazo';
+      await msg.reply(`✅ Tarefa #${tarefaId} criada:\n📋 ${parsed.titulo}\n👤 ${funcLabel}\n📅 ${prazoLabel}`);
+
+      // Notify assigned employee
+      if (assignedFunc && assignedFunc.telefone) {
+        const phone = assignedFunc.telefone.replace(/\D/g, '');
+        const chatId = phone.startsWith('55') ? phone + '@c.us' : '55' + phone + '@c.us';
+        this.client.sendMessage(chatId, `📋 Nova tarefa: ${parsed.titulo}${parsed.prazo ? ' - Prazo: ' + prazoLabel : ''}`).catch(() => {});
+      }
+
+      console.log(`[WhatsApp] Task #${tarefaId} created via private message from ${senderName}`);
+    } catch (err) {
+      console.error('[WhatsApp] Private message error:', err.message);
     }
   }
 

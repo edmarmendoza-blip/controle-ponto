@@ -227,4 +227,129 @@ Retorne APENAS JSON válido (sem markdown):
   }
 });
 
+// ============================================================
+// CHAT DIRETO - Private messaging with employees
+// ============================================================
+
+// GET /api/whatsapp/chat/:funcionario_id - Get chat history
+router.get('/chat/:funcionario_id', authenticateToken, (req, res) => {
+  try {
+    const funcId = parseInt(req.params.funcionario_id);
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = parseInt(req.query.offset) || 0;
+
+    const messages = db.prepare(`
+      SELECT * FROM whatsapp_chats
+      WHERE funcionario_id = ?
+      ORDER BY created_at ASC
+      LIMIT ? OFFSET ?
+    `).all(funcId, limit, offset);
+
+    const total = db.prepare('SELECT COUNT(*) as count FROM whatsapp_chats WHERE funcionario_id = ?').get(funcId).count;
+
+    res.json({ messages, total });
+  } catch (err) {
+    console.error('[WhatsApp Chat] Get history error:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar histórico do chat' });
+  }
+});
+
+// POST /api/whatsapp/chat/:funcionario_id/send - Send text message
+router.post('/chat/:funcionario_id/send', authenticateToken, async (req, res) => {
+  try {
+    const funcId = parseInt(req.params.funcionario_id);
+    const { message } = req.body;
+    if (!message) return res.status(400).json({ error: 'Mensagem obrigatória' });
+
+    const Funcionario = require('../models/Funcionario');
+    const func = Funcionario.findById(funcId);
+    if (!func) return res.status(404).json({ error: 'Funcionário não encontrado' });
+    if (!func.telefone) return res.status(400).json({ error: 'Funcionário sem telefone cadastrado' });
+
+    // Send via WhatsApp
+    if (!whatsappService.ready || !whatsappService.client) {
+      // Store message anyway but mark as not sent
+      db.prepare(`
+        INSERT INTO whatsapp_chats (funcionario_id, direcao, tipo, conteudo)
+        VALUES (?, 'enviada', 'texto', ?)
+      `).run(funcId, message);
+      return res.status(503).json({ error: 'WhatsApp não conectado. Mensagem salva localmente.' });
+    }
+
+    const phone = func.telefone.replace(/\D/g, '');
+    const chatId = phone.startsWith('55') ? phone + '@c.us' : '55' + phone + '@c.us';
+
+    await whatsappService.client.sendMessage(chatId, message);
+
+    // Store in chat history
+    const result = db.prepare(`
+      INSERT INTO whatsapp_chats (funcionario_id, direcao, tipo, conteudo)
+      VALUES (?, 'enviada', 'texto', ?)
+    `).run(funcId, message);
+
+    res.json({ success: true, id: result.lastInsertRowid, message: 'Mensagem enviada' });
+  } catch (err) {
+    console.error('[WhatsApp Chat] Send error:', err.message);
+    res.status(500).json({ error: 'Erro ao enviar mensagem: ' + err.message });
+  }
+});
+
+// POST /api/whatsapp/chat/:funcionario_id/send-media - Send photo/file
+router.post('/chat/:funcionario_id/send-media', authenticateToken, (req, res) => {
+  const multer = require('multer');
+  const path = require('path');
+  const fs = require('fs');
+
+  const upload = multer({
+    dest: path.join(__dirname, '../../public/uploads/chat/'),
+    limits: { fileSize: 10 * 1024 * 1024 }
+  }).single('media');
+
+  upload(req, res, async (err) => {
+    if (err) return res.status(400).json({ error: err.message });
+    if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado' });
+
+    try {
+      const funcId = parseInt(req.params.funcionario_id);
+      const Funcionario = require('../models/Funcionario');
+      const func = Funcionario.findById(funcId);
+      if (!func) return res.status(404).json({ error: 'Funcionário não encontrado' });
+      if (!func.telefone) return res.status(400).json({ error: 'Funcionário sem telefone' });
+
+      // Ensure upload dir exists
+      const uploadDir = path.join(__dirname, '../../public/uploads/chat/');
+      fs.mkdirSync(uploadDir, { recursive: true });
+
+      const ext = path.extname(req.file.originalname).toLowerCase() || '.bin';
+      const newName = `chat-${funcId}-${Date.now()}${ext}`;
+      const newPath = path.join(uploadDir, newName);
+      fs.renameSync(req.file.path, newPath);
+      const mediaPath = `/uploads/chat/${newName}`;
+
+      const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(ext);
+      const tipo = isImage ? 'foto' : 'arquivo';
+
+      // Send via WhatsApp if connected
+      if (whatsappService.ready && whatsappService.client) {
+        const { MessageMedia } = require('whatsapp-web.js');
+        const media = MessageMedia.fromFilePath(newPath);
+        const phone = func.telefone.replace(/\D/g, '');
+        const chatId = phone.startsWith('55') ? phone + '@c.us' : '55' + phone + '@c.us';
+        await whatsappService.client.sendMessage(chatId, media, { caption: req.body.caption || '' });
+      }
+
+      // Store in chat history
+      const result = db.prepare(`
+        INSERT INTO whatsapp_chats (funcionario_id, direcao, tipo, conteudo, media_path)
+        VALUES (?, 'enviada', ?, ?, ?)
+      `).run(funcId, tipo, req.body.caption || '', mediaPath);
+
+      res.json({ success: true, id: result.lastInsertRowid, media_path: mediaPath });
+    } catch (err) {
+      console.error('[WhatsApp Chat] Send media error:', err.message);
+      res.status(500).json({ error: 'Erro ao enviar mídia: ' + err.message });
+    }
+  });
+});
+
 module.exports = router;

@@ -27,7 +27,7 @@
               <label for="login-email" class="form-label">Email</label>
               <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                <input type="email" class="form-control" id="login-email" placeholder="edmarmbull@gmail.com" required>
+                <input type="email" class="form-control" id="login-email" placeholder="seu.email@exemplo.com" required>
               </div>
             </div>
             <div class="mb-3">
@@ -41,7 +41,30 @@
               <span class="spinner-border spinner-border-sm d-none" id="login-spinner"></span>
               Entrar
             </button>
+            <div class="text-center mt-2">
+              <a href="#" id="forgot-password-link" class="text-decoration-none small text-muted">Esqueci minha senha</a>
+            </div>
             <div id="login-error" class="alert alert-danger mt-3 d-none"></div>
+            <div id="forgot-password-form" class="d-none mt-3">
+              <hr>
+              <h6 class="text-muted mb-2">Recuperar Senha</h6>
+              <div id="forgot-step1">
+                <div class="mb-2">
+                  <input type="email" class="form-control form-control-sm" id="forgot-email" placeholder="Seu email">
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm w-100" id="forgot-send-btn">Enviar código</button>
+              </div>
+              <div id="forgot-step2" class="d-none">
+                <div class="mb-2">
+                  <input type="text" class="form-control form-control-sm" id="forgot-code" placeholder="Código recebido por email">
+                </div>
+                <div class="mb-2">
+                  <input type="password" class="form-control form-control-sm" id="forgot-new-password" placeholder="Nova senha">
+                </div>
+                <button type="button" class="btn btn-outline-success btn-sm w-100" id="forgot-reset-btn">Redefinir senha</button>
+              </div>
+              <div id="forgot-message" class="small mt-2 d-none"></div>
+            </div>
           </form>
         </div>
       </div>
@@ -106,6 +129,11 @@
               <i class="bi bi-box-seam"></i><span>Entregas</span>
             </a>
           </li>
+          <li>
+            <a href="#" data-page="tarefas">
+              <i class="bi bi-list-task"></i><span>Tarefas</span>
+            </a>
+          </li>
           <li class="nav-admin-only d-none">
             <a href="#" data-page="insights">
               <i class="bi bi-lightbulb"></i><span>Insights IA</span>
@@ -158,6 +186,7 @@
           <!-- Pages rendered here -->
         </div>
       </main>
+      <div id="app-version" class="position-fixed bottom-0 end-0 p-2 small text-muted" style="font-size:0.7rem;opacity:0.6;z-index:1000;"></div>
     </div>
   </div>
 

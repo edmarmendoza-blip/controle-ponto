@@ -10,7 +10,12 @@ const ALL_FIELDS = [
   'tem_vale_alimentacao', 'valor_va_dia',
   'pix_tipo', 'pix_chave', 'pix_banco',
   'ferias_inicio', 'ferias_fim', 'ferias_status',
-  'notificacoes_ativas', 'notificacoes_config'
+  'notificacoes_ativas', 'notificacoes_config',
+  'cpf', 'rg', 'data_nascimento',
+  'data_inicio_trabalho', 'data_inicio_registro_carteira',
+  'endereco_cep', 'endereco_rua', 'endereco_numero', 'endereco_complemento',
+  'endereco_bairro', 'endereco_cidade', 'endereco_estado',
+  'telefone_contato2', 'telefone_emergencia', 'nome_contato_emergencia'
 ];
 
 class Funcionario {

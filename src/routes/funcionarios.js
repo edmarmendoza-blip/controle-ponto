@@ -1,11 +1,32 @@
 const express = require('express');
 const { body, param, query, validationResult } = require('express-validator');
+const multer = require('multer');
+const path = require('path');
 const Funcionario = require('../models/Funcionario');
 const { authenticateToken, requireAdmin, requireGestor } = require('../middleware/auth');
 const AuditLog = require('../services/auditLog');
 const EmailService = require('../services/emailService');
 
 const router = express.Router();
+
+// Multer config for foto upload
+const fotoStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, path.join(__dirname, '../../public/uploads/funcionarios')),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `func-${req.params.id}-${Date.now()}${ext}`);
+  }
+});
+const fotoUpload = multer({
+  storage: fotoStorage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = /jpeg|jpg|png|gif|webp/;
+    const ext = allowed.test(path.extname(file.originalname).toLowerCase());
+    const mime = allowed.test(file.mimetype);
+    cb(ext && mime ? null : new Error('Apenas imagens são permitidas'), ext && mime);
+  }
+});
 
 // GET /api/funcionarios
 router.get('/', authenticateToken, (req, res) => {
@@ -276,6 +297,27 @@ router.delete('/transportes/:transporteId', authenticateToken, requireGestor, [
     console.error('Remove transporte error:', err);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
+});
+
+// POST /api/funcionarios/:id/foto
+router.post('/:id/foto', authenticateToken, requireGestor, (req, res) => {
+  fotoUpload.single('foto')(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ error: err.message || 'Erro no upload' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'Nenhuma foto enviada' });
+    }
+    try {
+      const fotoPath = `/uploads/funcionarios/${req.file.filename}`;
+      Funcionario.update(req.params.id, { foto: fotoPath });
+      AuditLog.log(req.user.id, 'upload_foto', 'funcionario', parseInt(req.params.id), { foto: fotoPath }, req.ip);
+      res.json({ message: 'Foto atualizada com sucesso', foto: fotoPath });
+    } catch (err) {
+      console.error('Upload foto error:', err);
+      res.status(500).json({ error: 'Erro ao salvar foto' });
+    }
+  });
 });
 
 module.exports = router;

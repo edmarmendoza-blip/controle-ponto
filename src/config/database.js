@@ -121,6 +121,31 @@ function initializeDatabase() {
         try { db.exec(`ALTER TABLE funcionarios ADD COLUMN ${col}`); } catch (e) { /* column may already exist */ }
       }
     }
+    // Add personal/document/address fields to funcionarios
+    const funcColsPersonal = db.prepare("PRAGMA table_info(funcionarios)").all().map(c => c.name);
+    if (funcColsPersonal.length > 0 && !funcColsPersonal.includes('cpf')) {
+      const personalCols = [
+        "cpf TEXT",
+        "rg TEXT",
+        "data_nascimento DATE",
+        "data_inicio_trabalho DATE",
+        "data_inicio_registro_carteira DATE",
+        "endereco_cep TEXT",
+        "endereco_rua TEXT",
+        "endereco_numero TEXT",
+        "endereco_complemento TEXT",
+        "endereco_bairro TEXT",
+        "endereco_cidade TEXT",
+        "endereco_estado TEXT",
+        "telefone_contato2 TEXT",
+        "telefone_emergencia TEXT",
+        "nome_contato_emergencia TEXT"
+      ];
+      for (const col of personalCols) {
+        try { db.exec(`ALTER TABLE funcionarios ADD COLUMN ${col}`); } catch (e) { /* column may already exist */ }
+      }
+    }
+
     // Add 2FA columns to users
     const userCols2FA = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
     if (userCols2FA.length > 0 && !userCols2FA.includes('totp_secret')) {
@@ -133,6 +158,14 @@ function initializeDatabase() {
     if (userColsReset.length > 0 && !userColsReset.includes('reset_code')) {
       try { db.exec('ALTER TABLE users ADD COLUMN reset_code TEXT DEFAULT NULL'); } catch (e) { /* ignore */ }
       try { db.exec('ALTER TABLE users ADD COLUMN reset_code_expires DATETIME DEFAULT NULL'); } catch (e) { /* ignore */ }
+    }
+
+    // Add task permission columns to users
+    const userColsTask = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
+    if (userColsTask.length > 0 && !userColsTask.includes('pode_criar_tarefas')) {
+      try { db.exec('ALTER TABLE users ADD COLUMN pode_criar_tarefas INTEGER DEFAULT 0'); } catch (e) { /* ignore */ }
+      try { db.exec('ALTER TABLE users ADD COLUMN pode_criar_tarefas_whatsapp INTEGER DEFAULT 0'); } catch (e) { /* ignore */ }
+      try { db.exec('ALTER TABLE users ADD COLUMN telefone TEXT DEFAULT NULL'); } catch (e) { /* ignore */ }
     }
 
     // Add cargo_id to funcionarios
@@ -456,6 +489,43 @@ function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS idx_insights_ia_data ON insights_ia(data);
     CREATE INDEX IF NOT EXISTS idx_entregas_data ON entregas(data_hora);
     CREATE INDEX IF NOT EXISTS idx_entregas_funcionario ON entregas(funcionario_id);
+
+    CREATE TABLE IF NOT EXISTS tarefas (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      titulo TEXT NOT NULL,
+      descricao TEXT,
+      prioridade TEXT DEFAULT 'media',
+      prazo TEXT,
+      criado_por INTEGER REFERENCES users(id),
+      status TEXT DEFAULT 'pendente',
+      fonte TEXT DEFAULT 'web',
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      updated_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+
+    CREATE TABLE IF NOT EXISTS tarefa_funcionarios (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tarefa_id INTEGER REFERENCES tarefas(id) ON DELETE CASCADE,
+      funcionario_id INTEGER REFERENCES funcionarios(id),
+      status TEXT DEFAULT 'pendente',
+      concluida_em TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_tarefas_status ON tarefas(status);
+    CREATE INDEX IF NOT EXISTS idx_tarefas_prazo ON tarefas(prazo);
+    CREATE INDEX IF NOT EXISTS idx_tarefa_funcionarios_tarefa ON tarefa_funcionarios(tarefa_id);
+
+    CREATE TABLE IF NOT EXISTS whatsapp_chats (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      funcionario_id INTEGER REFERENCES funcionarios(id),
+      direcao TEXT,
+      tipo TEXT DEFAULT 'texto',
+      conteudo TEXT,
+      media_path TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_whatsapp_chats_func ON whatsapp_chats(funcionario_id);
   `);
 
   // Default configs

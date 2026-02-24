@@ -132,7 +132,7 @@
               name="email"
               required
               autocomplete="email"
-              placeholder="seu@email.com"
+              placeholder="seu.email@exemplo.com"
               class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 text-sm transition-all duration-200 hover:border-primary-light dark:hover:border-primary-light focus:border-primary-light dark:focus:border-primary-light"
             />
           </div>
@@ -248,7 +248,7 @@
 
     <!-- Bottom branding -->
     <p class="text-center mt-6 text-xs text-gray-400 dark:text-gray-600">
-      &copy; 2026 Lar Digital &mdash; Todos os direitos reservados
+      &copy; 2026 Lar Digital &mdash; Todos os direitos reservados <span id="login-version"></span>
     </p>
   </div>
 
@@ -506,6 +506,15 @@
       } catch (err) { msgDiv.className = 'mt-2 text-sm text-red-500'; msgDiv.textContent = 'Erro ao redefinir.'; msgDiv.classList.remove('hidden'); }
       finally { btn.disabled = false; btn.textContent = 'Redefinir Senha'; }
     }
+    // Load version
+    fetch('/api/version').then(r => r.json()).then(v => {
+      const el = document.getElementById('login-version');
+      if (el && v.version) {
+        const envLabel = v.env ? v.env.charAt(0).toUpperCase() + v.env.slice(1) : '';
+        const dateLabel = v.date ? v.date.split('-').reverse().join('/') : '';
+        el.textContent = 'v' + v.version + (envLabel ? ' | ' + envLabel : '') + (dateLabel ? ' | ' + dateLabel : '');
+      }
+    }).catch(() => {});
   </script>
 </body>
 </html>

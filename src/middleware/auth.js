@@ -11,7 +11,7 @@ function authenticateToken(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = db.prepare('SELECT id, email, name, role, active FROM users WHERE id = ?').get(decoded.userId);
+    const user = db.prepare('SELECT id, email, name, role, active, pode_criar_tarefas, pode_criar_tarefas_whatsapp FROM users WHERE id = ?').get(decoded.userId);
 
     if (!user || !user.active) {
       return res.status(401).json({ error: 'Usuário não encontrado ou inativo' });

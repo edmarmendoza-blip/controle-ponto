@@ -7,7 +7,7 @@ class User {
   }
 
   static findById(id) {
-    return db.prepare('SELECT id, email, name, role, active, created_at FROM users WHERE id = ?').get(id);
+    return db.prepare('SELECT id, email, name, role, active, telefone, pode_criar_tarefas, pode_criar_tarefas_whatsapp, created_at FROM users WHERE id = ?').get(id);
   }
 
   static async create({ email, password, name, role = 'viewer' }) {
@@ -23,14 +23,14 @@ class User {
   }
 
   static getAll() {
-    return db.prepare('SELECT id, email, name, role, active, totp_enabled, created_at FROM users ORDER BY name').all();
+    return db.prepare('SELECT id, email, name, role, active, totp_enabled, telefone, pode_criar_tarefas, pode_criar_tarefas_whatsapp, created_at FROM users ORDER BY name').all();
   }
 
   static update(id, data) {
     const fields = [];
     const values = [];
     for (const [key, value] of Object.entries(data)) {
-      if (['name', 'role', 'active', 'email'].includes(key)) {
+      if (['name', 'role', 'active', 'email', 'telefone', 'pode_criar_tarefas', 'pode_criar_tarefas_whatsapp'].includes(key)) {
         fields.push(`${key} = ?`);
         values.push(value);
       }

@@ -116,6 +116,15 @@
       el.classList.toggle('d-none', !isGestorOrAdmin);
     });
     navigateTo('dashboard');
+    // Load version
+    fetch('/api/version').then(r => r.json()).then(v => {
+      const el = document.getElementById('app-version');
+      if (el && v.version) {
+        const envLabel = v.env ? v.env.charAt(0).toUpperCase() + v.env.slice(1) : '';
+        const dateLabel = v.date ? v.date.split('-').reverse().join('/') : '';
+        el.textContent = 'v' + v.version + (envLabel ? ' | ' + envLabel : '') + (dateLabel ? ' | ' + dateLabel : '');
+      }
+    }).catch(() => {});
   }
 
   function logout() {
@@ -171,6 +180,62 @@
     }
   });
 
+  // --- Forgot Password ---
+  document.getElementById('forgot-password-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    const form = document.getElementById('forgot-password-form');
+    form.classList.toggle('d-none');
+    document.getElementById('forgot-step1').classList.remove('d-none');
+    document.getElementById('forgot-step2').classList.add('d-none');
+    document.getElementById('forgot-message').classList.add('d-none');
+  });
+
+  document.getElementById('forgot-send-btn').addEventListener('click', async () => {
+    const email = document.getElementById('forgot-email').value;
+    const msgEl = document.getElementById('forgot-message');
+    if (!email) { msgEl.textContent = 'Informe o email'; msgEl.className = 'small mt-2 text-danger'; return; }
+    try {
+      await fetch('/api/auth/forgot-password', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      msgEl.textContent = 'Se o email existir, um código foi enviado.';
+      msgEl.className = 'small mt-2 text-success';
+      document.getElementById('forgot-step1').classList.add('d-none');
+      document.getElementById('forgot-step2').classList.remove('d-none');
+    } catch (err) {
+      msgEl.textContent = 'Erro ao enviar. Tente novamente.';
+      msgEl.className = 'small mt-2 text-danger';
+    }
+  });
+
+  document.getElementById('forgot-reset-btn').addEventListener('click', async () => {
+    const email = document.getElementById('forgot-email').value;
+    const code = document.getElementById('forgot-code').value;
+    const newPassword = document.getElementById('forgot-new-password').value;
+    const msgEl = document.getElementById('forgot-message');
+    if (!code || !newPassword) { msgEl.textContent = 'Preencha código e nova senha'; msgEl.className = 'small mt-2 text-danger'; return; }
+    if (newPassword.length < 6) { msgEl.textContent = 'Senha deve ter no mínimo 6 caracteres'; msgEl.className = 'small mt-2 text-danger'; return; }
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code, newPassword })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        msgEl.textContent = 'Senha redefinida com sucesso! Faça login.';
+        msgEl.className = 'small mt-2 text-success';
+        document.getElementById('forgot-password-form').classList.add('d-none');
+      } else {
+        msgEl.textContent = data.error || 'Código inválido ou expirado';
+        msgEl.className = 'small mt-2 text-danger';
+      }
+    } catch (err) {
+      msgEl.textContent = 'Erro ao redefinir senha';
+      msgEl.className = 'small mt-2 text-danger';
+    }
+  });
+
   // Logout
   document.getElementById('logout-btn').addEventListener('click', logout);
 
@@ -192,6 +257,7 @@
       usuarios: 'Gerenciar Usuários',
       perfil: 'Meu Perfil',
       auditlog: 'Log de Auditoria',
+      tarefas: 'Tarefas',
       accesslog: 'Log de Acessos'
     };
     document.getElementById('page-title').textContent = titles[page] || page;
@@ -236,6 +302,7 @@
       case 'insights': renderInsightsIA(); break;
       case 'cargos': renderCargos(); break;
       case 'entregas': renderEntregas(); break;
+      case 'tarefas': renderTarefas(); break;
       case 'accesslog': renderAccessLog(); break;
       default: content.innerHTML = '<p>Página não encontrada</p>';
     }
@@ -361,7 +428,7 @@
               ${funcionarios.length === 0 ? `<tr><td colspan="${canManage ? 7 : 6}" class="text-center text-muted py-4">Nenhum funcionário cadastrado</td></tr>` : ''}
               ${funcionarios.map(f => `
                 <tr>
-                  <td><strong>${f.nome}</strong></td>
+                  <td class="d-flex align-items-center gap-2">${f.foto ? '<img src="' + f.foto + '" class="rounded-circle" style="width:32px;height:32px;object-fit:cover" alt="">' : '<i class="bi bi-person-circle text-muted" style="font-size:1.5rem"></i>'}<strong>${f.nome}</strong></td>
                   <td>${f.cargo_nome || f.cargo || '-'}</td>
                   <td>${formatCurrency(f.salario_hora_display || f.salario_hora)}</td>
                   <td>${f.telefone || '-'}</td>
@@ -370,6 +437,7 @@
                   ${canManage ? `
                     <td class="text-nowrap">
                       <button class="btn btn-action btn-outline-primary btn-edit-func" data-id="${f.id}" title="Editar"><i class="bi bi-pencil"></i></button>
+                      ${f.telefone ? `<button class="btn btn-action btn-outline-success ms-1" onclick="App.openChatModal(${f.id}, '${f.nome.replace(/'/g, "\\'")}')" title="Chat WhatsApp"><i class="bi bi-chat-dots"></i></button>` : ''}
                       ${f.status === 'ativo' ? `<button class="btn btn-action btn-outline-danger ms-1 btn-del-func" data-id="${f.id}" data-nome="${f.nome.replace(/"/g, '&quot;')}" title="Desativar"><i class="bi bi-person-x"></i></button>` : ''}
                     </td>` : ''}
                 </tr>`).join('')}
@@ -397,43 +465,157 @@
     const isEdit = !!id;
     const title = isEdit ? 'Editar Funcionário' : 'Novo Funcionário';
 
+    const ufs = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'];
+
     const body = `
       <form id="func-form">
-        <div class="mb-3">
-          <label class="form-label">Nome</label>
-          <input type="text" class="form-control" id="func-nome" required>
+        <h6 class="text-muted mb-2"><i class="bi bi-person me-1"></i>Dados Pessoais</h6>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Nome <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="func-nome" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Cargo <span class="text-danger">*</span></label>
+            <select class="form-select" id="func-cargo" required>
+              <option value="">Selecione...</option>
+            </select>
+          </div>
         </div>
-        <div class="mb-3">
-          <label class="form-label">Cargo</label>
-          <select class="form-select" id="func-cargo" required>
-            <option value="">Selecione...</option>
-          </select>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Salário/Hora (R$)</label>
-          <input type="number" class="form-control" id="func-salario" step="0.01" min="0" required>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Telefone</label>
-          <input type="text" class="form-control" id="func-telefone" placeholder="(11) 99999-0000">
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Horário de Entrada</label>
-          <input type="time" class="form-control" id="func-horario-entrada" value="08:00">
-        </div>
-        <hr><h6 class="text-muted">Folha de Pagamento</h6>
         <div class="row">
           <div class="col-md-4 mb-3">
-            <label class="form-label">Valor Hora Extra (R$)</label>
+            <label class="form-label">Telefone</label>
+            <input type="text" class="form-control" id="func-telefone" placeholder="(11) 99999-0000">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Email Pessoal</label>
+            <input type="email" class="form-control" id="func-email-pessoal" placeholder="email@exemplo.com">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Salário/Hora (R$) <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="func-salario" step="0.01" min="0" required>
+          </div>
+        </div>
+
+        <hr><h6 class="text-muted mb-2"><i class="bi bi-card-text me-1"></i>Documentos</h6>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label">CPF</label>
+            <input type="text" class="form-control" id="func-cpf" placeholder="000.000.000-00" maxlength="14">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">RG</label>
+            <input type="text" class="form-control" id="func-rg">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Data de Nascimento</label>
+            <input type="date" class="form-control" id="func-data-nascimento">
+          </div>
+        </div>
+
+        <hr><h6 class="text-muted mb-2"><i class="bi bi-calendar3 me-1"></i>Datas</h6>
+        <div class="row">
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Admissão</label>
+            <input type="date" class="form-control" id="func-data-admissao">
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Início Trabalho</label>
+            <input type="date" class="form-control" id="func-data-inicio-trabalho">
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Registro Carteira</label>
+            <input type="date" class="form-control" id="func-data-inicio-registro-carteira">
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Desligamento</label>
+            <input type="date" class="form-control" id="func-data-desligamento">
+          </div>
+        </div>
+
+        <hr><h6 class="text-muted mb-2"><i class="bi bi-geo-alt me-1"></i>Endereço</h6>
+        <div class="row">
+          <div class="col-md-3 mb-3">
+            <label class="form-label">CEP</label>
+            <input type="text" class="form-control" id="func-endereco-cep" placeholder="00000-000" maxlength="9">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Rua</label>
+            <input type="text" class="form-control" id="func-endereco-rua">
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Número</label>
+            <input type="text" class="form-control" id="func-endereco-numero">
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Complemento</label>
+            <input type="text" class="form-control" id="func-endereco-complemento">
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Bairro</label>
+            <input type="text" class="form-control" id="func-endereco-bairro">
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Cidade</label>
+            <input type="text" class="form-control" id="func-endereco-cidade">
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Estado</label>
+            <select class="form-select" id="func-endereco-estado">
+              <option value="">UF</option>
+              ${ufs.map(u => '<option value="' + u + '">' + u + '</option>').join('')}
+            </select>
+          </div>
+        </div>
+
+        <hr><h6 class="text-muted mb-2"><i class="bi bi-telephone me-1"></i>Contatos Adicionais</h6>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Telefone 2</label>
+            <input type="text" class="form-control" id="func-telefone-contato2" placeholder="(11) 99999-0000">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Contato Emergência</label>
+            <input type="text" class="form-control" id="func-nome-contato-emergencia" placeholder="Nome do contato">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Tel. Emergência</label>
+            <input type="text" class="form-control" id="func-telefone-emergencia" placeholder="(11) 99999-0000">
+          </div>
+        </div>
+
+        <hr><h6 class="text-muted mb-2"><i class="bi bi-camera me-1"></i>Foto</h6>
+        <div class="row align-items-center">
+          <div class="col-md-3 mb-3 text-center">
+            <div id="func-foto-preview">
+              <i class="bi bi-person-circle" style="font-size:4rem;color:#ccc"></i>
+            </div>
+          </div>
+          <div class="col-md-9 mb-3">
+            <input type="file" class="form-control" id="func-foto-input" accept="image/*">
+            <small class="text-muted">JPG, PNG ou WebP. Máx 10MB.</small>
+          </div>
+        </div>
+
+        <hr><h6 class="text-muted mb-2"><i class="bi bi-wallet2 me-1"></i>Folha de Pagamento</h6>
+        <div class="row">
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Hora Extra (R$)</label>
             <input type="number" class="form-control" id="func-valor-hora-extra" step="0.01" min="0" placeholder="Herda do cargo">
           </div>
-          <div class="col-md-4 mb-3">
-            <label class="form-label">Valor Dia Especial (R$)</label>
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Dia Especial (R$)</label>
             <input type="number" class="form-control" id="func-valor-dia-especial" step="0.01" min="0" placeholder="Herda do cargo">
           </div>
-          <div class="col-md-4 mb-3">
+          <div class="col-md-3 mb-3">
             <label class="form-label">Jornada Diária (h)</label>
             <input type="number" class="form-control" id="func-jornada-diaria" step="0.01" min="0" value="9.8">
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Horário Entrada</label>
+            <input type="time" class="form-control" id="func-horario-entrada" value="08:00">
           </div>
         </div>
         ${isEdit ? `
@@ -450,7 +632,27 @@
       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
       <button type="button" class="btn btn-primary" onclick="App.saveFuncionario(${id || 'null'})">Salvar</button>`;
 
+    // Use modal-lg for the expanded form
+    const modalEl = document.getElementById('app-modal');
+    modalEl.querySelector('.modal-dialog').classList.add('modal-lg');
+    modalEl.addEventListener('hidden.bs.modal', function handler() {
+      modalEl.querySelector('.modal-dialog').classList.remove('modal-lg');
+      modalEl.removeEventListener('hidden.bs.modal', handler);
+    });
+
     openModal(title, body, footer);
+
+    // CPF mask
+    const cpfInput = document.getElementById('func-cpf');
+    if (cpfInput) {
+      cpfInput.addEventListener('input', function() {
+        let v = this.value.replace(/\D/g, '').substring(0, 11);
+        if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+        else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+        else if (v.length > 3) v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+        this.value = v;
+      });
+    }
 
     // Load cargos dropdown
     api('/api/cargos').then(cargos => {
@@ -470,7 +672,6 @@
           const heField = document.getElementById('func-valor-hora-extra');
           const deField = document.getElementById('func-valor-dia-especial');
           const salField = document.getElementById('func-salario');
-          // Only fill if current value is 0 or empty
           if (!parseFloat(heField.value)) heField.value = cargo.valor_hora_extra || 0;
           if (!parseFloat(deField.value)) deField.value = cargo.valor_dia_extra || 0;
           if (!parseFloat(salField.value)) salField.value = cargo.valor_hora_extra || 0;
@@ -481,13 +682,35 @@
         api(`/api/funcionarios/${id}`).then(f => {
           document.getElementById('func-nome').value = f.nome;
           document.getElementById('func-cargo').value = f.cargo_id || '';
-          // Use _display values (COALESCE from cargo) for showing real values
           document.getElementById('func-salario').value = f.salario_hora_display || f.salario_hora || 0;
           document.getElementById('func-telefone').value = f.telefone || '';
+          document.getElementById('func-email-pessoal').value = f.email_pessoal || '';
           document.getElementById('func-horario-entrada').value = f.horario_entrada || '08:00';
           document.getElementById('func-valor-hora-extra').value = f.valor_hora_extra_display || f.valor_hora_extra || 0;
           document.getElementById('func-valor-dia-especial').value = f.valor_dia_extra_display || f.valor_dia_especial || 0;
           document.getElementById('func-jornada-diaria').value = f.jornada_diaria || 9.8;
+          // New fields
+          document.getElementById('func-cpf').value = f.cpf || '';
+          document.getElementById('func-rg').value = f.rg || '';
+          document.getElementById('func-data-nascimento').value = f.data_nascimento || '';
+          document.getElementById('func-data-admissao').value = f.data_admissao || '';
+          document.getElementById('func-data-inicio-trabalho').value = f.data_inicio_trabalho || '';
+          document.getElementById('func-data-inicio-registro-carteira').value = f.data_inicio_registro_carteira || '';
+          document.getElementById('func-data-desligamento').value = f.data_desligamento || '';
+          document.getElementById('func-endereco-cep').value = f.endereco_cep || '';
+          document.getElementById('func-endereco-rua').value = f.endereco_rua || '';
+          document.getElementById('func-endereco-numero').value = f.endereco_numero || '';
+          document.getElementById('func-endereco-complemento').value = f.endereco_complemento || '';
+          document.getElementById('func-endereco-bairro').value = f.endereco_bairro || '';
+          document.getElementById('func-endereco-cidade').value = f.endereco_cidade || '';
+          document.getElementById('func-endereco-estado').value = f.endereco_estado || '';
+          document.getElementById('func-telefone-contato2').value = f.telefone_contato2 || '';
+          document.getElementById('func-nome-contato-emergencia').value = f.nome_contato_emergencia || '';
+          document.getElementById('func-telefone-emergencia').value = f.telefone_emergencia || '';
+          // Foto preview
+          if (f.foto) {
+            document.getElementById('func-foto-preview').innerHTML = '<img src="' + f.foto + '" class="rounded" style="width:80px;height:80px;object-fit:cover" alt="Foto">';
+          }
           const statusEl = document.getElementById('func-status');
           if (statusEl) statusEl.value = f.status;
         });
@@ -499,16 +722,35 @@
     const cargoSelect = document.getElementById('func-cargo');
     const cargoId = parseInt(cargoSelect.value);
     const cargoNome = cargoSelect.options[cargoSelect.selectedIndex]?.text || '';
+    const getVal = (elId) => { const el = document.getElementById(elId); return el ? el.value : ''; };
     const data = {
-      nome: document.getElementById('func-nome').value,
+      nome: getVal('func-nome'),
       cargo: cargoNome,
       cargo_id: cargoId || null,
-      salario_hora: parseFloat(document.getElementById('func-salario').value),
-      telefone: document.getElementById('func-telefone').value || null,
-      horario_entrada: document.getElementById('func-horario-entrada').value || '08:00',
-      valor_hora_extra: parseFloat(document.getElementById('func-valor-hora-extra').value) || 0,
-      valor_dia_especial: parseFloat(document.getElementById('func-valor-dia-especial').value) || 0,
-      jornada_diaria: parseFloat(document.getElementById('func-jornada-diaria').value) || 9.8
+      salario_hora: parseFloat(getVal('func-salario')),
+      telefone: getVal('func-telefone') || null,
+      email_pessoal: getVal('func-email-pessoal') || null,
+      horario_entrada: getVal('func-horario-entrada') || '08:00',
+      valor_hora_extra: parseFloat(getVal('func-valor-hora-extra')) || 0,
+      valor_dia_especial: parseFloat(getVal('func-valor-dia-especial')) || 0,
+      jornada_diaria: parseFloat(getVal('func-jornada-diaria')) || 9.8,
+      cpf: getVal('func-cpf') || null,
+      rg: getVal('func-rg') || null,
+      data_nascimento: getVal('func-data-nascimento') || null,
+      data_admissao: getVal('func-data-admissao') || null,
+      data_inicio_trabalho: getVal('func-data-inicio-trabalho') || null,
+      data_inicio_registro_carteira: getVal('func-data-inicio-registro-carteira') || null,
+      data_desligamento: getVal('func-data-desligamento') || null,
+      endereco_cep: getVal('func-endereco-cep') || null,
+      endereco_rua: getVal('func-endereco-rua') || null,
+      endereco_numero: getVal('func-endereco-numero') || null,
+      endereco_complemento: getVal('func-endereco-complemento') || null,
+      endereco_bairro: getVal('func-endereco-bairro') || null,
+      endereco_cidade: getVal('func-endereco-cidade') || null,
+      endereco_estado: getVal('func-endereco-estado') || null,
+      telefone_contato2: getVal('func-telefone-contato2') || null,
+      nome_contato_emergencia: getVal('func-nome-contato-emergencia') || null,
+      telefone_emergencia: getVal('func-telefone-emergencia') || null
     };
 
     if (!data.nome || !cargoId || isNaN(data.salario_hora)) {
@@ -522,12 +764,26 @@
     }
 
     try {
+      let funcId = id;
       if (id) {
         await api(`/api/funcionarios/${id}`, { method: 'PUT', body: JSON.stringify(data) });
         showToast('Funcionário atualizado com sucesso');
       } else {
-        await api('/api/funcionarios', { method: 'POST', body: JSON.stringify(data) });
+        const result = await api('/api/funcionarios', { method: 'POST', body: JSON.stringify(data) });
+        funcId = result.id;
         showToast('Funcionário criado com sucesso');
+      }
+      // Upload foto if selected
+      const fotoInput = document.getElementById('func-foto-input');
+      if (fotoInput && fotoInput.files.length > 0 && funcId) {
+        const formData = new FormData();
+        formData.append('foto', fotoInput.files[0]);
+        const token = localStorage.getItem('ponto_token');
+        await fetch(`/api/funcionarios/${funcId}/foto`, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token },
+          body: formData
+        });
       }
       closeModal();
       renderFuncionarios();
@@ -555,19 +811,45 @@
     const content = document.getElementById('page-content');
     try {
       const funcionarios = await api('/api/funcionarios');
-      const dataAtual = today();
+      const now = new Date();
+      const mesAtual = now.getMonth() + 1;
+      const anoAtual = now.getFullYear();
+      const meses = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
       content.innerHTML = `
-        <div class="filter-bar">
+        <div class="filter-bar flex-wrap gap-2">
           <div>
-            <label class="form-label">Data</label>
-            <input type="date" class="form-control" id="reg-filter-data" value="${dataAtual}">
+            <label class="form-label">Mês</label>
+            <select class="form-select" id="reg-filter-mes">
+              <option value="">-- Período manual --</option>
+              ${meses.slice(1).map((m, i) => `<option value="${i+1}" ${i+1 === mesAtual ? 'selected' : ''}>${m}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Ano</label>
+            <input type="number" class="form-control" id="reg-filter-ano" value="${anoAtual}" min="2024" max="2030" style="width:90px">
+          </div>
+          <div>
+            <label class="form-label">Data Início</label>
+            <input type="date" class="form-control" id="reg-filter-inicio" disabled>
+          </div>
+          <div>
+            <label class="form-label">Data Fim</label>
+            <input type="date" class="form-control" id="reg-filter-fim" disabled>
           </div>
           <div>
             <label class="form-label">Funcionário</label>
             <select class="form-select" id="reg-filter-func">
               <option value="">Todos</option>
               ${funcionarios.map(f => `<option value="${f.id}">${f.nome}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Tipo</label>
+            <select class="form-select" id="reg-filter-tipo">
+              <option value="">Todos</option>
+              <option value="ponto">Entrada/Saída</option>
+              <option value="almoco">Almoço</option>
             </select>
           </div>
           <div>
@@ -583,24 +865,93 @@
         </div>
         <div id="registros-table"></div>`;
 
+      // Toggle: mês vs período manual
+      const mesSelect = document.getElementById('reg-filter-mes');
+      const inicioInput = document.getElementById('reg-filter-inicio');
+      const fimInput = document.getElementById('reg-filter-fim');
+      mesSelect.addEventListener('change', function() {
+        const useMes = this.value !== '';
+        inicioInput.disabled = useMes;
+        fimInput.disabled = useMes;
+        if (useMes) { inicioInput.value = ''; fimInput.value = ''; }
+      });
+      inicioInput.addEventListener('change', function() {
+        if (this.value) { mesSelect.value = ''; fimInput.disabled = false; inicioInput.disabled = false; }
+      });
+
       filterRegistros();
     } catch (err) {
       content.innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
     }
   }
 
+  function getBadgeForRegistro(r) {
+    const obs = (r.observacao || '').toLowerCase();
+    const isAlmocoSaida = obs.includes('saída almoço') || obs.includes('saida almoço') || obs.includes('saída almoco') || obs.includes('saida almoco');
+    const isAlmocoRetorno = obs.includes('retorno almoço') || obs.includes('retorno almoco') || obs.includes('volta almoço') || obs.includes('volta almoco');
+    let badge = '';
+    if (isAlmocoSaida) {
+      badge = '<span class="badge bg-warning text-dark">Saída Almoço</span>';
+    } else if (isAlmocoRetorno) {
+      badge = '<span class="badge bg-warning text-dark">Retorno Almoço</span>';
+    } else if (r.entrada && !r.saida) {
+      badge = '<span class="badge bg-success">Entrada</span>';
+    } else if (r.saida && !r.entrada) {
+      badge = '<span class="badge bg-danger">Saída</span>';
+    } else if (r.entrada && r.saida) {
+      badge = '<span class="badge bg-primary">Completo</span>';
+    } else {
+      badge = '<span class="badge bg-secondary">-</span>';
+    }
+    const fonte = r.tipo === 'whatsapp' ? '<span class="badge bg-success bg-opacity-25 text-success ms-1" style="font-size:0.65em">WA</span>' : r.tipo === 'manual' ? '<span class="badge bg-secondary bg-opacity-25 text-secondary ms-1" style="font-size:0.65em">Manual</span>' : '';
+    return badge + fonte;
+  }
+
   async function filterRegistros() {
     const container = document.getElementById('registros-table');
-    const data = document.getElementById('reg-filter-data').value;
+    const mesEl = document.getElementById('reg-filter-mes');
+    const anoEl = document.getElementById('reg-filter-ano');
+    const inicioEl = document.getElementById('reg-filter-inicio');
+    const fimEl = document.getElementById('reg-filter-fim');
     const funcId = document.getElementById('reg-filter-func').value;
+
+    let dataInicio, dataFim;
+    if (mesEl && mesEl.value) {
+      const mes = parseInt(mesEl.value);
+      const ano = parseInt(anoEl.value);
+      dataInicio = `${ano}-${String(mes).padStart(2,'0')}-01`;
+      const lastDay = new Date(ano, mes, 0).getDate();
+      dataFim = `${ano}-${String(mes).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
+    } else if (inicioEl && inicioEl.value) {
+      dataInicio = inicioEl.value;
+      dataFim = fimEl && fimEl.value ? fimEl.value : dataInicio;
+    } else {
+      dataInicio = today();
+      dataFim = today();
+    }
 
     container.innerHTML = '<div class="loading-spinner"><div class="spinner-border spinner-border-sm text-primary"></div></div>';
 
     try {
-      let url = `/api/registros?data=${data}`;
+      let url = `/api/registros?dataInicio=${dataInicio}&dataFim=${dataFim}`;
       if (funcId) url += `&funcionarioId=${funcId}`;
-      const registros = await api(url);
+      let registros = await api(url);
       const isAdmin = currentUser.role === 'admin';
+
+      // Filter by tipo (ponto vs almoço)
+      const tipoFilter = document.getElementById('reg-filter-tipo');
+      const tipoVal = tipoFilter ? tipoFilter.value : '';
+      if (tipoVal === 'almoco') {
+        registros = registros.filter(r => {
+          const obs = (r.observacao || '').toLowerCase();
+          return obs.includes('almo');
+        });
+      } else if (tipoVal === 'ponto') {
+        registros = registros.filter(r => {
+          const obs = (r.observacao || '').toLowerCase();
+          return !obs.includes('almo');
+        });
+      }
 
       container.innerHTML = `
         <div class="data-table">
@@ -627,7 +978,7 @@
                   <td>${formatDate(r.data)}</td>
                   <td>${r.entrada || '-'}</td>
                   <td>${r.saida || '-'}</td>
-                  <td><span class="badge bg-${r.tipo === 'whatsapp' ? 'success' : 'secondary'} bg-opacity-10 text-${r.tipo === 'whatsapp' ? 'success' : 'secondary'}">${r.tipo}</span></td>
+                  <td>${getBadgeForRegistro(r)}</td>
                   <td>${r.latitude != null && r.longitude != null && isFinite(r.latitude) && isFinite(r.longitude) ? `<a class="location-link" onclick="App.showLocationMap(${parseFloat(r.latitude)}, ${parseFloat(r.longitude)})" title="Ver no mapa"><i class="bi bi-geo-alt-fill"></i></a>` : '<i class="bi bi-geo-alt text-muted"></i>'}</td>
                   <td>${r.observacao || '-'}</td>
                   <td>
@@ -1060,7 +1411,7 @@
               </div>
               <div class="text-end">
                 <div class="fs-4 fw-bold text-success">${formatCurrency(r.totalGeral || 0)}</div>
-                <small class="text-muted">Total a pagar</small>
+                <small class="text-muted">Total extras do mês</small>
               </div>
             </div>
 
@@ -1122,11 +1473,12 @@
                   <td class="text-end fw-bold">${r.totalAjudaCombustivel != null ? formatCurrency(r.totalAjudaCombustivel) : '-'}</td>
                 </tr>` : ''}
                 <tr class="table-success">
-                  <td colspan="2" class="fw-bold fs-6">TOTAL A PAGAR</td>
+                  <td colspan="2" class="fw-bold fs-6">TOTAL EXTRAS DO MÊS</td>
                   <td class="text-end fw-bold fs-6 text-success">${formatCurrency(r.totalGeral || 0)}</td>
                 </tr>
               </tbody>
             </table>
+            <small class="text-muted d-block mt-1"><i class="bi bi-info-circle me-1"></i>Valores adicionais ao salário base. Não inclui salário fixo.</small>
 
             <div class="mt-2">
               <a class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" href="#detalhes-${folha.funcionario ? f.nome.replace(/\\s/g, '-') : 'func'}-${mes}${ano}" role="button">
@@ -1174,7 +1526,7 @@
         html += `
           <div class="summary-card mb-4" style="background: #EEF2FF; border-left: 4px solid #4F46E5;">
             <div class="d-flex justify-content-between align-items-center">
-              <h5 class="mb-0"><i class="bi bi-calculator me-2"></i>Total Geral - ${monthName(mes)}/${ano}</h5>
+              <h5 class="mb-0"><i class="bi bi-calculator me-2"></i>Total Extras Geral - ${monthName(mes)}/${ano}</h5>
               <div class="fs-3 fw-bold text-primary">${formatCurrency(grandTotal)}</div>
             </div>
           </div>`;
@@ -2158,6 +2510,19 @@
             <option value="0">Inativo</option>
           </select>
         </div>` : ''}
+        <hr><h6 class="text-muted">Permissões de Tarefas</h6>
+        <div class="mb-3">
+          <label class="form-label">Telefone (para WhatsApp)</label>
+          <input type="text" class="form-control" id="user-telefone-input" placeholder="(11) 99999-0000">
+        </div>
+        <div class="form-check mb-2">
+          <input class="form-check-input" type="checkbox" id="user-pode-tarefas">
+          <label class="form-check-label" for="user-pode-tarefas">Pode criar tarefas (web)</label>
+        </div>
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="user-pode-tarefas-wa">
+          <label class="form-check-label" for="user-pode-tarefas-wa">Pode criar tarefas via WhatsApp</label>
+        </div>
       </form>`;
 
     const footer = `
@@ -2174,6 +2539,9 @@
           document.getElementById('user-email-input').value = u.email;
           document.getElementById('user-role-input').value = u.role;
           document.getElementById('user-active-input').value = u.active ? '1' : '0';
+          document.getElementById('user-telefone-input').value = u.telefone || '';
+          document.getElementById('user-pode-tarefas').checked = !!u.pode_criar_tarefas;
+          document.getElementById('user-pode-tarefas-wa').checked = !!u.pode_criar_tarefas_whatsapp;
         }
       });
     }
@@ -2187,6 +2555,14 @@
     };
     const password = document.getElementById('user-password-input').value;
     if (password) data.password = password;
+
+    // Novos campos de permissão de tarefas
+    const telefoneEl = document.getElementById('user-telefone-input');
+    if (telefoneEl) data.telefone = telefoneEl.value;
+    const podeTarefasEl = document.getElementById('user-pode-tarefas');
+    if (podeTarefasEl) data.pode_criar_tarefas = podeTarefasEl.checked ? 1 : 0;
+    const podeTarefasWaEl = document.getElementById('user-pode-tarefas-wa');
+    if (podeTarefasWaEl) data.pode_criar_tarefas_whatsapp = podeTarefasWaEl.checked ? 1 : 0;
 
     if (id) {
       const activeEl = document.getElementById('user-active-input');
@@ -3205,6 +3581,334 @@
   }
 
   // ============================================================
+  // TAREFAS
+  // ============================================================
+  async function renderTarefas() {
+    const content = document.getElementById('page-content');
+    try {
+      const funcionarios = await api('/api/funcionarios');
+      content.innerHTML = `
+        <div class="filter-bar flex-wrap gap-2">
+          <div>
+            <label class="form-label">Status</label>
+            <select class="form-select" id="tarefa-filter-status">
+              <option value="">Todos</option>
+              <option value="pendente" selected>Pendente</option>
+              <option value="em_andamento">Em Andamento</option>
+              <option value="concluida">Concluída</option>
+              <option value="cancelada">Cancelada</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Prioridade</label>
+            <select class="form-select" id="tarefa-filter-prioridade">
+              <option value="">Todas</option>
+              <option value="alta">Alta</option>
+              <option value="media">Média</option>
+              <option value="baixa">Baixa</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Funcionário</label>
+            <select class="form-select" id="tarefa-filter-func">
+              <option value="">Todos</option>
+              ${funcionarios.map(f => '<option value="' + f.id + '">' + f.nome + '</option>').join('')}
+            </select>
+          </div>
+          <div>
+            <button class="btn btn-primary" onclick="App.filterTarefas()">
+              <i class="bi bi-search"></i> Buscar
+            </button>
+          </div>
+          <div class="ms-auto">
+            <button class="btn btn-success" onclick="App.openTarefaModal()">
+              <i class="bi bi-plus-lg"></i> Nova Tarefa
+            </button>
+          </div>
+        </div>
+        <div id="tarefas-list"></div>`;
+      filterTarefas();
+    } catch (err) {
+      content.innerHTML = '<div class="alert alert-danger">Erro: ' + err.message + '</div>';
+    }
+  }
+
+  async function filterTarefas() {
+    const container = document.getElementById('tarefas-list');
+    if (!container) return;
+    container.innerHTML = '<div class="loading-spinner"><div class="spinner-border spinner-border-sm text-primary"></div></div>';
+
+    try {
+      let url = '/api/tarefas?';
+      const status = document.getElementById('tarefa-filter-status')?.value;
+      const prioridade = document.getElementById('tarefa-filter-prioridade')?.value;
+      const funcId = document.getElementById('tarefa-filter-func')?.value;
+      if (status) url += 'status=' + status + '&';
+      if (prioridade) url += 'prioridade=' + prioridade + '&';
+      if (funcId) url += 'funcionarioId=' + funcId + '&';
+
+      const tarefas = await api(url);
+
+      if (tarefas.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="bi bi-list-task"></i><p>Nenhuma tarefa encontrada</p></div>';
+        return;
+      }
+
+      const prioridadeBadge = { alta: 'danger', media: 'warning', baixa: 'info' };
+      const statusBadge = { pendente: 'secondary', em_andamento: 'primary', concluida: 'success', cancelada: 'dark' };
+      const statusLabel = { pendente: 'Pendente', em_andamento: 'Em Andamento', concluida: 'Concluída', cancelada: 'Cancelada' };
+      const isAdmin = currentUser.role === 'admin' || currentUser.role === 'gestor';
+
+      container.innerHTML = `<div class="row g-3">${tarefas.map(t => {
+        const prazoDate = t.prazo ? new Date(t.prazo + 'T12:00:00') : null;
+        const isOverdue = prazoDate && prazoDate < new Date() && t.status !== 'concluida';
+        const funcNames = (t.funcionarios || []).map(f => f.funcionario_nome).join(', ') || 'Ninguém atribuído';
+
+        return '<div class="col-md-6 col-lg-4"><div class="summary-card h-100' + (isOverdue ? ' border-danger' : '') + '">' +
+          '<div class="d-flex justify-content-between align-items-start mb-2">' +
+            '<h6 class="mb-0">' + t.titulo + '</h6>' +
+            '<span class="badge bg-' + (prioridadeBadge[t.prioridade] || 'secondary') + '">' + (t.prioridade || 'media') + '</span>' +
+          '</div>' +
+          (t.descricao ? '<p class="small text-muted mb-2">' + t.descricao + '</p>' : '') +
+          '<div class="mb-2">' +
+            '<i class="bi bi-person me-1"></i><small>' + funcNames + '</small>' +
+          '</div>' +
+          '<div class="d-flex justify-content-between align-items-center">' +
+            '<div>' +
+              '<span class="badge bg-' + (statusBadge[t.status] || 'secondary') + ' me-1">' + (statusLabel[t.status] || t.status) + '</span>' +
+              (t.prazo ? '<small class="' + (isOverdue ? 'text-danger fw-bold' : 'text-muted') + '"><i class="bi bi-calendar3 me-1"></i>' + formatDate(t.prazo) + '</small>' : '') +
+            '</div>' +
+            '<div>' +
+              (t.fonte !== 'web' ? '<span class="badge bg-success bg-opacity-25 text-success me-1" style="font-size:0.65em">WA</span>' : '') +
+              (isAdmin ? '<button class="btn btn-action btn-outline-primary btn-sm" onclick="App.openTarefaModal(' + t.id + ')" title="Editar"><i class="bi bi-pencil"></i></button>' +
+              '<button class="btn btn-action btn-outline-danger btn-sm ms-1" onclick="App.deleteTarefa(' + t.id + ')" title="Excluir"><i class="bi bi-trash"></i></button>' : '') +
+            '</div>' +
+          '</div>' +
+        '</div></div>';
+      }).join('')}</div>`;
+    } catch (err) {
+      container.innerHTML = '<div class="alert alert-danger">Erro: ' + err.message + '</div>';
+    }
+  }
+
+  async function openTarefaModal(id) {
+    const isEdit = !!id;
+    const funcionarios = await api('/api/funcionarios');
+
+    const body = `
+      <form id="tarefa-form">
+        <div class="mb-3">
+          <label class="form-label">Título <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="tarefa-titulo" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Descrição</label>
+          <textarea class="form-control" id="tarefa-descricao" rows="2"></textarea>
+        </div>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Prioridade</label>
+            <select class="form-select" id="tarefa-prioridade">
+              <option value="baixa">Baixa</option>
+              <option value="media" selected>Média</option>
+              <option value="alta">Alta</option>
+            </select>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Prazo</label>
+            <input type="date" class="form-control" id="tarefa-prazo">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Status</label>
+            <select class="form-select" id="tarefa-status">
+              <option value="pendente">Pendente</option>
+              <option value="em_andamento">Em Andamento</option>
+              <option value="concluida">Concluída</option>
+              <option value="cancelada">Cancelada</option>
+            </select>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Atribuir Funcionário(s)</label>
+          <div id="tarefa-func-checks" class="border rounded p-2" style="max-height:150px;overflow-y:auto">
+            ${funcionarios.map(f => '<div class="form-check"><input class="form-check-input tarefa-func-check" type="checkbox" value="' + f.id + '" id="tf-' + f.id + '"><label class="form-check-label" for="tf-' + f.id + '">' + f.nome + '</label></div>').join('')}
+          </div>
+        </div>
+      </form>`;
+
+    const footer = '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>' +
+      '<button type="button" class="btn btn-primary" onclick="App.saveTarefa(' + (id || 'null') + ')">Salvar</button>';
+
+    openModal(isEdit ? 'Editar Tarefa' : 'Nova Tarefa', body, footer);
+
+    if (isEdit) {
+      const t = await api('/api/tarefas/' + id);
+      document.getElementById('tarefa-titulo').value = t.titulo;
+      document.getElementById('tarefa-descricao').value = t.descricao || '';
+      document.getElementById('tarefa-prioridade').value = t.prioridade;
+      document.getElementById('tarefa-prazo').value = t.prazo || '';
+      document.getElementById('tarefa-status').value = t.status;
+      (t.funcionarios || []).forEach(f => {
+        const cb = document.getElementById('tf-' + f.funcionario_id);
+        if (cb) cb.checked = true;
+      });
+    }
+  }
+
+  async function saveTarefa(id) {
+    const funcChecks = document.querySelectorAll('.tarefa-func-check:checked');
+    const funcIds = Array.from(funcChecks).map(cb => parseInt(cb.value));
+
+    const data = {
+      titulo: document.getElementById('tarefa-titulo').value,
+      descricao: document.getElementById('tarefa-descricao').value || null,
+      prioridade: document.getElementById('tarefa-prioridade').value,
+      prazo: document.getElementById('tarefa-prazo').value || null,
+      status: document.getElementById('tarefa-status').value,
+      funcionario_ids: funcIds
+    };
+
+    if (!data.titulo) { showToast('Título obrigatório', 'danger'); return; }
+
+    try {
+      if (id) {
+        await api('/api/tarefas/' + id, { method: 'PUT', body: JSON.stringify(data) });
+        showToast('Tarefa atualizada com sucesso');
+      } else {
+        await api('/api/tarefas', { method: 'POST', body: JSON.stringify(data) });
+        showToast('Tarefa criada com sucesso');
+      }
+      closeModal();
+      filterTarefas();
+    } catch (err) {
+      showToast(err.message, 'danger');
+    }
+  }
+
+  function deleteTarefa(id) {
+    confirmAction('Deseja excluir esta tarefa?', async () => {
+      try {
+        await api('/api/tarefas/' + id, { method: 'DELETE' });
+        showToast('Tarefa excluída');
+        filterTarefas();
+      } catch (err) {
+        showToast(err.message, 'danger');
+      }
+    });
+  }
+
+  // ============================================================
+  // CHAT WHATSAPP (modal on funcionários)
+  // ============================================================
+  async function openChatModal(funcionarioId, funcionarioNome) {
+    const body = `
+      <div id="chat-container" style="height:350px;overflow-y:auto;border:1px solid #dee2e6;border-radius:8px;padding:10px;background:#f8f9fa;margin-bottom:10px">
+        <div class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm"></div> Carregando...</div>
+      </div>
+      <div class="input-group">
+        <input type="text" class="form-control" id="chat-input" placeholder="Digite sua mensagem..." onkeydown="if(event.key==='Enter')App.sendChatMessage(${funcionarioId})">
+        <button class="btn btn-primary" onclick="App.sendChatMessage(${funcionarioId})"><i class="bi bi-send"></i></button>
+      </div>
+      <div class="mt-2">
+        <input type="file" class="form-control form-control-sm" id="chat-file-input" accept="image/*,.pdf,.doc,.docx">
+        <button class="btn btn-sm btn-outline-secondary mt-1" onclick="App.sendChatMedia(${funcionarioId})"><i class="bi bi-paperclip"></i> Enviar arquivo</button>
+      </div>`;
+
+    const modalEl = document.getElementById('app-modal');
+    modalEl.querySelector('.modal-dialog').classList.add('modal-lg');
+    modalEl.addEventListener('hidden.bs.modal', function handler() {
+      modalEl.querySelector('.modal-dialog').classList.remove('modal-lg');
+      modalEl.removeEventListener('hidden.bs.modal', handler);
+    });
+
+    openModal('Chat com ' + funcionarioNome, body, '');
+
+    // Load messages
+    try {
+      const data = await api('/api/whatsapp/chat/' + funcionarioId + '?limit=100');
+      const container = document.getElementById('chat-container');
+      if (!data.messages || data.messages.length === 0) {
+        container.innerHTML = '<div class="text-center text-muted py-4"><i class="bi bi-chat-dots" style="font-size:2rem"></i><p>Nenhuma mensagem ainda</p></div>';
+        return;
+      }
+      container.innerHTML = data.messages.map(m => {
+        const isSent = m.direcao === 'enviada';
+        const time = m.created_at ? m.created_at.slice(11, 16) : '';
+        const date = m.created_at ? m.created_at.slice(0, 10).split('-').reverse().join('/') : '';
+        let content = m.conteudo || '';
+        if (m.media_path) {
+          if (m.tipo === 'foto') {
+            content += '<br><img src="' + m.media_path + '" style="max-width:200px;border-radius:8px;margin-top:4px" onclick="window.open(\'' + m.media_path + '\')" class="cursor-pointer">';
+          } else {
+            content += '<br><a href="' + m.media_path + '" target="_blank" class="btn btn-sm btn-outline-primary mt-1"><i class="bi bi-download"></i> Arquivo</a>';
+          }
+        }
+        return '<div class="mb-2 d-flex ' + (isSent ? 'justify-content-end' : 'justify-content-start') + '">' +
+          '<div style="max-width:75%;padding:8px 12px;border-radius:12px;' + (isSent ? 'background:#0d6efd;color:#fff' : 'background:#fff;border:1px solid #dee2e6') + '">' +
+            '<div class="small">' + content + '</div>' +
+            '<div style="font-size:0.65rem;opacity:0.7;text-align:right">' + date + ' ' + time + '</div>' +
+          '</div></div>';
+      }).join('');
+      container.scrollTop = container.scrollHeight;
+    } catch (err) {
+      document.getElementById('chat-container').innerHTML = '<div class="alert alert-danger">Erro: ' + err.message + '</div>';
+    }
+  }
+
+  async function sendChatMessage(funcionarioId) {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    if (!message) return;
+    input.value = '';
+
+    try {
+      await api('/api/whatsapp/chat/' + funcionarioId + '/send', {
+        method: 'POST', body: JSON.stringify({ message })
+      });
+      // Reload chat
+      const data = await api('/api/whatsapp/chat/' + funcionarioId + '?limit=100');
+      const container = document.getElementById('chat-container');
+      container.innerHTML = data.messages.map(m => {
+        const isSent = m.direcao === 'enviada';
+        const time = m.created_at ? m.created_at.slice(11, 16) : '';
+        let content = m.conteudo || '';
+        if (m.media_path && m.tipo === 'foto') {
+          content += '<br><img src="' + m.media_path + '" style="max-width:200px;border-radius:8px">';
+        }
+        return '<div class="mb-2 d-flex ' + (isSent ? 'justify-content-end' : 'justify-content-start') + '">' +
+          '<div style="max-width:75%;padding:8px 12px;border-radius:12px;' + (isSent ? 'background:#0d6efd;color:#fff' : 'background:#fff;border:1px solid #dee2e6') + '">' +
+            '<div class="small">' + content + '</div>' +
+            '<div style="font-size:0.65rem;opacity:0.7;text-align:right">' + time + '</div>' +
+          '</div></div>';
+      }).join('');
+      container.scrollTop = container.scrollHeight;
+    } catch (err) {
+      showToast(err.message, 'danger');
+    }
+  }
+
+  async function sendChatMedia(funcionarioId) {
+    const fileInput = document.getElementById('chat-file-input');
+    if (!fileInput.files.length) { showToast('Selecione um arquivo', 'warning'); return; }
+    const formData = new FormData();
+    formData.append('media', fileInput.files[0]);
+    try {
+      const token = localStorage.getItem('ponto_token');
+      await fetch('/api/whatsapp/chat/' + funcionarioId + '/send-media', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token },
+        body: formData
+      });
+      fileInput.value = '';
+      showToast('Arquivo enviado');
+      // Reload chat
+      openChatModal(funcionarioId, '');
+    } catch (err) {
+      showToast('Erro ao enviar: ' + err.message, 'danger');
+    }
+  }
+
+  // ============================================================
   // Public API (for onclick handlers in HTML)
   // ============================================================
   window.App = {
@@ -3247,6 +3951,13 @@
     openCargoModal: openCargoModal,
     loadAccessLog: loadAccessLog,
     saveCargo: saveCargo,
+    filterTarefas: filterTarefas,
+    openTarefaModal: openTarefaModal,
+    saveTarefa: saveTarefa,
+    deleteTarefa: deleteTarefa,
+    openChatModal: openChatModal,
+    sendChatMessage: sendChatMessage,
+    sendChatMedia: sendChatMedia,
     openNovaEntrega: function() {
       document.getElementById('novaEntregaForm').reset();
       document.getElementById('novaEntregaPreview').style.display = 'none';

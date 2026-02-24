@@ -208,6 +208,9 @@ router.put('/users/:id', authenticateToken, requireAdmin, [
     if (req.body.email) updateData.email = req.body.email;
     if (req.body.role) updateData.role = req.body.role;
     if (req.body.active !== undefined) updateData.active = parseInt(req.body.active);
+    if (req.body.telefone !== undefined) updateData.telefone = req.body.telefone;
+    if (req.body.pode_criar_tarefas !== undefined) updateData.pode_criar_tarefas = parseInt(req.body.pode_criar_tarefas) ? 1 : 0;
+    if (req.body.pode_criar_tarefas_whatsapp !== undefined) updateData.pode_criar_tarefas_whatsapp = parseInt(req.body.pode_criar_tarefas_whatsapp) ? 1 : 0;
 
     if (req.body.password) {
       const bcrypt = require('bcryptjs');

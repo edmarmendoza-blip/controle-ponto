@@ -61,7 +61,18 @@ app.use('/api/holerites', require('./src/routes/holerites'));
 app.use('/api/cargos', require('./src/routes/cargos'));
 app.use('/api/entregas', require('./src/routes/entregas'));
 app.use('/api/users', require('./src/routes/users'));
+app.use('/api/tarefas', require('./src/routes/tarefas'));
 app.use('/api/audit-log', require('./src/routes/auditLog'));
+
+// Version endpoint
+app.get('/api/version', (req, res) => {
+  try {
+    const versionData = require('./version.json');
+    res.json(versionData);
+  } catch (err) {
+    res.json({ version: '2.0.0', env: 'sandbox' });
+  }
+});
 
 // Root redirect to dashboard
 app.get('/', (req, res) => {
