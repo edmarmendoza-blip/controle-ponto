@@ -77,6 +77,30 @@ class Schedulers {
     }, ms);
   }
 
+  // Schedule a job every N minutes
+  static _scheduleIntervalMinutes(name, intervalMinutes, jobFn, startupDelayMs = 60000) {
+    const ms = intervalMinutes * 60000;
+    console.log(`[Scheduler] ${name}: executando a cada ${intervalMinutes}min`);
+
+    // Run once on startup after delay
+    setTimeout(async () => {
+      try {
+        await jobFn();
+        console.log(`[Scheduler] ${name}: execução inicial concluída`);
+      } catch (err) {
+        console.error(`[Scheduler] ${name}: erro inicial -`, err.message);
+      }
+    }, startupDelayMs);
+
+    setInterval(async () => {
+      try {
+        await jobFn();
+      } catch (err) {
+        console.error(`[Scheduler] ${name}: erro -`, err.message);
+      }
+    }, ms);
+  }
+
   // Initialize all schedulers
   static init() {
     console.log('[Scheduler] Inicializando schedulers...');
@@ -89,6 +113,9 @@ class Schedulers {
 
     // 3. IMAP holerite sync - every 6 hours
     this._scheduleInterval('Sync Holerites IMAP', 6, () => this.syncHolerites());
+
+    // 4. WhatsApp health check - every 20 minutes
+    this._scheduleIntervalMinutes('WhatsApp Health Check', 20, () => this.checkWhatsAppHealth(), 120000);
 
     console.log('[Scheduler] Todos os schedulers iniciados');
   }
@@ -233,6 +260,30 @@ class Schedulers {
     });
 
     return { mes, ano, funcionarios: resultados.length, totalPagar };
+  }
+
+  // WhatsApp health check - verify connection status, email if offline
+  static async checkWhatsAppHealth() {
+    const whatsappService = require('./whatsapp');
+    const status = whatsappService.status;
+
+    if (status === 'connected') {
+      console.log('[Scheduler] WhatsApp Health: conectado ✓');
+      return { status: 'connected', ok: true };
+    }
+
+    // Check if WhatsApp is enabled
+    const config = db.prepare("SELECT valor FROM configuracoes WHERE chave = 'whatsapp_enabled'").get();
+    if (!config || config.valor !== 'true') {
+      console.log('[Scheduler] WhatsApp Health: serviço desabilitado (ignorando)');
+      return { status: 'disabled', ok: true };
+    }
+
+    // WhatsApp is enabled but not connected - send alert
+    console.warn(`[Scheduler] WhatsApp Health: OFFLINE (status: ${status})`);
+    await EmailService.sendWhatsAppAlert(`Health check falhou - status: ${status}`);
+
+    return { status, ok: false };
   }
 
   // IMAP holerite sync

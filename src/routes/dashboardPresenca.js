@@ -8,7 +8,7 @@ const router = express.Router();
 // GET /api/dashboard/presenca/hoje
 router.get('/hoje', authenticateToken, (req, res) => {
   try {
-    const data = new Date().toISOString().split('T')[0];
+    const data = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
     const result = DashboardPresenca.getPresencaHoje(data);
     res.json(result);
   } catch (err) {

@@ -90,6 +90,24 @@
     return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
   }
 
+  function maskPhone(value) {
+    const nums = (value || '').replace(/\D/g, '').slice(0, 11);
+    if (nums.length === 0) return '';
+    if (nums.length <= 2) return '(' + nums;
+    if (nums.length <= 7) return '(' + nums.slice(0,2) + ') ' + nums.slice(2);
+    return '(' + nums.slice(0,2) + ') ' + nums.slice(2,7) + '-' + nums.slice(7);
+  }
+
+  function formatPhone(value) {
+    if (!value) return '-';
+    return maskPhone(value);
+  }
+
+  function applyPhoneMask(inputId) {
+    const el = document.getElementById(inputId);
+    if (el) el.addEventListener('input', () => { el.value = maskPhone(el.value); });
+  }
+
   function monthName(m) {
     return ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'][parseInt(m)];
@@ -193,19 +211,40 @@
   document.getElementById('forgot-send-btn').addEventListener('click', async () => {
     const email = document.getElementById('forgot-email').value;
     const msgEl = document.getElementById('forgot-message');
+    const btn = document.getElementById('forgot-send-btn');
     if (!email) { msgEl.textContent = 'Informe o email'; msgEl.className = 'small mt-2 text-danger'; return; }
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Enviando...';
     try {
-      await fetch('/api/auth/forgot-password', {
+      const res = await fetch('/api/auth/forgot-password', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
       });
+      const data = await res.json();
+      if (res.status === 429) {
+        msgEl.textContent = data.error;
+        msgEl.className = 'small mt-2 text-danger';
+        btn.disabled = false;
+        btn.textContent = 'Enviar código';
+        return;
+      }
       msgEl.textContent = 'Se o email existir, um código foi enviado.';
       msgEl.className = 'small mt-2 text-success';
       document.getElementById('forgot-step1').classList.add('d-none');
       document.getElementById('forgot-step2').classList.remove('d-none');
+      // Countdown 60s on button (in case user goes back)
+      let secs = 60;
+      btn.textContent = `Reenviar em ${secs}s...`;
+      const countdown = setInterval(() => {
+        secs--;
+        if (secs <= 0) { clearInterval(countdown); btn.disabled = false; btn.textContent = 'Enviar código'; }
+        else btn.textContent = `Reenviar em ${secs}s...`;
+      }, 1000);
     } catch (err) {
       msgEl.textContent = 'Erro ao enviar. Tente novamente.';
       msgEl.className = 'small mt-2 text-danger';
+      btn.disabled = false;
+      btn.textContent = 'Enviar código';
     }
   });
 
@@ -431,7 +470,7 @@
                   <td class="d-flex align-items-center gap-2">${f.foto ? '<img src="' + f.foto + '" class="rounded-circle" style="width:32px;height:32px;object-fit:cover" alt="">' : '<i class="bi bi-person-circle text-muted" style="font-size:1.5rem"></i>'}<strong>${f.nome}</strong></td>
                   <td>${f.cargo_nome || f.cargo || '-'}</td>
                   <td>${formatCurrency(f.salario_hora_display || f.salario_hora)}</td>
-                  <td>${f.telefone || '-'}</td>
+                  <td>${formatPhone(f.telefone)}</td>
                   <td>${f.horario_entrada || '08:00'}</td>
                   <td><span class="badge-status badge-${f.status}">${f.status === 'ativo' ? 'Ativo' : 'Inativo'}</span></td>
                   ${canManage ? `
@@ -654,6 +693,11 @@
       });
     }
 
+    // Apply phone masks
+    applyPhoneMask('func-telefone');
+    applyPhoneMask('func-telefone-contato2');
+    applyPhoneMask('func-telefone-emergencia');
+
     // Load cargos dropdown
     api('/api/cargos').then(cargos => {
       const select = document.getElementById('func-cargo');
@@ -683,7 +727,7 @@
           document.getElementById('func-nome').value = f.nome;
           document.getElementById('func-cargo').value = f.cargo_id || '';
           document.getElementById('func-salario').value = f.salario_hora_display || f.salario_hora || 0;
-          document.getElementById('func-telefone').value = f.telefone || '';
+          document.getElementById('func-telefone').value = maskPhone(f.telefone || '');
           document.getElementById('func-email-pessoal').value = f.email_pessoal || '';
           document.getElementById('func-horario-entrada').value = f.horario_entrada || '08:00';
           document.getElementById('func-valor-hora-extra').value = f.valor_hora_extra_display || f.valor_hora_extra || 0;
@@ -704,9 +748,9 @@
           document.getElementById('func-endereco-bairro').value = f.endereco_bairro || '';
           document.getElementById('func-endereco-cidade').value = f.endereco_cidade || '';
           document.getElementById('func-endereco-estado').value = f.endereco_estado || '';
-          document.getElementById('func-telefone-contato2').value = f.telefone_contato2 || '';
+          document.getElementById('func-telefone-contato2').value = maskPhone(f.telefone_contato2 || '');
           document.getElementById('func-nome-contato-emergencia').value = f.nome_contato_emergencia || '';
-          document.getElementById('func-telefone-emergencia').value = f.telefone_emergencia || '';
+          document.getElementById('func-telefone-emergencia').value = maskPhone(f.telefone_emergencia || '');
           // Foto preview
           if (f.foto) {
             document.getElementById('func-foto-preview').innerHTML = '<img src="' + f.foto + '" class="rounded" style="width:80px;height:80px;object-fit:cover" alt="Foto">';
@@ -728,7 +772,7 @@
       cargo: cargoNome,
       cargo_id: cargoId || null,
       salario_hora: parseFloat(getVal('func-salario')),
-      telefone: getVal('func-telefone') || null,
+      telefone: (getVal('func-telefone') || '').replace(/\D/g, '') || null,
       email_pessoal: getVal('func-email-pessoal') || null,
       horario_entrada: getVal('func-horario-entrada') || '08:00',
       valor_hora_extra: parseFloat(getVal('func-valor-hora-extra')) || 0,
@@ -748,9 +792,9 @@
       endereco_bairro: getVal('func-endereco-bairro') || null,
       endereco_cidade: getVal('func-endereco-cidade') || null,
       endereco_estado: getVal('func-endereco-estado') || null,
-      telefone_contato2: getVal('func-telefone-contato2') || null,
+      telefone_contato2: (getVal('func-telefone-contato2') || '').replace(/\D/g, '') || null,
       nome_contato_emergencia: getVal('func-nome-contato-emergencia') || null,
-      telefone_emergencia: getVal('func-telefone-emergencia') || null
+      telefone_emergencia: (getVal('func-telefone-emergencia') || '').replace(/\D/g, '') || null
     };
 
     if (!data.nome || !cargoId || isNaN(data.salario_hora)) {
@@ -852,9 +896,12 @@
               <option value="almoco">Almoço</option>
             </select>
           </div>
-          <div>
+          <div class="d-flex gap-2 align-items-end">
             <button class="btn btn-primary" onclick="App.filterRegistros()">
               <i class="bi bi-search"></i> Buscar
+            </button>
+            <button class="btn btn-outline-secondary" onclick="App.filterRegistrosHoje()" title="Filtrar hoje">
+              <i class="bi bi-calendar-day"></i> Hoje
             </button>
           </div>
           <div class="ms-auto">
@@ -992,6 +1039,18 @@
     } catch (err) {
       container.innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
     }
+  }
+
+  function filterRegistrosHoje() {
+    const todayStr = today();
+    const mesEl = document.getElementById('reg-filter-mes');
+    const anoEl = document.getElementById('reg-filter-ano');
+    const inicioEl = document.getElementById('reg-filter-inicio');
+    const fimEl = document.getElementById('reg-filter-fim');
+    if (mesEl) mesEl.value = '';
+    if (inicioEl) { inicioEl.disabled = false; inicioEl.value = todayStr; }
+    if (fimEl) { fimEl.disabled = false; fimEl.value = todayStr; }
+    filterRegistros();
   }
 
   // Geolocation helper
@@ -1802,7 +1861,8 @@
     const anoAtual = now.getFullYear();
 
     try {
-      const funcionarios = await api('/api/funcionarios');
+      const allFuncionarios = await api('/api/funcionarios');
+      const funcionarios = allFuncionarios.filter(f => f.cargo_nome !== 'Dono(a) da Casa' && f.precisa_bater_ponto !== 0);
 
       content.innerHTML = `
         <div class="filter-bar">
@@ -2530,6 +2590,7 @@
       <button type="button" class="btn btn-primary" onclick="App.saveUsuario(${id || 'null'})">Salvar</button>`;
 
     openModal(isEdit ? 'Editar Usuário' : 'Novo Usuário', body, footer);
+    applyPhoneMask('user-telefone-input');
 
     if (isEdit) {
       api('/api/auth/users').then(users => {
@@ -2539,7 +2600,7 @@
           document.getElementById('user-email-input').value = u.email;
           document.getElementById('user-role-input').value = u.role;
           document.getElementById('user-active-input').value = u.active ? '1' : '0';
-          document.getElementById('user-telefone-input').value = u.telefone || '';
+          document.getElementById('user-telefone-input').value = maskPhone(u.telefone || '');
           document.getElementById('user-pode-tarefas').checked = !!u.pode_criar_tarefas;
           document.getElementById('user-pode-tarefas-wa').checked = !!u.pode_criar_tarefas_whatsapp;
         }
@@ -2558,7 +2619,7 @@
 
     // Novos campos de permissão de tarefas
     const telefoneEl = document.getElementById('user-telefone-input');
-    if (telefoneEl) data.telefone = telefoneEl.value;
+    if (telefoneEl) data.telefone = (telefoneEl.value || '').replace(/\D/g, '') || null;
     const podeTarefasEl = document.getElementById('user-pode-tarefas');
     if (podeTarefasEl) data.pode_criar_tarefas = podeTarefasEl.checked ? 1 : 0;
     const podeTarefasWaEl = document.getElementById('user-pode-tarefas-wa');
@@ -3919,6 +3980,7 @@
     saveRegistro: saveRegistro,
     deleteRegistro: deleteRegistro,
     filterRegistros: filterRegistros,
+    filterRegistrosHoje: filterRegistrosHoje,
     loadRelatorio: loadRelatorio,
     loadFolha: loadFolha,
     exportExcel: exportExcel,

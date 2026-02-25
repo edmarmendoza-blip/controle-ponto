@@ -457,7 +457,7 @@ function initializeDatabase() {
     CREATE TABLE IF NOT EXISTS pending_confirmations (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       funcionario_id INTEGER NOT NULL,
-      tipo TEXT NOT NULL CHECK(tipo IN ('entrada', 'saida', 'saida_almoco', 'retorno_almoco')),
+      tipo TEXT NOT NULL CHECK(tipo IN ('entrada', 'saida', 'saida_almoco', 'retorno_almoco', 'entrega')),
       data DATE NOT NULL,
       horario TEXT NOT NULL,
       message_text TEXT,
@@ -527,6 +527,34 @@ function initializeDatabase() {
 
     CREATE INDEX IF NOT EXISTS idx_whatsapp_chats_func ON whatsapp_chats(funcionario_id);
   `);
+
+  // Migrate pending_confirmations to include 'entrega' in tipo CHECK (post-CREATE)
+  try {
+    const pcInfo = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='pending_confirmations'").get();
+    if (pcInfo && pcInfo.sql && !pcInfo.sql.includes("'entrega'")) {
+      // Drop leftover temp table if exists from failed previous migration
+      try { db.exec('DROP TABLE IF EXISTS pending_confirmations_mig'); } catch(e) {}
+      db.exec(`
+        CREATE TABLE pending_confirmations_mig (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          funcionario_id INTEGER NOT NULL,
+          tipo TEXT NOT NULL CHECK(tipo IN ('entrada', 'saida', 'saida_almoco', 'retorno_almoco', 'entrega')),
+          data DATE NOT NULL,
+          horario TEXT NOT NULL,
+          message_text TEXT,
+          status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'confirmed', 'denied', 'expired')),
+          created_at DATETIME DEFAULT (datetime('now','localtime')),
+          resolved_at DATETIME,
+          FOREIGN KEY (funcionario_id) REFERENCES funcionarios(id)
+        );
+        INSERT INTO pending_confirmations_mig SELECT * FROM pending_confirmations;
+        DROP TABLE pending_confirmations;
+        ALTER TABLE pending_confirmations_mig RENAME TO pending_confirmations;
+        CREATE INDEX IF NOT EXISTS idx_pending_confirmations_status ON pending_confirmations(funcionario_id, status);
+      `);
+      console.log('[Migration] pending_confirmations: added entrega to tipo CHECK');
+    }
+  } catch (e) { console.error('[Migration] pending_confirmations tipo:', e.message); }
 
   // Default configs
   const configs = [

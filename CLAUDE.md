@@ -187,8 +187,8 @@ APP_NAME=Lar Digital
 3. **Cargos** - CRUD com config de benefícios e regras por cargo
 4. **Registros** - Ponto com geo, filtros, edição, tipos: entrada/saída/almoço
 5. **Relatórios** - Mensal, export Excel/PDF
-6. **Presença** - Calendário visual mensal
-7. **Gráficos** - Chart.js: barras, linha, pizza
+6. **Presença** - Calendário visual mensal (filtra por precisa_bater_ponto=1, exclui Dono da Casa/Governanta)
+7. **Gráficos** - Chart.js: barras, linha, pizza (filtra por precisa_bater_ponto=1)
 8. **Feriados** - SP 2026, sync auto, CRUD manual (manual=true prevalece)
 9. **WhatsApp** - QR Code, status, reconectar, parser inteligente
 10. **Entregas** - Cards com thumbnail, upload manual com foto, confirmação WhatsApp (SIM/NÃO)
@@ -210,24 +210,28 @@ ativo, created_at, updated_at
 ### Dados Pessoais
 nome, cargo_id (FK→cargos), telefone, email_pessoal, foto
 ### Documentos
-cpf, rg, data_nascimento
+cpf (validação mod-11 no frontend), rg, data_nascimento
 ### Status
 classificacao, status (ativo|desligado), data_admissao, data_desligamento
 ### Datas de Trabalho
 data_inicio_trabalho, data_inicio_registro_carteira
+- Cross-validation: registro_carteira >= inicio_trabalho, desligamento >= inicio_trabalho
 ### Endereço
-endereco_cep, endereco_rua, endereco_numero, endereco_complemento,
-endereco_bairro, endereco_cidade, endereco_estado
+endereco_cep (mask XXXXX-XXX, auto-fill via ViaCEP), endereco_rua, endereco_numero,
+endereco_complemento, endereco_bairro, endereco_cidade, endereco_estado (dropdown 27 UFs)
 ### Contatos Adicionais
 telefone_contato2, telefone_emergencia, nome_contato_emergencia
-### Benefícios (herda do cargo, editável)
-contabiliza_hora_extra, recebe_vt, recebe_va, contabiliza_feriado,
-valor_hora_extra, valor_dia_extra, recebe_ajuda_combustivel, valor_ajuda_combustivel
+### Benefícios (herda do cargo, editável via checkboxes)
+contabiliza_hora_extra, recebe_vt, recebe_va (tem_vale_alimentacao), contabiliza_feriado,
+valor_hora_extra, valor_dia_extra, recebe_ajuda_combustivel, valor_ajuda_combustivel,
+valor_va_dia
+- Cargo change auto-fill: preenche campos vazios com defaults do cargo (HE, VT, VA, combustível)
 ### Jornada
 Texto livre ou JSON: dias_semana, entrada, saída, carga diária
 ### VT: tipo (diario|pernoite|fixo), múltiplos transportes
 ### VA: tem_vale_alimentacao, valor_va_dia
-### PIX: pix_tipo, pix_chave, pix_banco
+### PIX (editável no form): pix_tipo (cpf|cnpj|email|telefone|aleatoria), pix_chave, pix_banco
+- Exibido na folha de pagamento como badge
 ### Férias: período aquisitivo auto, status, alertas 60/30/7 dias
 ### Foto: upload via POST /api/funcionarios/:id/foto (multer, max 10MB, salva em /public/uploads/funcionarios/)
 
@@ -351,7 +355,7 @@ NÃO usar parser manual de palavras-chave. Usar IA para interpretar.
 - Verificar com: `pm2 logs lardigital-sandbox --lines 50`
 
 ## CRON JOBS
-- 5min: Health check WhatsApp → email se offline
+- 20min: Health check WhatsApp → email se offline (schedulers.js)
 - 30min: IMAP holerites
 - Dia 01 08:00: Email fechamento mês
 - Dia 05 08:00: Email holerites pendentes
@@ -442,6 +446,14 @@ NÃO usar parser manual de palavras-chave. Usar IA para interpretar.
 ## SIDEBAR MOBILE
 - sidebar-nav tem overflow-y:auto + -webkit-overflow-scrolling:touch para scroll no iPhone
 - @supports (-webkit-touch-callout: none) aplica max-height: -webkit-fill-available
+
+## PRESENÇA / GRÁFICOS - FILTRO POR CARGO
+- Presença (hoje e mensal) e Gráficos filtram por `precisa_bater_ponto = 1` do cargo
+- Exclui automaticamente: Dono(a) da Casa (cargo_id 82), Governanta (cargo_id 143), Assistente Pessoal (cargo_id 4)
+- JOIN com cargos: `LEFT JOIN cargos c ON f.cargo_id = c.id WHERE (c.precisa_bater_ponto = 1 OR c.id IS NULL)`
+- Presença hoje usa `toLocaleDateString('sv-SE', {timeZone:'America/Sao_Paulo'})` para data correta (não UTC)
+- Dropdown de funcionários nos gráficos também filtra por precisa_bater_ponto
+- API funcionarios.getAll() retorna campo `precisa_bater_ponto` do cargo
 
 ## COMANDOS ÚTEIS
 ```bash

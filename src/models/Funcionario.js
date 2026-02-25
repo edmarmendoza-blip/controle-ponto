@@ -24,6 +24,7 @@ class Funcionario {
     return db.prepare(`
       SELECT f.*,
         c.nome as cargo_nome,
+        c.precisa_bater_ponto,
         COALESCE(NULLIF(f.salario_hora, 0), c.valor_hora_extra, 0) as salario_hora_display,
         COALESCE(NULLIF(f.valor_hora_extra, 0), c.valor_hora_extra, 0) as valor_hora_extra_display,
         COALESCE(NULLIF(f.valor_dia_especial, 0), c.valor_dia_extra, 0) as valor_dia_extra_display

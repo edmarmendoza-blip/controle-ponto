@@ -7,13 +7,15 @@ class DashboardPresenca {
       SELECT
         f.id,
         f.nome,
-        f.cargo,
+        COALESCE(c.nome, f.cargo) as cargo,
         f.horario_entrada,
         r.entrada,
         r.saida
       FROM funcionarios f
+      LEFT JOIN cargos c ON f.cargo_id = c.id
       LEFT JOIN registros r ON f.id = r.funcionario_id AND r.data = ?
       WHERE f.status = 'ativo'
+        AND (c.precisa_bater_ponto = 1 OR (c.precisa_bater_ponto IS NULL AND c.id IS NULL))
       ORDER BY f.nome
     `).all(data);
 
@@ -67,9 +69,14 @@ class DashboardPresenca {
     const dataInicio = `${ano}-${String(mes).padStart(2, '0')}-01`;
     const dataFim = `${ano}-${String(mes).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
 
-    const funcionariosAtivos = db.prepare(
-      "SELECT id, nome, cargo, horario_entrada FROM funcionarios WHERE status = 'ativo' ORDER BY nome"
-    ).all();
+    const funcionariosAtivos = db.prepare(`
+      SELECT f.id, f.nome, COALESCE(c.nome, f.cargo) as cargo, f.horario_entrada
+      FROM funcionarios f
+      LEFT JOIN cargos c ON f.cargo_id = c.id
+      WHERE f.status = 'ativo'
+        AND (c.precisa_bater_ponto = 1 OR (c.precisa_bater_ponto IS NULL AND c.id IS NULL))
+      ORDER BY f.nome
+    `).all();
 
     const registros = db.prepare(`
       SELECT funcionario_id, data, entrada
