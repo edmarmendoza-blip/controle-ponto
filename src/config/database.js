@@ -139,11 +139,19 @@ function initializeDatabase() {
         "endereco_estado TEXT",
         "telefone_contato2 TEXT",
         "telefone_emergencia TEXT",
-        "nome_contato_emergencia TEXT"
+        "nome_contato_emergencia TEXT",
+        "recebe_ajuda_combustivel INTEGER DEFAULT 0",
+        "valor_ajuda_combustivel REAL DEFAULT 0"
       ];
       for (const col of personalCols) {
         try { db.exec(`ALTER TABLE funcionarios ADD COLUMN ${col}`); } catch (e) { /* column may already exist */ }
       }
+    }
+    // Add combustivel columns if missing
+    const funcColsComb = db.prepare("PRAGMA table_info(funcionarios)").all().map(c => c.name);
+    if (!funcColsComb.includes('recebe_ajuda_combustivel')) {
+      try { db.exec("ALTER TABLE funcionarios ADD COLUMN recebe_ajuda_combustivel INTEGER DEFAULT 0"); } catch(e) {}
+      try { db.exec("ALTER TABLE funcionarios ADD COLUMN valor_ajuda_combustivel REAL DEFAULT 0"); } catch(e) {}
     }
 
     // Add 2FA columns to users
@@ -526,6 +534,40 @@ function initializeDatabase() {
     );
 
     CREATE INDEX IF NOT EXISTS idx_whatsapp_chats_func ON whatsapp_chats(funcionario_id);
+
+    CREATE TABLE IF NOT EXISTS veiculos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      marca TEXT,
+      modelo TEXT,
+      ano_fabricacao INTEGER,
+      ano_modelo INTEGER,
+      cor TEXT,
+      placa TEXT UNIQUE,
+      renavam TEXT,
+      chassi TEXT,
+      combustivel TEXT DEFAULT 'flex',
+      km_atual INTEGER DEFAULT 0,
+      seguradora TEXT,
+      seguro_apolice TEXT,
+      seguro_vigencia_inicio TEXT,
+      seguro_vigencia_fim TEXT,
+      seguro_valor REAL,
+      ipva_valor REAL,
+      ipva_vencimento TEXT,
+      ipva_status TEXT DEFAULT 'pendente',
+      licenciamento_ano INTEGER,
+      licenciamento_status TEXT DEFAULT 'pendente',
+      ultima_revisao_data TEXT,
+      ultima_revisao_km INTEGER,
+      proxima_revisao_data TEXT,
+      proxima_revisao_km INTEGER,
+      responsavel_id INTEGER REFERENCES funcionarios(id),
+      crlv_foto_path TEXT,
+      observacoes TEXT,
+      status TEXT DEFAULT 'ativo',
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      updated_at TEXT DEFAULT (datetime('now','localtime'))
+    );
   `);
 
   // Migrate pending_confirmations to include 'entrega' in tipo CHECK (post-CREATE)

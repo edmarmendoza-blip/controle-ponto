@@ -191,13 +191,14 @@ APP_NAME=Lar Digital
 7. **Gráficos** - Chart.js: barras, linha, pizza (filtra por precisa_bater_ponto=1)
 8. **Feriados** - SP 2026, sync auto, CRUD manual (manual=true prevalece)
 9. **WhatsApp** - QR Code, status, reconectar, parser inteligente
-10. **Entregas** - Cards com thumbnail, upload manual com foto, confirmação WhatsApp (SIM/NÃO)
-11. **Tarefas** - CRUD, multi-assign funcionários, prioridade/prazo, integração WhatsApp
-12. **Insights IA** - Operacional + Melhorias (admin only)
-13. **Usuários** - CRUD, roles, permissões tarefas, excluir com confirmação, reenviar senha (admin only)
-14. **Audit Log** - Log de ações (admin only)
-15. **Log de Acessos** - Login/logout/falhas com IP e navegador (admin only, bi-door-open)
-16. **Perfil** - Editar dados, trocar senha, 2FA
+10. **Veículos** - CRUD, CRLV Vision AI, busca por placa (BigDataCorp), alertas IPVA/revisão
+11. **Entregas** - Cards com thumbnail, upload manual com foto, confirmação WhatsApp (SIM/NÃO)
+12. **Tarefas** - CRUD, multi-assign funcionários, prioridade/prazo, integração WhatsApp
+13. **Insights IA** - Operacional + Melhorias (admin only)
+14. **Usuários** - CRUD, roles, permissões tarefas, excluir com confirmação, reenviar senha (admin only)
+15. **Audit Log** - Log de ações (admin only)
+16. **Log de Acessos** - Login/logout/falhas com IP e navegador (admin only, bi-door-open)
+17. **Perfil** - Editar dados, trocar senha, 2FA
 
 ## CADASTRO DE CARGOS
 nome, precisa_bater_ponto, permite_hora_extra, permite_dia_extra,
@@ -205,12 +206,13 @@ valor_hora_extra, valor_dia_extra, recebe_vale_transporte, valor_vale_transporte
 recebe_vale_refeicao, valor_vale_refeicao, recebe_ajuda_combustivel,
 valor_ajuda_combustivel, dorme_no_local, dias_dormida (JSON), tipo_dias_dormida (uteis|todos|customizado),
 ativo, created_at, updated_at
+- Frontend: inativos ocultos por padrão, toggle "Mostrar inativos (X)" com contagem
 
 ## CADASTRO DE FUNCIONÁRIO
 ### Dados Pessoais
 nome, cargo_id (FK→cargos), telefone, email_pessoal, foto
 ### Documentos
-cpf (validação mod-11 no frontend), rg, data_nascimento
+cpf (validação mod-11 no frontend, botão buscar dados via BigDataCorp), rg, data_nascimento
 ### Status
 classificacao, status (ativo|desligado), data_admissao, data_desligamento
 ### Datas de Trabalho
@@ -239,7 +241,7 @@ Texto livre ou JSON: dias_semana, entrada, saída, carga diária
 users, funcionarios, cargos, registros, feriados (com manual boolean),
 funcionario_transportes, entregas, holerites, email_logs,
 audit_log, access_log, ferias, pending_confirmations,
-tarefas, tarefa_funcionarios, whatsapp_chats
+tarefas, tarefa_funcionarios, whatsapp_chats, veiculos
 
 ## ENTREGAS - FLUXO COMPLETO
 ### Via WhatsApp (automático com confirmação):
@@ -270,6 +272,43 @@ tarefas, tarefa_funcionarios, whatsapp_chats
 - Campo descricao guarda a análise completa da Vision AI
 - Thumbnails servidos via GET /uploads/entregas/{arquivo} ou /uploads/whatsapp/{data}/{arquivo}
 
+## VEÍCULOS
+### Tabela: veiculos
+id, marca, modelo, ano_fabricacao, ano_modelo, cor, placa (UNIQUE), renavam, chassi,
+combustivel (default 'flex'), km_atual, seguradora, seguro_apolice, seguro_vigencia_inicio,
+seguro_vigencia_fim, seguro_valor, ipva_valor, ipva_vencimento, ipva_status (pendente|pago),
+licenciamento_ano, licenciamento_status, ultima_revisao_data, ultima_revisao_km,
+proxima_revisao_data, proxima_revisao_km, responsavel_id (FK→funcionarios),
+crlv_foto_path, observacoes, status (ativo|inativo), created_at, updated_at
+
+### API Endpoints
+- GET /api/veiculos — lista (param: includeInactive=true)
+- GET /api/veiculos/alerts — alertas IPVA, revisão (próximos 30 dias)
+- GET /api/veiculos/:id — detalhes
+- POST /api/veiculos — criar (gestor)
+- PUT /api/veiculos/:id — atualizar (gestor)
+- DELETE /api/veiculos/:id — soft delete (gestor)
+- POST /api/veiculos/:id/crlv — upload foto CRLV (multer, max 10MB)
+- POST /api/veiculos/analyze-crlv — Vision AI (claude-haiku-4-5-20251001) extrai dados do CRLV
+- POST /api/veiculos/buscar-placa — BigDataCorp vehiclesv2 lookup por placa
+
+### Frontend
+- Sidebar: bi-car-front, após Cargos
+- Cards com status, placa, responsável, alertas
+- Modal CRUD com todas as seções: dados, seguro, IPVA, revisão, responsável
+- Botão "Analisar CRLV": upload foto → IA extrai dados → auto-fill formulário
+- Botão "Buscar Placa": consulta BigDataCorp → auto-fill marca/modelo/cor
+- Toggle inativos (mesmo padrão de Cargos)
+
+## BIGDATACORP INTEGRAÇÃO
+- Token: BIGDATACORP_TOKEN no .env (JWT Bearer)
+- **Veículos**: POST /api/veiculos/buscar-placa → BigDataCorp vehiclesv2 (plate lookup)
+- **Funcionários**: POST /api/funcionarios/enrich-cpf → BigDataCorp peoplev2 (CPF lookup)
+  - Retorna: nome, data_nascimento, rg, email, telefone, endereço completo
+  - Frontend: botão de busca ao lado do campo CPF no modal de funcionário
+  - Auto-fill: preenche campos vazios sem sobrescrever existentes
+  - Audit log: registra consulta (CPF parcialmente mascarado)
+
 ## FLUXO CARGOS → FUNCIONÁRIOS → RELATÓRIOS
 
 ### Regra fundamental: Employee overrides Cargo. Cargo is the default.
@@ -293,6 +332,7 @@ combustivel:      cargo.valor_ajuda_combustivel
 - Campos com valor do funcionário são preservados (override)
 
 ### Relatório Mensal (tab 1)
+- Usa mesma lógica de cálculo da Folha de Pagamento (API /api/relatorios/folha)
 - Exclui "Dono(a) da Casa" automaticamente
 - Colunas dinâmicas: esconde "Extras" se nenhum funcionário tem permiteHE
 - Flags do cargo propagados na resposta: permiteHE, permiteDE, precisaBaterPonto

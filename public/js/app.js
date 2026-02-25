@@ -340,6 +340,7 @@
       case 'auditlog': renderAuditLog(); break;
       case 'insights': renderInsightsIA(); break;
       case 'cargos': renderCargos(); break;
+      case 'veiculos': renderVeiculos(); break;
       case 'entregas': renderEntregas(); break;
       case 'tarefas': renderTarefas(); break;
       case 'accesslog': renderAccessLog(); break;
@@ -540,7 +541,12 @@
         <div class="row">
           <div class="col-md-4 mb-3">
             <label class="form-label">CPF</label>
-            <input type="text" class="form-control" id="func-cpf" placeholder="000.000.000-00" maxlength="14">
+            <div class="input-group">
+              <input type="text" class="form-control" id="func-cpf" placeholder="000.000.000-00" maxlength="14">
+              <button class="btn btn-outline-primary" type="button" id="btn-enrich-cpf" title="Buscar dados por CPF (BigDataCorp)">
+                <i class="bi bi-search"></i>
+              </button>
+            </div>
           </div>
           <div class="col-md-4 mb-3">
             <label class="form-label">RG</label>
@@ -657,6 +663,45 @@
             <input type="time" class="form-control" id="func-horario-entrada" value="08:00">
           </div>
         </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <div class="form-check form-switch"><input type="checkbox" class="form-check-input" id="func-contabiliza-he"><label class="form-check-label" for="func-contabiliza-he">Contabiliza hora extra</label></div>
+            <div class="form-check form-switch"><input type="checkbox" class="form-check-input" id="func-recebe-vt"><label class="form-check-label" for="func-recebe-vt">Recebe vale transporte</label></div>
+            <div class="form-check form-switch"><input type="checkbox" class="form-check-input" id="func-recebe-va"><label class="form-check-label" for="func-recebe-va">Recebe vale alimentação</label></div>
+            <div class="form-check form-switch"><input type="checkbox" class="form-check-input" id="func-recebe-combustivel"><label class="form-check-label" for="func-recebe-combustivel">Recebe ajuda combustível</label></div>
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="form-label">VA/dia (R$)</label>
+            <input type="number" class="form-control" id="func-valor-va-dia" step="0.01" min="0" placeholder="Herda do cargo">
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Combustível (R$)</label>
+            <input type="number" class="form-control" id="func-valor-combustivel" step="0.01" min="0" placeholder="Herda do cargo">
+          </div>
+        </div>
+
+        <hr><h6 class="text-muted mb-2"><i class="bi bi-qr-code me-1"></i>PIX</h6>
+        <div class="row">
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Tipo PIX</label>
+            <select class="form-select" id="func-pix-tipo">
+              <option value="">Não cadastrado</option>
+              <option value="cpf">CPF</option>
+              <option value="cnpj">CNPJ</option>
+              <option value="email">E-mail</option>
+              <option value="telefone">Telefone</option>
+              <option value="aleatoria">Chave aleatória</option>
+            </select>
+          </div>
+          <div class="col-md-5 mb-3">
+            <label class="form-label">Chave PIX</label>
+            <input type="text" class="form-control" id="func-pix-chave" placeholder="CPF, e-mail, telefone ou chave aleatória">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Banco</label>
+            <input type="text" class="form-control" id="func-pix-banco" placeholder="Ex: Nubank, Itaú">
+          </div>
+        </div>
         ${isEdit ? `
           <div class="mb-3">
             <label class="form-label">Status</label>
@@ -693,10 +738,85 @@
       });
     }
 
+    // Enrich CPF button
+    const enrichBtn = document.getElementById('btn-enrich-cpf');
+    if (enrichBtn) {
+      enrichBtn.addEventListener('click', async function() {
+        const cpfVal = (document.getElementById('func-cpf').value || '').replace(/\D/g, '');
+        if (cpfVal.length !== 11) { showToast('CPF deve ter 11 dígitos', 'warning'); return; }
+        enrichBtn.disabled = true;
+        enrichBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        try {
+          const resp = await api('/api/funcionarios/enrich-cpf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cpf: cpfVal })
+          });
+          if (!resp.success) { showToast(resp.message || 'CPF não encontrado', 'warning'); return; }
+          const d = resp.data;
+          const setIf = (id, val) => { if (val) { const el = document.getElementById(id); if (el && !el.value) el.value = val; } };
+          setIf('func-nome', d.nome);
+          setIf('func-rg', d.rg);
+          setIf('func-data-nascimento', d.data_nascimento);
+          setIf('func-email', d.email_pessoal);
+          if (d.telefone) {
+            const tel = document.getElementById('func-telefone');
+            if (tel && !tel.value) { tel.value = d.telefone; tel.dispatchEvent(new Event('input')); }
+          }
+          if (d.endereco_cep) {
+            const cep = document.getElementById('func-endereco-cep');
+            if (cep && !cep.value) { cep.value = d.endereco_cep; cep.dispatchEvent(new Event('input')); }
+          }
+          setIf('func-endereco-rua', d.endereco_rua);
+          setIf('func-endereco-numero', d.endereco_numero);
+          setIf('func-endereco-complemento', d.endereco_complemento);
+          setIf('func-endereco-bairro', d.endereco_bairro);
+          setIf('func-endereco-cidade', d.endereco_cidade);
+          if (d.endereco_estado) {
+            const uf = document.getElementById('func-endereco-estado');
+            if (uf && !uf.value) uf.value = d.endereco_estado;
+          }
+          showToast('Dados preenchidos via BigDataCorp', 'success');
+        } catch (err) {
+          showToast('Erro: ' + err.message, 'danger');
+        } finally {
+          enrichBtn.disabled = false;
+          enrichBtn.innerHTML = '<i class="bi bi-search"></i>';
+        }
+      });
+    }
+
     // Apply phone masks
     applyPhoneMask('func-telefone');
     applyPhoneMask('func-telefone-contato2');
     applyPhoneMask('func-telefone-emergencia');
+
+    // CEP auto-fill via ViaCEP
+    const cepInput = document.getElementById('func-endereco-cep');
+    if (cepInput) {
+      cepInput.addEventListener('input', function() {
+        let v = this.value.replace(/\D/g, '').substring(0, 8);
+        if (v.length > 5) v = v.replace(/(\d{5})(\d{1,3})/, '$1-$2');
+        this.value = v;
+      });
+      cepInput.addEventListener('blur', async function() {
+        const cep = this.value.replace(/\D/g, '');
+        if (cep.length === 8) {
+          try {
+            const resp = await fetch('https://viacep.com.br/ws/' + cep + '/json/');
+            const data = await resp.json();
+            if (!data.erro) {
+              const fill = (id, val) => { const el = document.getElementById(id); if (el && !el.value) el.value = val || ''; };
+              fill('func-endereco-rua', data.logradouro);
+              fill('func-endereco-bairro', data.bairro);
+              fill('func-endereco-cidade', data.localidade);
+              const estadoEl = document.getElementById('func-endereco-estado');
+              if (estadoEl) estadoEl.value = data.uf || '';
+            }
+          } catch(e) { /* ViaCEP indisponível */ }
+        }
+      });
+    }
 
     // Load cargos dropdown
     api('/api/cargos').then(cargos => {
@@ -713,12 +833,18 @@
       select.addEventListener('change', function() {
         const cargo = cargosList.find(c => c.id == this.value);
         if (cargo) {
-          const heField = document.getElementById('func-valor-hora-extra');
-          const deField = document.getElementById('func-valor-dia-especial');
-          const salField = document.getElementById('func-salario');
-          if (!parseFloat(heField.value)) heField.value = cargo.valor_hora_extra || 0;
-          if (!parseFloat(deField.value)) deField.value = cargo.valor_dia_extra || 0;
-          if (!parseFloat(salField.value)) salField.value = cargo.valor_hora_extra || 0;
+          const fill = (elId, val) => { const el = document.getElementById(elId); if (el && !parseFloat(el.value)) el.value = val || 0; };
+          fill('func-valor-hora-extra', cargo.valor_hora_extra);
+          fill('func-valor-dia-especial', cargo.valor_dia_extra);
+          fill('func-salario', cargo.valor_hora_extra);
+          // PIX, VT, VA, combustível fields from cargo
+          const fillCheck = (elId, val) => { const el = document.getElementById(elId); if (el) el.checked = !!val; };
+          fillCheck('func-contabiliza-he', cargo.permite_hora_extra);
+          fillCheck('func-recebe-vt', cargo.recebe_vale_transporte);
+          fillCheck('func-recebe-va', cargo.recebe_vale_refeicao);
+          fillCheck('func-recebe-combustivel', cargo.recebe_ajuda_combustivel);
+          fill('func-valor-combustivel', cargo.valor_ajuda_combustivel);
+          fill('func-valor-va-dia', cargo.valor_vale_refeicao);
         }
       });
 
@@ -751,6 +877,18 @@
           document.getElementById('func-telefone-contato2').value = maskPhone(f.telefone_contato2 || '');
           document.getElementById('func-nome-contato-emergencia').value = f.nome_contato_emergencia || '';
           document.getElementById('func-telefone-emergencia').value = maskPhone(f.telefone_emergencia || '');
+          // Benefits checkboxes
+          const setCheck = (elId, val) => { const el = document.getElementById(elId); if (el) el.checked = !!val; };
+          setCheck('func-contabiliza-he', f.contabiliza_hora_extra);
+          setCheck('func-recebe-vt', f.recebe_vt);
+          setCheck('func-recebe-va', f.tem_vale_alimentacao);
+          setCheck('func-recebe-combustivel', f.recebe_ajuda_combustivel);
+          document.getElementById('func-valor-va-dia').value = f.valor_va_dia || 0;
+          document.getElementById('func-valor-combustivel').value = f.valor_ajuda_combustivel || 0;
+          // PIX fields
+          document.getElementById('func-pix-tipo').value = f.pix_tipo || '';
+          document.getElementById('func-pix-chave').value = f.pix_chave || '';
+          document.getElementById('func-pix-banco').value = f.pix_banco || '';
           // Foto preview
           if (f.foto) {
             document.getElementById('func-foto-preview').innerHTML = '<img src="' + f.foto + '" class="rounded" style="width:80px;height:80px;object-fit:cover" alt="Foto">';
@@ -794,8 +932,42 @@
       endereco_estado: getVal('func-endereco-estado') || null,
       telefone_contato2: (getVal('func-telefone-contato2') || '').replace(/\D/g, '') || null,
       nome_contato_emergencia: getVal('func-nome-contato-emergencia') || null,
-      telefone_emergencia: (getVal('func-telefone-emergencia') || '').replace(/\D/g, '') || null
+      telefone_emergencia: (getVal('func-telefone-emergencia') || '').replace(/\D/g, '') || null,
+      // Benefits
+      contabiliza_hora_extra: document.getElementById('func-contabiliza-he')?.checked ? 1 : 0,
+      recebe_vt: document.getElementById('func-recebe-vt')?.checked ? 1 : 0,
+      tem_vale_alimentacao: document.getElementById('func-recebe-va')?.checked ? 1 : 0,
+      recebe_ajuda_combustivel: document.getElementById('func-recebe-combustivel')?.checked ? 1 : 0,
+      valor_va_dia: parseFloat(getVal('func-valor-va-dia')) || 0,
+      valor_ajuda_combustivel: parseFloat(getVal('func-valor-combustivel')) || 0,
+      // PIX
+      pix_tipo: getVal('func-pix-tipo') || null,
+      pix_chave: getVal('func-pix-chave') || null,
+      pix_banco: getVal('func-pix-banco') || null
     };
+
+    // Date cross-validation
+    if (data.data_inicio_registro_carteira && data.data_inicio_trabalho && data.data_inicio_registro_carteira < data.data_inicio_trabalho) {
+      showToast('Data registro carteira não pode ser anterior ao início do trabalho', 'danger');
+      return;
+    }
+    if (data.data_desligamento && data.data_inicio_trabalho && data.data_desligamento < data.data_inicio_trabalho) {
+      showToast('Data desligamento não pode ser anterior ao início do trabalho', 'danger');
+      return;
+    }
+
+    // CPF validation (if filled)
+    if (data.cpf) {
+      const cpfDigits = data.cpf.replace(/\D/g, '');
+      if (cpfDigits.length === 11) {
+        const allSame = cpfDigits.split('').every(d => d === cpfDigits[0]);
+        if (allSame) { showToast('CPF inválido', 'danger'); return; }
+        const calcDigit = (cpf, len) => { let sum = 0; for (let i = 0; i < len; i++) sum += parseInt(cpf[i]) * (len + 1 - i); const r = 11 - (sum % 11); return r > 9 ? 0 : r; };
+        const d1 = calcDigit(cpfDigits, 9);
+        const d2 = calcDigit(cpfDigits, 10);
+        if (parseInt(cpfDigits[9]) !== d1 || parseInt(cpfDigits[10]) !== d2) { showToast('CPF inválido (dígitos verificadores)', 'danger'); return; }
+      }
+    }
 
     if (!data.nome || !cargoId || isNaN(data.salario_hora)) {
       showToast('Preencha todos os campos obrigatórios', 'danger');
@@ -1320,56 +1492,62 @@
     container.innerHTML = '<div class="loading-spinner"><div class="spinner-border text-primary"></div></div>';
 
     try {
-      let url = `/api/relatorios/mensal?mes=${mes}&ano=${ano}`;
+      // Use the SAME folha endpoint so both tabs have identical calculations
+      let url = `/api/relatorios/folha?mes=${mes}&ano=${ano}`;
       if (funcId) url += `&funcionarioId=${funcId}`;
       const data = await api(url);
 
-      if (data.funcionarios.length === 0) {
+      if (!data.folhas || data.folhas.length === 0) {
         container.innerHTML = '<div class="empty-state"><i class="bi bi-clipboard-x"></i><p>Nenhum registro encontrado para o período</p></div>';
         return;
       }
 
-      // Determine which columns are relevant across all employees
-      const anyHasHE = data.funcionarios.some(f => f.permiteHE !== false && f.totalHorasExtras > 0);
-      const showHECol = data.funcionarios.some(f => f.permiteHE !== false);
+      // Filter out entries with no registros
+      const folhas = data.folhas.filter(f => (f.registros || []).length > 0);
+      if (folhas.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="bi bi-clipboard-x"></i><p>Nenhum registro encontrado para o período</p></div>';
+        return;
+      }
+
+      const showHECol = folhas.some(f => f.funcionario && f.funcionario.permiteHE !== false);
+      const totalExtrasGeral = folhas.reduce((s, f) => s + (f.resumo.totalGeral || 0), 0);
+      const totalHEGeral = folhas.reduce((s, f) => s + (f.funcionario.permiteHE !== false ? (f.resumo.totalHorasExtras || 0) : 0), 0);
 
       let html = `
         <div class="row g-3 mb-4">
           <div class="col-md-3">
             <div class="stat-card">
-              <div class="stat-icon icon-blue"><i class="bi bi-calendar-check"></i></div>
-              <div class="stat-value">${data.diasUteis}</div>
-              <div class="stat-label">Dias Úteis no Mês</div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="stat-card">
               <div class="stat-icon icon-green"><i class="bi bi-people"></i></div>
-              <div class="stat-value">${data.funcionarios.length}</div>
+              <div class="stat-value">${folhas.length}</div>
               <div class="stat-label">Funcionários</div>
             </div>
           </div>
           ${showHECol ? `<div class="col-md-3">
             <div class="stat-card">
               <div class="stat-icon icon-yellow"><i class="bi bi-clock-history"></i></div>
-              <div class="stat-value">${data.funcionarios.reduce((s, f) => s + (f.permiteHE !== false ? f.totalHorasExtras : 0), 0).toFixed(1)}</div>
+              <div class="stat-value">${totalHEGeral.toFixed(1)}</div>
               <div class="stat-label">Total H. Extras</div>
             </div>
           </div>` : ''}
           <div class="col-md-3">
             <div class="stat-card">
               <div class="stat-icon icon-red"><i class="bi bi-cash-stack"></i></div>
-              <div class="stat-value">${formatCurrency(data.funcionarios.reduce((s, f) => s + f.totalValor, 0))}</div>
-              <div class="stat-label">Custo Total</div>
+              <div class="stat-value">${formatCurrency(totalExtrasGeral)}</div>
+              <div class="stat-label">Total Extras</div>
             </div>
           </div>
         </div>`;
 
-      for (const func of data.funcionarios) {
-        const funcHasHE = func.permiteHE !== false;
+      const dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+      for (const folha of folhas) {
+        const f = folha.funcionario || {};
+        const r = folha.resumo || {};
+        const regs = folha.registros || [];
+        const funcHasHE = f.permiteHE !== false;
+
         html += `
           <div class="summary-card mb-4">
-            <h5><i class="bi bi-person me-2"></i>${func.nome} - ${func.cargo} (${formatCurrency(func.salario_hora)}/h)</h5>
+            <h5><i class="bi bi-person me-2"></i>${f.nome || 'N/A'} - ${f.cargo || ''} (${formatCurrency(f.valor_hora_extra || 0)}/h)</h5>
             <div class="row mb-3">
               <div class="col-md-8">
                 <div class="data-table">
@@ -1381,19 +1559,19 @@
                       </tr>
                     </thead>
                     <tbody>
-                      ${func.registros.map(r => {
-                        const date = new Date(r.data + 'T12:00:00');
-                        const dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-                        const isSpecial = r.tipoDia.tipo === 'feriado' || r.tipoDia.tipo === 'domingo';
+                      ${regs.map(reg => {
+                        const date = new Date(reg.data + 'T12:00:00');
+                        const tipoDia = reg.tipoDia || {};
+                        const isSpecial = tipoDia.tipo === 'feriado' || tipoDia.tipo === 'domingo' || tipoDia.tipo === 'sabado';
                         return `
                           <tr class="${isSpecial ? 'table-warning' : ''}">
-                            <td>${formatDate(r.data)}</td>
+                            <td>${formatDate(reg.data)}</td>
                             <td>${dias[date.getDay()]}</td>
-                            <td>${r.entrada || '-'}</td>
-                            <td>${r.saida || '-'}</td>
-                            <td>${r.horasTrabalhadas.toFixed(2)}</td>
-                            ${funcHasHE ? `<td>${r.horasExtras > 0 ? '<span class="text-warning fw-bold">' + r.horasExtras.toFixed(2) + '</span>' : '0.00'}</td>` : ''}
-                            <td>${formatCurrency(r.valorTotal)}</td>
+                            <td>${reg.entrada || '-'}</td>
+                            <td>${reg.saida || '-'}</td>
+                            <td>${(reg.horasTrabalhadas || 0).toFixed(2)}</td>
+                            ${funcHasHE ? `<td>${(reg.horasExtras || 0) > 0 ? '<span class="text-warning fw-bold">' + (reg.horasExtras).toFixed(2) + '</span>' : '0.00'}</td>` : ''}
+                            <td>${formatCurrency((reg.pgtoHoraExtra || 0) + (reg.pgtoFDS || 0))}</td>
                           </tr>`;
                       }).join('')}
                     </tbody>
@@ -1403,14 +1581,17 @@
               <div class="col-md-4">
                 <div class="summary-card" style="background: #F8FAFC;">
                   <h5>Resumo</h5>
-                  <div class="summary-item"><span class="label">Dias Trabalhados</span><span class="value">${func.diasTrabalhados}</span></div>
-                  <div class="summary-item"><span class="label">Horas Trabalhadas</span><span class="value">${func.totalHorasTrabalhadas.toFixed(2)}</span></div>
-                  <div class="summary-item"><span class="label">Horas Normais</span><span class="value">${func.totalHorasNormais.toFixed(2)}</span></div>
-                  ${funcHasHE ? `<div class="summary-item"><span class="label">Horas Extras</span><span class="value text-warning">${func.totalHorasExtras.toFixed(2)}</span></div>` : ''}
-                  <div class="summary-item"><span class="label">Valor Normal</span><span class="value">${formatCurrency(func.totalValorNormal)}</span></div>
-                  ${funcHasHE ? `<div class="summary-item"><span class="label">Valor H. Extras</span><span class="value text-warning">${formatCurrency(func.totalHorasExtraValor)}</span></div>` : ''}
+                  <div class="summary-item"><span class="label">Dias Trabalhados</span><span class="value">${r.diasTrabalhados || 0}</span></div>
+                  <div class="summary-item"><span class="label">Horas Trabalhadas</span><span class="value">${(r.totalHorasTrabalhadas || 0).toFixed(2)}</span></div>
+                  <div class="summary-item"><span class="label">Horas Normais</span><span class="value">${(r.totalHorasNormais || 0).toFixed(2)}</span></div>
+                  ${funcHasHE ? `<div class="summary-item"><span class="label">Horas Extras</span><span class="value text-warning">${(r.totalHorasExtras || 0).toFixed(2)}</span></div>` : ''}
+                  ${funcHasHE ? `<div class="summary-item"><span class="label">Pgto H. Extras</span><span class="value text-warning">${formatCurrency(r.totalPgtoHE || 0)}</span></div>` : ''}
+                  ${(r.totalPgtoFDS || 0) > 0 ? `<div class="summary-item"><span class="label">Pgto Dias Especiais</span><span class="value text-info">${formatCurrency(r.totalPgtoFDS)}</span></div>` : ''}
+                  ${r.totalVT != null ? `<div class="summary-item"><span class="label">Vale Transporte</span><span class="value">${formatCurrency(r.totalVT)}</span></div>` : ''}
+                  ${r.totalVA != null ? `<div class="summary-item"><span class="label">Vale Alimentação</span><span class="value">${formatCurrency(r.totalVA)}</span></div>` : ''}
+                  ${r.totalAjudaCombustivel != null ? `<div class="summary-item"><span class="label">Ajuda Combustível</span><span class="value">${formatCurrency(r.totalAjudaCombustivel)}</span></div>` : ''}
                   <hr>
-                  <div class="summary-item"><span class="label fw-bold">Total</span><span class="value text-primary fs-5">${formatCurrency(func.totalValor)}</span></div>
+                  <div class="summary-item"><span class="label fw-bold">Total Extras</span><span class="value text-primary fs-5">${formatCurrency(r.totalGeral || 0)}</span></div>
                 </div>
               </div>
             </div>
@@ -3219,15 +3400,23 @@
   // ============================================================
   // Cargos
   // ============================================================
+  let _cargosShowInactive = false;
   async function renderCargos() {
     const content = document.getElementById('page-content');
     try {
-      const cargos = await api('/api/cargos?includeInactive=true');
+      const allCargos = await api('/api/cargos?includeInactive=true');
+      const inactiveCount = allCargos.filter(c => c.ativo === 0).length;
+      const cargos = _cargosShowInactive ? allCargos : allCargos.filter(c => c.ativo !== 0);
       const canManage = currentUser.role === 'admin' || currentUser.role === 'gestor';
       content.innerHTML = `
         <div class="page-header">
           <h3><i class="bi bi-briefcase me-2"></i>Cargos</h3>
-          ${canManage ? '<button class="btn btn-primary btn-sm" onclick="App.openCargoModal()"><i class="bi bi-plus-lg"></i> Novo Cargo</button>' : ''}
+          <div class="d-flex gap-2">
+            ${inactiveCount > 0 ? `<button class="btn btn-sm ${_cargosShowInactive ? 'btn-secondary' : 'btn-outline-secondary'}" id="btn-toggle-inativos-cargo">
+              <i class="bi bi-eye${_cargosShowInactive ? '-slash' : ''}"></i> ${_cargosShowInactive ? 'Ocultar' : 'Mostrar'} inativos (${inactiveCount})
+            </button>` : ''}
+            ${canManage ? '<button class="btn btn-primary btn-sm" onclick="App.openCargoModal()"><i class="bi bi-plus-lg"></i> Novo Cargo</button>' : ''}
+          </div>
         </div>
         <div class="data-table">
           <table class="table">
@@ -3235,7 +3424,7 @@
             <tbody>
               ${cargos.length === 0 ? '<tr><td colspan="4" class="text-center text-muted py-4">Nenhum cargo cadastrado</td></tr>' : ''}
               ${cargos.map(c => `
-                <tr>
+                <tr${c.ativo === 0 ? ' class="text-muted" style="opacity:0.6"' : ''}>
                   <td><strong>${c.nome}</strong></td>
                   <td>${c.descricao || '-'}</td>
                   <td><span class="badge-status badge-${c.ativo !== 0 ? 'ativo' : 'inativo'}">${c.ativo !== 0 ? 'Ativo' : 'Inativo'}</span></td>
@@ -3247,6 +3436,10 @@
             </tbody>
           </table>
         </div>`;
+      const toggleBtn = document.getElementById('btn-toggle-inativos-cargo');
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => { _cargosShowInactive = !_cargosShowInactive; renderCargos(); });
+      }
       content.querySelectorAll('.btn-edit-cargo').forEach(btn => {
         btn.addEventListener('click', () => openCargoModal(parseInt(btn.dataset.id)));
       });
@@ -3361,6 +3554,315 @@
       closeModal();
       showToast(id ? 'Cargo atualizado' : 'Cargo criado');
       renderCargos();
+    } catch (err) {
+      showToast('Erro: ' + err.message, 'danger');
+    }
+  }
+
+  // ============================================================
+  // Veículos
+  // ============================================================
+  let _veiculosShowInactive = false;
+  async function renderVeiculos() {
+    const content = document.getElementById('page-content');
+    try {
+      const [veiculos, alerts, funcionarios] = await Promise.all([
+        api('/api/veiculos?includeInactive=true'),
+        api('/api/veiculos/alerts'),
+        api('/api/funcionarios')
+      ]);
+      const inactiveCount = veiculos.filter(v => v.status !== 'ativo').length;
+      const list = _veiculosShowInactive ? veiculos : veiculos.filter(v => v.status === 'ativo');
+      const canManage = currentUser.role === 'admin' || currentUser.role === 'gestor';
+
+      let alertsHtml = '';
+      if (alerts.length > 0) {
+        alertsHtml = `<div class="alert alert-warning py-2 mb-3"><i class="bi bi-exclamation-triangle me-2"></i><strong>${alerts.length} alerta(s):</strong> ` +
+          alerts.map(a => {
+            if (a.tipo === 'ipva') return `IPVA ${a.placa} ${a.vencido ? 'VENCIDO' : 'vence ' + formatDate(a.data)}`;
+            if (a.tipo === 'revisao') return `Revisão ${a.placa} ${a.vencido ? 'ATRASADA' : 'em ' + formatDate(a.data)}`;
+            if (a.tipo === 'revisao_km') return `Revisão ${a.placa} km ${a.km_atual}/${a.proxima_km}`;
+            return a.tipo;
+          }).join(' | ') + '</div>';
+      }
+
+      content.innerHTML = `
+        <div class="page-header">
+          <h3><i class="bi bi-car-front me-2"></i>Veículos</h3>
+          <div class="d-flex gap-2">
+            ${inactiveCount > 0 ? `<button class="btn btn-sm ${_veiculosShowInactive ? 'btn-secondary' : 'btn-outline-secondary'}" id="btn-toggle-inativos-veic">
+              <i class="bi bi-eye${_veiculosShowInactive ? '-slash' : ''}"></i> ${_veiculosShowInactive ? 'Ocultar' : 'Mostrar'} inativos (${inactiveCount})
+            </button>` : ''}
+            ${canManage ? '<button class="btn btn-primary btn-sm" id="btn-novo-veiculo"><i class="bi bi-plus-lg"></i> Novo Veículo</button>' : ''}
+          </div>
+        </div>
+        ${alertsHtml}
+        <div class="row g-3">
+          ${list.length === 0 ? '<div class="col-12"><div class="empty-state"><i class="bi bi-car-front"></i><p>Nenhum veículo cadastrado</p></div></div>' : ''}
+          ${list.map(v => `
+            <div class="col-md-6 col-lg-4">
+              <div class="summary-card h-100${v.status !== 'ativo' ? ' opacity-50' : ''}">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div>
+                    <h5 class="mb-1"><i class="bi bi-car-front me-2"></i>${v.marca || ''} ${v.modelo || 'Sem modelo'}</h5>
+                    <span class="badge bg-dark me-1">${v.placa || 'Sem placa'}</span>
+                    <span class="badge bg-secondary">${v.cor || ''}</span>
+                    ${v.ano_fabricacao ? `<span class="badge bg-light text-dark border">${v.ano_fabricacao}/${v.ano_modelo || v.ano_fabricacao}</span>` : ''}
+                  </div>
+                  <span class="badge-status badge-${v.status === 'ativo' ? 'ativo' : 'inativo'}">${v.status || 'ativo'}</span>
+                </div>
+                <div class="small text-muted mb-2">
+                  ${v.combustivel ? `<span class="me-2"><i class="bi bi-fuel-pump"></i> ${v.combustivel}</span>` : ''}
+                  ${v.km_atual ? `<span class="me-2"><i class="bi bi-speedometer2"></i> ${v.km_atual.toLocaleString()} km</span>` : ''}
+                  ${v.responsavel_nome ? `<span><i class="bi bi-person"></i> ${v.responsavel_nome}</span>` : ''}
+                </div>
+                ${canManage ? `<div class="mt-auto pt-2 border-top">
+                  <button class="btn btn-sm btn-outline-primary btn-edit-veic" data-id="${v.id}"><i class="bi bi-pencil"></i> Editar</button>
+                  <button class="btn btn-sm btn-outline-danger ms-1 btn-del-veic" data-id="${v.id}" data-nome="${(v.marca||'') + ' ' + (v.modelo||'')}"><i class="bi bi-trash"></i></button>
+                </div>` : ''}
+              </div>
+            </div>`).join('')}
+        </div>`;
+
+      const toggleBtn = document.getElementById('btn-toggle-inativos-veic');
+      if (toggleBtn) toggleBtn.addEventListener('click', () => { _veiculosShowInactive = !_veiculosShowInactive; renderVeiculos(); });
+      const novoBtn = document.getElementById('btn-novo-veiculo');
+      if (novoBtn) novoBtn.addEventListener('click', () => openVeiculoModal(null, funcionarios));
+      content.querySelectorAll('.btn-edit-veic').forEach(btn => {
+        btn.addEventListener('click', () => openVeiculoModal(parseInt(btn.dataset.id), funcionarios));
+      });
+      content.querySelectorAll('.btn-del-veic').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (confirm('Desativar veículo "' + btn.dataset.nome + '"?')) {
+            await api('/api/veiculos/' + btn.dataset.id, { method: 'DELETE' });
+            renderVeiculos();
+          }
+        });
+      });
+    } catch (err) {
+      content.innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
+    }
+  }
+
+  function openVeiculoModal(id, funcionarios) {
+    const isEdit = !!id;
+    const ufs = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'];
+    const body = `
+      <form id="veiculo-form">
+        <div class="row mb-2">
+          <div class="col-12 d-flex gap-2 mb-3">
+            <button type="button" class="btn btn-sm btn-outline-success" id="btn-crlv-ai"><i class="bi bi-camera"></i> Preencher via CRLV</button>
+            <button type="button" class="btn btn-sm btn-outline-info" id="btn-buscar-placa" disabled><i class="bi bi-search"></i> Buscar por placa</button>
+            <input type="file" id="crlv-file-input" accept="image/*" class="d-none">
+          </div>
+        </div>
+        <h6 class="text-muted">Dados do Veículo</h6>
+        <div class="row g-2">
+          <div class="col-md-4"><label class="form-label">Marca</label><input type="text" class="form-control" id="veic-marca"></div>
+          <div class="col-md-4"><label class="form-label">Modelo</label><input type="text" class="form-control" id="veic-modelo"></div>
+          <div class="col-md-2"><label class="form-label">Ano Fab.</label><input type="number" class="form-control" id="veic-ano-fab" min="1900" max="2099"></div>
+          <div class="col-md-2"><label class="form-label">Ano Mod.</label><input type="number" class="form-control" id="veic-ano-mod" min="1900" max="2099"></div>
+        </div>
+        <div class="row g-2 mt-1">
+          <div class="col-md-3"><label class="form-label">Placa</label><input type="text" class="form-control" id="veic-placa" maxlength="8" placeholder="ABC1D23"></div>
+          <div class="col-md-3"><label class="form-label">Cor</label><input type="text" class="form-control" id="veic-cor"></div>
+          <div class="col-md-3"><label class="form-label">Combustível</label><select class="form-select" id="veic-combustivel"><option value="flex">Flex</option><option value="gasolina">Gasolina</option><option value="etanol">Etanol</option><option value="diesel">Diesel</option><option value="eletrico">Elétrico</option><option value="hibrido">Híbrido</option></select></div>
+          <div class="col-md-3"><label class="form-label">KM Atual</label><input type="number" class="form-control" id="veic-km" min="0"></div>
+        </div>
+        <div class="row g-2 mt-1">
+          <div class="col-md-6"><label class="form-label">Renavam</label><input type="text" class="form-control" id="veic-renavam"></div>
+          <div class="col-md-6"><label class="form-label">Chassi</label><input type="text" class="form-control" id="veic-chassi"></div>
+        </div>
+        <hr><h6 class="text-muted">Seguro</h6>
+        <div class="row g-2">
+          <div class="col-md-4"><label class="form-label">Seguradora</label><input type="text" class="form-control" id="veic-seguradora"></div>
+          <div class="col-md-3"><label class="form-label">Apólice</label><input type="text" class="form-control" id="veic-seguro-apolice"></div>
+          <div class="col-md-2"><label class="form-label">Início</label><input type="date" class="form-control" id="veic-seguro-inicio"></div>
+          <div class="col-md-2"><label class="form-label">Fim</label><input type="date" class="form-control" id="veic-seguro-fim"></div>
+          <div class="col-md-1"><label class="form-label">Valor</label><input type="number" class="form-control" id="veic-seguro-valor" step="0.01" min="0"></div>
+        </div>
+        <hr><h6 class="text-muted">IPVA / Licenciamento / Revisão</h6>
+        <div class="row g-2">
+          <div class="col-md-3"><label class="form-label">IPVA Valor</label><input type="number" class="form-control" id="veic-ipva-valor" step="0.01" min="0"></div>
+          <div class="col-md-3"><label class="form-label">IPVA Vencimento</label><input type="date" class="form-control" id="veic-ipva-venc"></div>
+          <div class="col-md-3"><label class="form-label">IPVA Status</label><select class="form-select" id="veic-ipva-status"><option value="pendente">Pendente</option><option value="pago">Pago</option><option value="atrasado">Atrasado</option></select></div>
+          <div class="col-md-3"><label class="form-label">Licenciamento Status</label><select class="form-select" id="veic-lic-status"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
+        </div>
+        <div class="row g-2 mt-1">
+          <div class="col-md-3"><label class="form-label">Última Revisão</label><input type="date" class="form-control" id="veic-ult-rev-data"></div>
+          <div class="col-md-3"><label class="form-label">KM Última Rev.</label><input type="number" class="form-control" id="veic-ult-rev-km" min="0"></div>
+          <div class="col-md-3"><label class="form-label">Próxima Revisão</label><input type="date" class="form-control" id="veic-prox-rev-data"></div>
+          <div class="col-md-3"><label class="form-label">KM Próxima Rev.</label><input type="number" class="form-control" id="veic-prox-rev-km" min="0"></div>
+        </div>
+        <hr><h6 class="text-muted">Outros</h6>
+        <div class="row g-2">
+          <div class="col-md-4"><label class="form-label">Responsável</label><select class="form-select" id="veic-responsavel"><option value="">Nenhum</option>${funcionarios.map(f => `<option value="${f.id}">${f.nome}</option>`).join('')}</select></div>
+          <div class="col-md-4"><label class="form-label">Status</label><select class="form-select" id="veic-status"><option value="ativo">Ativo</option><option value="vendido">Vendido</option><option value="manutencao">Manutenção</option><option value="inativo">Inativo</option></select></div>
+          <div class="col-md-4"><label class="form-label">Licenciamento Ano</label><input type="number" class="form-control" id="veic-lic-ano" min="2020" max="2099"></div>
+        </div>
+        <div class="mt-2"><label class="form-label">Observações</label><textarea class="form-control" id="veic-obs" rows="2"></textarea></div>
+      </form>`;
+    const footer = `
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="btn-save-veiculo">Salvar</button>`;
+    openModal(isEdit ? 'Editar Veículo' : 'Novo Veículo', body, footer, 'modal-lg');
+
+    // Wire up save button
+    document.getElementById('btn-save-veiculo').addEventListener('click', () => saveVeiculo(id));
+
+    // CRLV AI button
+    document.getElementById('btn-crlv-ai').addEventListener('click', () => document.getElementById('crlv-file-input').click());
+    document.getElementById('crlv-file-input').addEventListener('change', async function() {
+      if (!this.files[0]) return;
+      const formData = new FormData();
+      formData.append('foto', this.files[0]);
+      showToast('Analisando documento com IA...', 'info');
+      try {
+        const resp = await fetch('/api/veiculos/analyze-crlv', {
+          method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData
+        });
+        const result = await resp.json();
+        if (result.success && result.data) {
+          const d = result.data;
+          const fill = (elId, val) => { const el = document.getElementById(elId); if (el && !el.value && val) el.value = val; };
+          fill('veic-marca', d.marca);
+          fill('veic-modelo', d.modelo);
+          fill('veic-ano-fab', d.ano_fabricacao);
+          fill('veic-ano-mod', d.ano_modelo);
+          fill('veic-cor', d.cor);
+          fill('veic-placa', d.placa);
+          fill('veic-renavam', d.renavam);
+          fill('veic-chassi', d.chassi);
+          if (d.combustivel) { const el = document.getElementById('veic-combustivel'); if (el) el.value = d.combustivel.toLowerCase(); }
+          fill('veic-seguradora', d.seguradora);
+          fill('veic-seguro-apolice', d.seguro_apolice);
+          fill('veic-seguro-inicio', d.seguro_vigencia_inicio);
+          fill('veic-seguro-fim', d.seguro_vigencia_fim);
+          fill('veic-seguro-valor', d.seguro_valor);
+          fill('veic-ipva-valor', d.ipva_valor);
+          fill('veic-ipva-venc', d.ipva_vencimento);
+          showToast('Dados extraídos do documento com sucesso!');
+        } else {
+          showToast('Não foi possível extrair dados: ' + (result.error || ''), 'danger');
+        }
+      } catch (err) { showToast('Erro ao analisar: ' + err.message, 'danger'); }
+    });
+
+    // Placa mask and search button
+    const placaInput = document.getElementById('veic-placa');
+    const searchBtn = document.getElementById('btn-buscar-placa');
+    placaInput.addEventListener('input', function() {
+      const v = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      this.value = v;
+      searchBtn.disabled = v.length !== 7;
+    });
+    searchBtn.addEventListener('click', async () => {
+      const placa = placaInput.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      if (placa.length !== 7) return showToast('Placa deve ter 7 caracteres', 'danger');
+      showToast('Buscando dados da placa...', 'info');
+      try {
+        const resp = await fetch('/api/veiculos/buscar-placa', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ placa })
+        });
+        const result = await resp.json();
+        if (result.success && result.data) {
+          const d = result.data;
+          const fill = (elId, val) => { const el = document.getElementById(elId); if (el && !el.value && val) el.value = val; };
+          fill('veic-marca', d.marca);
+          fill('veic-modelo', d.modelo);
+          fill('veic-ano-fab', d.ano_fabricacao);
+          fill('veic-ano-mod', d.ano_modelo);
+          fill('veic-cor', d.cor);
+          fill('veic-renavam', d.renavam);
+          fill('veic-chassi', d.chassi);
+          if (d.combustivel) { const el = document.getElementById('veic-combustivel'); if (el && el.value === 'flex') el.value = d.combustivel.toLowerCase(); }
+          showToast('Dados encontrados e preenchidos!');
+        } else if (resp.status === 403) {
+          showToast('Consulta por placa não disponível no seu plano BigDataCorp. Use a opção Preencher via CRLV.', 'warning');
+        } else {
+          showToast(result.message || 'Veículo não encontrado. Tente preencher via foto do CRLV.', 'warning');
+        }
+      } catch (err) { showToast('Erro: ' + err.message, 'danger'); }
+    });
+
+    // Load existing data if editing
+    if (isEdit) {
+      api('/api/veiculos/' + id).then(v => {
+        document.getElementById('veic-marca').value = v.marca || '';
+        document.getElementById('veic-modelo').value = v.modelo || '';
+        document.getElementById('veic-ano-fab').value = v.ano_fabricacao || '';
+        document.getElementById('veic-ano-mod').value = v.ano_modelo || '';
+        document.getElementById('veic-placa').value = v.placa || '';
+        document.getElementById('veic-cor').value = v.cor || '';
+        document.getElementById('veic-combustivel').value = v.combustivel || 'flex';
+        document.getElementById('veic-km').value = v.km_atual || '';
+        document.getElementById('veic-renavam').value = v.renavam || '';
+        document.getElementById('veic-chassi').value = v.chassi || '';
+        document.getElementById('veic-seguradora').value = v.seguradora || '';
+        document.getElementById('veic-seguro-apolice').value = v.seguro_apolice || '';
+        document.getElementById('veic-seguro-inicio').value = v.seguro_vigencia_inicio || '';
+        document.getElementById('veic-seguro-fim').value = v.seguro_vigencia_fim || '';
+        document.getElementById('veic-seguro-valor').value = v.seguro_valor || '';
+        document.getElementById('veic-ipva-valor').value = v.ipva_valor || '';
+        document.getElementById('veic-ipva-venc').value = v.ipva_vencimento || '';
+        document.getElementById('veic-ipva-status').value = v.ipva_status || 'pendente';
+        document.getElementById('veic-lic-status').value = v.licenciamento_status || 'pendente';
+        document.getElementById('veic-lic-ano').value = v.licenciamento_ano || '';
+        document.getElementById('veic-ult-rev-data').value = v.ultima_revisao_data || '';
+        document.getElementById('veic-ult-rev-km').value = v.ultima_revisao_km || '';
+        document.getElementById('veic-prox-rev-data').value = v.proxima_revisao_data || '';
+        document.getElementById('veic-prox-rev-km').value = v.proxima_revisao_km || '';
+        document.getElementById('veic-responsavel').value = v.responsavel_id || '';
+        document.getElementById('veic-status').value = v.status || 'ativo';
+        document.getElementById('veic-obs').value = v.observacoes || '';
+        // Enable search button if placa filled
+        if (v.placa && v.placa.length === 7) searchBtn.disabled = false;
+      });
+    }
+  }
+
+  async function saveVeiculo(id) {
+    const data = {
+      marca: document.getElementById('veic-marca').value,
+      modelo: document.getElementById('veic-modelo').value,
+      ano_fabricacao: parseInt(document.getElementById('veic-ano-fab').value) || null,
+      ano_modelo: parseInt(document.getElementById('veic-ano-mod').value) || null,
+      placa: document.getElementById('veic-placa').value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase(),
+      cor: document.getElementById('veic-cor').value,
+      combustivel: document.getElementById('veic-combustivel').value,
+      km_atual: parseInt(document.getElementById('veic-km').value) || 0,
+      renavam: document.getElementById('veic-renavam').value,
+      chassi: document.getElementById('veic-chassi').value,
+      seguradora: document.getElementById('veic-seguradora').value,
+      seguro_apolice: document.getElementById('veic-seguro-apolice').value,
+      seguro_vigencia_inicio: document.getElementById('veic-seguro-inicio').value,
+      seguro_vigencia_fim: document.getElementById('veic-seguro-fim').value,
+      seguro_valor: parseFloat(document.getElementById('veic-seguro-valor').value) || null,
+      ipva_valor: parseFloat(document.getElementById('veic-ipva-valor').value) || null,
+      ipva_vencimento: document.getElementById('veic-ipva-venc').value,
+      ipva_status: document.getElementById('veic-ipva-status').value,
+      licenciamento_status: document.getElementById('veic-lic-status').value,
+      licenciamento_ano: parseInt(document.getElementById('veic-lic-ano').value) || null,
+      ultima_revisao_data: document.getElementById('veic-ult-rev-data').value,
+      ultima_revisao_km: parseInt(document.getElementById('veic-ult-rev-km').value) || null,
+      proxima_revisao_data: document.getElementById('veic-prox-rev-data').value,
+      proxima_revisao_km: parseInt(document.getElementById('veic-prox-rev-km').value) || null,
+      responsavel_id: parseInt(document.getElementById('veic-responsavel').value) || null,
+      status: document.getElementById('veic-status').value,
+      observacoes: document.getElementById('veic-obs').value
+    };
+    if (!data.placa && !data.modelo) return showToast('Placa ou modelo obrigatório', 'danger');
+    try {
+      if (id) {
+        await api('/api/veiculos/' + id, { method: 'PUT', body: JSON.stringify(data) });
+      } else {
+        await api('/api/veiculos', { method: 'POST', body: JSON.stringify(data) });
+      }
+      closeModal();
+      showToast(id ? 'Veículo atualizado' : 'Veículo cadastrado');
+      renderVeiculos();
     } catch (err) {
       showToast('Erro: ' + err.message, 'danger');
     }

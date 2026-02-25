@@ -30,9 +30,24 @@ class InsightsIA {
     `).all(date);
   }
 
+  // Convert datetime string to São Paulo timezone display
+  static _toSaoPaulo(dateStr) {
+    if (!dateStr) return dateStr;
+    try {
+      // If the stored datetime is UTC (datetime('now')), convert to SP
+      // If already local (datetime('now','localtime')), return as-is
+      const d = new Date(dateStr.replace(' ', 'T') + (dateStr.includes('+') || dateStr.includes('Z') ? '' : 'Z'));
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', hour12: false });
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
   static buildPrompt(messages, registros, employees) {
     const messageList = messages.map(m => {
-      let line = `[${m.created_at}] ${m.sender_name}: ${m.message_text || '(sem texto)'}`;
+      const ts = this._toSaoPaulo(m.created_at);
+      let line = `[${ts}] ${m.sender_name}: ${m.message_text || '(sem texto)'}`;
       if (m.media_type) line += ` [MÍDIA: ${m.media_type}${m.media_path ? ' - ' + m.media_path : ''}]`;
       return line;
     }).join('\n');
@@ -176,7 +191,7 @@ Responda SOMENTE com o JSON, sem texto adicional, sem markdown.`;
     // Group messages by day with summary
     const byDay = {};
     for (const m of messages) {
-      const day = m.created_at.split(' ')[0];
+      const day = (this._toSaoPaulo(m.created_at) || m.created_at).split(',')[0].split(' ')[0];
       if (!byDay[day]) byDay[day] = { msgs: [], senders: new Set(), entradas: 0, saidas: 0 };
       byDay[day].msgs.push(m);
       byDay[day].senders.add(m.funcionario_nome || m.sender_name);

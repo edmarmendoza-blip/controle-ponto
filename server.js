@@ -63,6 +63,7 @@ app.use('/api/entregas', require('./src/routes/entregas'));
 app.use('/api/users', require('./src/routes/users'));
 app.use('/api/tarefas', require('./src/routes/tarefas'));
 app.use('/api/audit-log', require('./src/routes/auditLog'));
+app.use('/api/veiculos', require('./src/routes/veiculos'));
 
 // Version endpoint
 app.get('/api/version', (req, res) => {

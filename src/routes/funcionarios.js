@@ -102,6 +102,120 @@ Dias da semana: "seg", "ter", "qua", "qui", "sex", "sab", "dom".`
   }
 });
 
+// POST /api/funcionarios/enrich-cpf - BigDataCorp CPF lookup
+router.post('/enrich-cpf', authenticateToken, requireGestor, async (req, res) => {
+  try {
+    const { cpf } = req.body;
+    if (!cpf) return res.status(400).json({ error: 'CPF obrigatório' });
+
+    const token = process.env.BIGDATACORP_TOKEN;
+    if (!token) return res.status(500).json({ error: 'BIGDATACORP_TOKEN não configurado' });
+
+    const cleanCpf = cpf.replace(/\D/g, '');
+    if (cleanCpf.length !== 11) return res.status(400).json({ error: 'CPF inválido (11 dígitos)' });
+
+    const response = await fetch('https://bigboost.bigdatacorp.com.br/peoplev2', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        Datasets: 'basic_data,emails,phones,addresses',
+        q: 'doc{' + cleanCpf + '}',
+        Limit: 1
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('[BigDataCorp] People error:', response.status, errText);
+      if (response.status === 403 || response.status === 401) {
+        return res.status(403).json({ error: 'Consulta por CPF não disponível no seu plano BigDataCorp' });
+      }
+      return res.status(response.status).json({ error: 'Erro na consulta BigDataCorp' });
+    }
+
+    const result = await response.json();
+    AuditLog.log(req.user.id, 'enrich_cpf', 'funcionario', null, { cpf: cleanCpf.substring(0, 3) + '***' }, req.ip);
+
+    // Extract person data from BigDataCorp response
+    let personData = null;
+
+    // Try main response structure
+    const extractData = (datasets) => {
+      let data = {};
+      for (const ds of (Array.isArray(datasets) ? datasets : [datasets])) {
+        // Basic data
+        if (ds.BasicData) {
+          const bd = Array.isArray(ds.BasicData) ? ds.BasicData[0] : ds.BasicData;
+          if (bd) {
+            data.nome = bd.Name || bd.FullName || null;
+            data.data_nascimento = bd.BirthDate ? bd.BirthDate.split('T')[0] : null;
+            data.rg = bd.RG || null;
+          }
+        }
+        // Emails
+        if (ds.Emails) {
+          const emails = Array.isArray(ds.Emails) ? ds.Emails : [ds.Emails];
+          if (emails.length > 0) {
+            const em = emails[0];
+            data.email_pessoal = em.EmailAddress || em.Email || (typeof em === 'string' ? em : null);
+          }
+        }
+        // Phones
+        if (ds.Phones) {
+          const phones = Array.isArray(ds.Phones) ? ds.Phones : [ds.Phones];
+          const mobiles = phones.filter(p => p.PhoneType === 'Mobile' || p.Type === 'Mobile');
+          const firstPhone = mobiles.length > 0 ? mobiles[0] : phones[0];
+          if (firstPhone) {
+            const num = firstPhone.Number || firstPhone.PhoneNumber || firstPhone.AreaCode + firstPhone.Number;
+            if (num) data.telefone = num.replace(/\D/g, '');
+          }
+        }
+        // Addresses
+        if (ds.Addresses) {
+          const addrs = Array.isArray(ds.Addresses) ? ds.Addresses : [ds.Addresses];
+          if (addrs.length > 0) {
+            const addr = addrs[0];
+            data.endereco_cep = (addr.ZipCode || addr.Zipcode || '').replace(/\D/g, '') || null;
+            data.endereco_rua = addr.AddressMain || addr.Street || null;
+            data.endereco_numero = addr.Number || addr.AddressNumber || null;
+            data.endereco_complemento = addr.Complement || null;
+            data.endereco_bairro = addr.Neighborhood || null;
+            data.endereco_cidade = addr.City || null;
+            data.endereco_estado = addr.State || null;
+          }
+        }
+      }
+      return Object.keys(data).length > 0 ? data : null;
+    };
+
+    // Try nested Result array structure
+    if (result && result.Result) {
+      personData = extractData(result.Result);
+    }
+    // Try top-level array structure
+    if (!personData && Array.isArray(result)) {
+      for (const item of result) {
+        if (item.Result) {
+          personData = extractData(Array.isArray(item.Result) ? item.Result : [item.Result]);
+          if (personData) break;
+        }
+      }
+    }
+
+    if (!personData) {
+      return res.json({ success: false, message: 'Pessoa não encontrada', raw: result });
+    }
+
+    res.json({ success: true, data: personData });
+  } catch (err) {
+    console.error('Enrich CPF error:', err);
+    res.status(500).json({ error: 'Erro ao consultar CPF: ' + err.message });
+  }
+});
+
 // GET /api/funcionarios/search
 router.get('/search', authenticateToken, [
   query('q').notEmpty().trim().withMessage('Termo de busca obrigatório')
