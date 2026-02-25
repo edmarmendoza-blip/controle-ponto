@@ -217,6 +217,9 @@ class WhatsAppService {
   }
 
   async onMessage(msg) {
+    // Debug: log every incoming message
+    console.log(`[WhatsApp] Message received: type=${msg.type} from=${msg.from} hasMedia=${msg.hasMedia} body="${(msg.body || '').substring(0, 50)}"`);
+
     // Ignore messages from the bot itself
     if (msg.fromMe) return;
 
@@ -280,8 +283,10 @@ class WhatsAppService {
     // Check if this is a confirmation response (SIM/NÃO)
     const confirmFuncId = funcionario?.id || 0;
     if (text) {
+      console.log(`[WhatsApp] Checking confirmation for funcId=${confirmFuncId} text="${text.substring(0, 30)}"`);
       const pending = this.getPendingConfirmation(confirmFuncId);
       if (pending) {
+        console.log(`[WhatsApp] Found pending #${pending.id} tipo=${pending.tipo} for funcId=${confirmFuncId}`);
         const response = this.checkConfirmationResponse(text);
         if (response === 'confirmed') {
           this.resolvePendingConfirmation(pending.id, 'confirmed');
@@ -899,6 +904,8 @@ Ao final da sua resposta, inclua um bloco JSON no formato:
       const senderName = contact.pushname || contact.name || '';
       const text = (msg.body || '').trim();
 
+      console.log(`[WhatsApp] Private message: type=${msg.type} from=${senderName} (${senderPhone}) hasMedia=${msg.hasMedia} body="${text.substring(0, 50)}"`);
+
       // Find matching user by phone
       const user = db.prepare("SELECT * FROM users WHERE telefone IS NOT NULL AND telefone != '' AND ? LIKE '%' || REPLACE(REPLACE(REPLACE(telefone, '(', ''), ')', ''), '-', '') || '%'").get(senderPhone);
 
@@ -952,12 +959,23 @@ Ao final da sua resposta, inclua um bloco JSON no formato:
       let taskContent = text;
       let fonte = 'whatsapp_texto';
 
-      // Handle audio: describe it
-      if (msg.hasMedia && !text) {
-        const media = msg.hasMedia ? await msg.downloadMedia().catch(() => null) : null;
-        if (media && media.mimetype.startsWith('audio')) {
-          fonte = 'whatsapp_audio';
-          taskContent = '[Áudio recebido - transcrição não disponível]';
+      // Handle audio: ask user to send as text (no transcription available yet)
+      const isAudioMsg = msg.type === 'audio' || msg.type === 'ptt';
+      if (isAudioMsg || (msg.hasMedia && !text)) {
+        const media = await msg.downloadMedia().catch(() => null);
+        if ((isAudioMsg) || (media && media.mimetype.startsWith('audio'))) {
+          // Save audio to dedicated folder
+          if (media) {
+            const audioDir = path.join(__dirname, '..', '..', 'public', 'uploads', 'whatsapp', 'audios');
+            fs.mkdirSync(audioDir, { recursive: true });
+            const ext = media.mimetype.split('/')[1]?.split(';')[0] || 'ogg';
+            const audioFilename = `${Date.now()}-${senderPhone}.${ext}`;
+            fs.writeFileSync(path.join(audioDir, audioFilename), Buffer.from(media.data, 'base64'));
+            console.log(`[WhatsApp] Audio saved: /uploads/whatsapp/audios/${audioFilename}`);
+          }
+          await msg.reply('🎤 Recebi seu áudio! Infelizmente ainda não consigo transcrever áudios automaticamente.\n\nPor favor, envie como *texto* para eu criar a tarefa. Exemplo:\n_"Pedir para Roberto limpar a piscina amanhã"_');
+          console.log(`[WhatsApp] Audio from ${senderName} - replied asking for text`);
+          return;
         } else if (media && media.mimetype.startsWith('image')) {
           fonte = 'whatsapp_foto';
           // Use Vision API if available

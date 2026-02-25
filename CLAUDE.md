@@ -178,7 +178,7 @@ APP_NAME=Lar Digital
 - JWT + bcrypt | 3 roles: admin, gestor, viewer
 - Admin: edmarmbull@gmail.com / Admin@2026!
 - 2FA via speakeasy (opcional)
-- Esqueci senha: botão no login → email com código → reset
+- Esqueci senha: botão no login → email com código → reset (rate limit: 5min entre envios, countdown 60s no frontend)
 - Reenviar senha: botão na pág. usuários (admin) → gera temporária → email
 
 ## PÁGINAS DO SISTEMA (sidebar - ordem exata)
@@ -242,10 +242,11 @@ tarefas, tarefa_funcionarios, whatsapp_chats
 1. Foto chega no grupo WhatsApp
 2. whatsapp-web.js salva foto em /uploads/whatsapp/{data}/
 3. Vision AI (claude-haiku-4-5-20251001) analisa a imagem em português
-4. Se identificada como entrega → bot pergunta "Isso é uma entrega? Responda SIM ou NÃO"
-5. Se SIM → Entrega.create() com destinatário, remetente, transportadora, descrição
-6. Se NÃO → entrega ignorada
+4. Se identificada como entrega → cria pending_confirmation tipo='entrega' + pergunta "SIM ou NÃO"
+5. Se SIM → busca pending_confirmation, Entrega.create() com dados, status='confirmed'
+6. Se NÃO → status='rejected', bot responde "Entrega ignorada"
 7. Vincula whatsapp_mensagem_id como FK
+8. CHECK constraint: pending_confirmations.tipo inclui 'entrega' (migração automática)
 
 ### Via Website (upload manual):
 1. Botão "Nova Entrega" na página Entregas
@@ -330,6 +331,25 @@ NÃO usar parser manual de palavras-chave. Usar IA para interpretar.
 - Model: claude-sonnet-4-20250514
 - API Key: ANTHROPIC_API_KEY do .env
 
+### Mensagens Privadas (DM):
+- Bot escuta mensagens privadas via `onPrivateMessage()`
+- Detecção: `!msg.from.endsWith('@g.us')`
+- Permissão: user.role === 'admin' OU user.pode_criar_tarefas_whatsapp
+- Chat armazenado em `whatsapp_chats` (tipo: texto/foto/audio/arquivo)
+- Tarefas criadas via Claude Haiku (texto e foto)
+
+### Áudio no WhatsApp:
+- **Grupo**: Download e armazenamento em `/uploads/whatsapp/{DATA}/`, sem transcrição
+- **Privado (autorizado)**: Detecta audio/ptt, salva em `/uploads/whatsapp/audios/`, responde pedindo texto
+- Resposta: "🎤 Recebi seu áudio! Infelizmente ainda não consigo transcrever áudios. Por favor, envie como texto."
+- Transcrição automática: NÃO implementada (futuramente: Whisper API ou similar)
+
+### Debug Logging:
+- `[WhatsApp] Message received: type=... from=... hasMedia=... body="..."` em toda mensagem
+- `[WhatsApp] Private message: type=... from=... hasMedia=... body="..."` em mensagens privadas
+- `[WhatsApp] Audio saved: /uploads/whatsapp/audios/{arquivo}` quando áudio é salvo
+- Verificar com: `pm2 logs lardigital-sandbox --lines 50`
+
 ## CRON JOBS
 - 5min: Health check WhatsApp → email se offline
 - 30min: IMAP holerites
@@ -357,6 +377,8 @@ NÃO usar parser manual de palavras-chave. Usar IA para interpretar.
 ## REGISTROS DE PONTO - FILTROS
 - Filtro por mês/ano (dropdown) ou período manual (data início/fim)
 - Toggle automático: ao selecionar mês, desabilita inputs manuais e vice-versa
+- Botão "Hoje": filtra registros do dia atual (seta mês vazio + datas de hoje)
+- Inputs de data: type="date" com calendário nativo do browser
 - Filtro por funcionário (dropdown)
 - Filtro por tipo: Todos | Entrada/Saída | Almoço (filtra client-side pela observação)
 - Badges coloridos: Saída Almoço (amarelo), Retorno Almoço (amarelo), Entrada (verde), Saída (vermelho), Completo (azul)
@@ -410,6 +432,16 @@ NÃO usar parser manual de palavras-chave. Usar IA para interpretar.
 - telefone TEXT — telefone do usuário para matching WhatsApp
 - pode_criar_tarefas INTEGER DEFAULT 0 — permite criar tarefas via web
 - pode_criar_tarefas_whatsapp INTEGER DEFAULT 0 — permite criar tarefas via WhatsApp DM
+
+## FORMATO DE TELEFONE
+- Máscara: (XX) XXXXX-XXXX (aplicada em tempo real via input event)
+- Armazenamento: apenas números no banco (11 dígitos)
+- Exibição: formatPhone() converte números para formato com máscara, "-" se vazio
+- Campos com máscara: func-telefone, func-telefone-contato2, func-telefone-emergencia, user-telefone-input
+
+## SIDEBAR MOBILE
+- sidebar-nav tem overflow-y:auto + -webkit-overflow-scrolling:touch para scroll no iPhone
+- @supports (-webkit-touch-callout: none) aplica max-height: -webkit-fill-available
 
 ## COMANDOS ÚTEIS
 ```bash
