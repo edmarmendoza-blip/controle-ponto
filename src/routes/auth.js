@@ -426,6 +426,15 @@ router.post('/forgot-password', loginLimiter, [
     }
     const crypto = require('crypto');
     const { db } = require('../config/database');
+    // Rate limit: check if code was sent in last 5 minutes
+    if (user.reset_code_expires) {
+      const expiresAt = new Date(user.reset_code_expires);
+      const sentAt = new Date(expiresAt.getTime() - 30 * 60 * 1000); // code expires in 30min, so sent = expires - 30min
+      const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+      if (sentAt > fiveMinAgo) {
+        return res.status(429).json({ error: 'Código já enviado. Aguarde 5 minutos para solicitar novamente.' });
+      }
+    }
     // Generate 6-digit code
     const code = String(crypto.randomInt(100000, 999999));
     // Store code with 30-minute expiry

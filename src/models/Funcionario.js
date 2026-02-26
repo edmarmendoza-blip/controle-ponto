@@ -15,7 +15,8 @@ const ALL_FIELDS = [
   'data_inicio_trabalho', 'data_inicio_registro_carteira',
   'endereco_cep', 'endereco_rua', 'endereco_numero', 'endereco_complemento',
   'endereco_bairro', 'endereco_cidade', 'endereco_estado',
-  'telefone_contato2', 'telefone_emergencia', 'nome_contato_emergencia'
+  'telefone_contato2', 'telefone_emergencia', 'nome_contato_emergencia',
+  'recebe_ajuda_combustivel', 'valor_ajuda_combustivel'
 ];
 
 class Funcionario {

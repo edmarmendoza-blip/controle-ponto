@@ -192,13 +192,14 @@ APP_NAME=Lar Digital
 8. **Feriados** - SP 2026, sync auto, CRUD manual (manual=true prevalece)
 9. **WhatsApp** - QR Code, status, reconectar, parser inteligente
 10. **Veículos** - CRUD, CRLV Vision AI, busca por placa (BigDataCorp), alertas IPVA/revisão
-11. **Entregas** - Cards com thumbnail, upload manual com foto, confirmação WhatsApp (SIM/NÃO)
-12. **Tarefas** - CRUD, multi-assign funcionários, prioridade/prazo, integração WhatsApp
-13. **Insights IA** - Operacional + Melhorias (admin only)
-14. **Usuários** - CRUD, roles, permissões tarefas, excluir com confirmação, reenviar senha (admin only)
-15. **Audit Log** - Log de ações (admin only)
-16. **Log de Acessos** - Login/logout/falhas com IP e navegador (admin only, bi-door-open)
-17. **Perfil** - Editar dados, trocar senha, 2FA
+11. **Documentos** - Upload, análise Vision AI, vinculação a funcionário/veículo, via WhatsApp
+12. **Entregas** - Cards com thumbnail, upload manual com foto, confirmação WhatsApp (SIM/NÃO)
+13. **Tarefas** - CRUD, multi-assign funcionários, prioridade/prazo, integração WhatsApp
+14. **Insights IA** - Operacional + Melhorias (admin only)
+15. **Usuários** - CRUD, roles, permissões tarefas, excluir com confirmação, reenviar senha (admin only)
+16. **Audit Log** - Log de ações (admin only)
+17. **Log de Acessos** - Login/logout/falhas com IP e navegador (admin only, bi-door-open)
+18. **Perfil** - Editar dados, trocar senha, 2FA
 
 ## CADASTRO DE CARGOS
 nome, precisa_bater_ponto, permite_hora_extra, permite_dia_extra,
@@ -241,7 +242,7 @@ Texto livre ou JSON: dias_semana, entrada, saída, carga diária
 users, funcionarios, cargos, registros, feriados (com manual boolean),
 funcionario_transportes, entregas, holerites, email_logs,
 audit_log, access_log, ferias, pending_confirmations,
-tarefas, tarefa_funcionarios, whatsapp_chats, veiculos
+tarefas, tarefa_funcionarios, whatsapp_chats, veiculos, documentos
 
 ## ENTREGAS - FLUXO COMPLETO
 ### Via WhatsApp (automático com confirmação):
@@ -308,6 +309,36 @@ crlv_foto_path, observacoes, status (ativo|inativo), created_at, updated_at
   - Frontend: botão de busca ao lado do campo CPF no modal de funcionário
   - Auto-fill: preenche campos vazios sem sobrescrever existentes
   - Audit log: registra consulta (CPF parcialmente mascarado)
+
+## DOCUMENTOS
+### Tabela: documentos
+id, tipo (crlv|rg|cpf|cnh|comprovante_endereco|apolice_seguro|contrato|holerite|outro),
+descricao, entidade_tipo (funcionario|veiculo), entidade_id, arquivo_path, arquivo_original,
+dados_extraidos (JSON), enviado_por_whatsapp, whatsapp_mensagem_id, created_at
+
+### API Endpoints
+- GET /api/documentos — lista com filtros (tipo, entidade_tipo, entidade_id, dataInicio, dataFim)
+- GET /api/documentos/:entidade_tipo/:entidade_id — documentos de uma entidade
+- POST /api/documentos/upload — upload com multer (imagem/PDF, max 10MB)
+- POST /api/documentos/analyze — Vision AI (claude-haiku-4-5-20251001) análise automática
+- DELETE /api/documentos/:id — excluir (gestor)
+
+### Frontend
+- Sidebar: bi-file-earmark-text, após Veículos
+- Cards com thumbnail, tipo badge, entidade, data
+- Modal upload: tipo, entidade, arquivo, botão "Analisar com IA"
+- IA identifica tipo, extrai dados, sugere vinculação com funcionário/veículo
+- Filtros: tipo, entidade
+
+### WhatsApp Integration
+- Admin envia foto privada → bot analisa com Vision AI
+- Se documento: identifica tipo, busca match (CPF→funcionário, placa→veículo)
+- Pergunta "Deseja salvar? (Sim/Não)" via pending_confirmations (tipo='documento_upload')
+- Sim → salva em documentos + move arquivo para pasta da entidade
+- Não → descarta
+
+### Storage structure
+/uploads/documentos/funcionarios/{id}/, /uploads/documentos/veiculos/{id}/, /uploads/documentos/avulsos/
 
 ## FLUXO CARGOS → FUNCIONÁRIOS → RELATÓRIOS
 
@@ -416,7 +447,7 @@ NÃO usar parser manual de palavras-chave. Usar IA para interpretar.
 - Endpoint: GET `/api/version` (retorna {version, date, env})
 - Exibida no rodapé do index.html (canto inferior direito) e no copyright do login.html
 - Formato de exibição: "v2.0.0 | Sandbox | 24/02/2026" (versão | ambiente capitalizado | data DD/MM/YYYY)
-- Versão atual: 2.0.0
+- Versão atual: 2.2.0
 
 ## REGISTROS DE PONTO - FILTROS
 - Filtro por mês/ano (dropdown) ou período manual (data início/fim)

@@ -940,6 +940,145 @@ Ao final da sua resposta, inclua um bloco JSON no formato:
         `).run(func.id, tipo, text || '', mediaPath);
       }
 
+      // Document detection for admin users with images
+      if (user && user.role === 'admin' && msg.hasMedia && !text) {
+        try {
+          const media = msg.hasMedia ? await msg.downloadMedia().catch(() => null) : null;
+          if (media && media.mimetype.startsWith('image')) {
+            // Check if there's a pending document confirmation for this chat
+            const chatId = msg.from;
+            const pendingDoc = db.prepare("SELECT * FROM pending_confirmations WHERE tipo = 'documento_upload' AND whatsapp_chat_id = ? AND status = 'pending' AND created_at > datetime('now','localtime','-5 minutes')").get(chatId);
+            if (!pendingDoc) {
+              // Analyze document with Vision AI
+              if (process.env.ANTHROPIC_API_KEY) {
+                const Anthropic = require('@anthropic-ai/sdk');
+                const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+                const resp = await client.messages.create({
+                  model: 'claude-haiku-4-5-20251001',
+                  max_tokens: 1500,
+                  messages: [{ role: 'user', content: [
+                    { type: 'image', source: { type: 'base64', media_type: media.mimetype, data: media.data } },
+                    { type: 'text', text: `Analise esta imagem. É um DOCUMENTO (CRLV, RG, CPF, CNH, comprovante, apólice, contrato, holerite)?
+Se SIM, retorne JSON: {"is_document": true, "type": "crlv|rg|cpf|cnh|comprovante_endereco|apolice_seguro|contrato|holerite|outro", "description": "descrição curta", "extracted_data": {...}, "suggested_entity": "funcionario|veiculo"}
+Se NÃO (foto casual, selfie, etc), retorne: {"is_document": false}
+Retorne APENAS JSON válido.` }
+                  ]}]
+                });
+                const docText = resp.content[0]?.text?.trim() || '';
+                const docCleaned = docText.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+                let docResult;
+                try { docResult = JSON.parse(docCleaned); } catch (e) {
+                  const m = docCleaned.match(/\{[\s\S]*\}/);
+                  if (m) docResult = JSON.parse(m[0]);
+                }
+
+                if (docResult && docResult.is_document) {
+                  // Save the image
+                  const docDir = path.join(__dirname, '..', '..', 'public', 'uploads', 'documentos', 'avulsos');
+                  fs.mkdirSync(docDir, { recursive: true });
+                  const ext = media.mimetype.split('/')[1]?.split(';')[0] || 'jpg';
+                  const filename = `${docResult.type || 'doc'}_${Date.now()}.${ext}`;
+                  fs.writeFileSync(path.join(docDir, filename), Buffer.from(media.data, 'base64'));
+
+                  // Try matching entities
+                  const extData = docResult.extracted_data || {};
+                  let matchInfo = '';
+                  let matchedEntity = null;
+                  if (extData.cpf) {
+                    const cpfClean = String(extData.cpf).replace(/\D/g, '');
+                    const matched = db.prepare("SELECT id, nome FROM funcionarios WHERE cpf = ? AND status = 'ativo'").get(cpfClean);
+                    if (matched) { matchInfo = `\n👤 Funcionário: ${matched.nome}`; matchedEntity = { tipo: 'funcionario', id: matched.id }; }
+                  }
+                  if (extData.placa && !matchedEntity) {
+                    const placaClean = String(extData.placa).replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+                    const matched = db.prepare("SELECT id, marca, modelo, placa FROM veiculos WHERE REPLACE(UPPER(placa), '-', '') = ? AND status = 'ativo'").get(placaClean);
+                    if (matched) { matchInfo = `\n🚗 Veículo: ${matched.marca} ${matched.modelo} - ${matched.placa}`; matchedEntity = { tipo: 'veiculo', id: matched.id }; }
+                  }
+
+                  const Documento = require('../models/Documento');
+                  const typeLabels = { crlv: 'CRLV', rg: 'RG', cpf: 'CPF', cnh: 'CNH', comprovante_endereco: 'Comprovante de Endereço', apolice_seguro: 'Apólice de Seguro', contrato: 'Contrato', holerite: 'Holerite', outro: 'Outro' };
+                  const typeLabel = typeLabels[docResult.type] || docResult.type;
+
+                  // Create pending confirmation
+                  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+                  db.prepare(`INSERT INTO pending_confirmations (tipo, funcionario_id, data, horario, message_text, status, whatsapp_chat_id, created_at) VALUES ('documento_upload', 0, ?, '00:00', ?, 'pending', ?, datetime('now','localtime'))`).run(
+                    today,
+                    JSON.stringify({
+                      doc_type: docResult.type,
+                      description: docResult.description,
+                      extracted_data: docResult.extracted_data,
+                      arquivo_path: `/uploads/documentos/avulsos/${filename}`,
+                      matched_entity: matchedEntity
+                    }),
+                    chatId
+                  );
+
+                  let replyMsg = `📄 Documento identificado: *${typeLabel}*`;
+                  if (docResult.description) replyMsg += `\n📝 ${docResult.description}`;
+                  replyMsg += matchInfo;
+                  if (matchedEntity) {
+                    replyMsg += `\n✅ ${matchedEntity.tipo === 'funcionario' ? 'Funcionário' : 'Veículo'} encontrado no sistema`;
+                  } else {
+                    replyMsg += `\n⚠️ Nenhuma entidade correspondente encontrada`;
+                  }
+                  replyMsg += `\n\nDeseja salvar este documento? (Sim/Não)`;
+                  await msg.reply(replyMsg);
+                  console.log(`[WhatsApp] Document detected: ${docResult.type} from ${senderName}`);
+                  return;
+                }
+              }
+            }
+          }
+        } catch (docErr) {
+          console.error('[WhatsApp] Document detection error:', docErr.message);
+        }
+      }
+
+      // Handle document confirmation responses (Sim/Não)
+      if (user && text && /^(sim|não|nao|s|n)$/i.test(text.trim())) {
+        const chatId = msg.from;
+        const pendingDoc = db.prepare("SELECT * FROM pending_confirmations WHERE tipo = 'documento_upload' AND whatsapp_chat_id = ? AND status = 'pending' AND created_at > datetime('now','localtime','-5 minutes') ORDER BY created_at DESC LIMIT 1").get(chatId);
+        if (pendingDoc) {
+          const isYes = /^(sim|s)$/i.test(text.trim());
+          if (isYes) {
+            const docData = JSON.parse(pendingDoc.data);
+            const Documento = require('../models/Documento');
+            const entTipo = docData.matched_entity ? docData.matched_entity.tipo : 'funcionario';
+            const entId = docData.matched_entity ? docData.matched_entity.id : 0;
+
+            // Move file to proper directory if entity matched
+            if (docData.matched_entity) {
+              const subdir = entTipo === 'funcionario' ? 'funcionarios' : 'veiculos';
+              const newDir = path.join(__dirname, '..', '..', 'public', 'uploads', 'documentos', subdir, String(entId));
+              fs.mkdirSync(newDir, { recursive: true });
+              const oldPath = path.join(__dirname, '..', '..', 'public', docData.arquivo_path);
+              const basename = path.basename(docData.arquivo_path);
+              const newPath = path.join(newDir, basename);
+              try { fs.renameSync(oldPath, newPath); } catch (e) { /* keep in avulsos */ }
+              docData.arquivo_path = `/uploads/documentos/${subdir}/${entId}/${basename}`;
+            }
+
+            Documento.create({
+              tipo: docData.doc_type,
+              descricao: docData.description,
+              entidade_tipo: entTipo,
+              entidade_id: entId,
+              arquivo_path: docData.arquivo_path,
+              dados_extraidos: docData.extracted_data,
+              enviado_por_whatsapp: 1,
+              whatsapp_mensagem_id: msg.id?._serialized || null
+            });
+            db.prepare("UPDATE pending_confirmations SET status = 'confirmed' WHERE id = ?").run(pendingDoc.id);
+            await msg.reply('✅ Documento salvo com sucesso!');
+            console.log(`[WhatsApp] Document saved: ${docData.doc_type} from ${senderName}`);
+          } else {
+            db.prepare("UPDATE pending_confirmations SET status = 'rejected' WHERE id = ?").run(pendingDoc.id);
+            await msg.reply('❌ Documento ignorado.');
+          }
+          return;
+        }
+      }
+
       // Check if user has task creation permission
       const canCreate = user && (user.role === 'admin' || user.pode_criar_tarefas_whatsapp);
       if (!canCreate) {

@@ -568,6 +568,20 @@ function initializeDatabase() {
       created_at TEXT DEFAULT (datetime('now','localtime')),
       updated_at TEXT DEFAULT (datetime('now','localtime'))
     );
+
+    CREATE TABLE IF NOT EXISTS documentos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tipo TEXT NOT NULL,
+      descricao TEXT,
+      entidade_tipo TEXT NOT NULL,
+      entidade_id INTEGER NOT NULL,
+      arquivo_path TEXT NOT NULL,
+      arquivo_original TEXT,
+      dados_extraidos TEXT,
+      enviado_por_whatsapp INTEGER DEFAULT 0,
+      whatsapp_mensagem_id TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
   `);
 
   // Migrate pending_confirmations to include 'entrega' in tipo CHECK (post-CREATE)
@@ -597,6 +611,40 @@ function initializeDatabase() {
       console.log('[Migration] pending_confirmations: added entrega to tipo CHECK');
     }
   } catch (e) { console.error('[Migration] pending_confirmations tipo:', e.message); }
+
+  // Add whatsapp_chat_id to pending_confirmations (idempotent)
+  try {
+    const pcCols = db.prepare("PRAGMA table_info(pending_confirmations)").all();
+    if (!pcCols.find(c => c.name === 'whatsapp_chat_id')) {
+      db.exec("ALTER TABLE pending_confirmations ADD COLUMN whatsapp_chat_id TEXT");
+      console.log('[Migration] pending_confirmations: added whatsapp_chat_id');
+    }
+    // Add documento_upload to tipo CHECK if needed (rebuild table)
+    const pcInfo2 = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='pending_confirmations'").get();
+    if (pcInfo2 && pcInfo2.sql && !pcInfo2.sql.includes("'documento_upload'")) {
+      try { db.exec('DROP TABLE IF EXISTS pending_confirmations_mig2'); } catch(e) {}
+      db.exec(`
+        CREATE TABLE pending_confirmations_mig2 (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          funcionario_id INTEGER,
+          tipo TEXT NOT NULL CHECK(tipo IN ('entrada', 'saida', 'saida_almoco', 'retorno_almoco', 'entrega', 'documento_upload')),
+          data TEXT,
+          horario TEXT,
+          message_text TEXT,
+          status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'confirmed', 'denied', 'expired', 'rejected')),
+          created_at DATETIME DEFAULT (datetime('now','localtime')),
+          resolved_at DATETIME,
+          whatsapp_chat_id TEXT,
+          FOREIGN KEY (funcionario_id) REFERENCES funcionarios(id)
+        );
+        INSERT INTO pending_confirmations_mig2 (id, funcionario_id, tipo, data, horario, message_text, status, created_at, resolved_at, whatsapp_chat_id) SELECT id, funcionario_id, tipo, data, horario, message_text, status, created_at, resolved_at, whatsapp_chat_id FROM pending_confirmations;
+        DROP TABLE pending_confirmations;
+        ALTER TABLE pending_confirmations_mig2 RENAME TO pending_confirmations;
+        CREATE INDEX IF NOT EXISTS idx_pending_confirmations_status ON pending_confirmations(funcionario_id, status);
+      `);
+      console.log('[Migration] pending_confirmations: added documento_upload tipo + nullable fields');
+    }
+  } catch (e) { console.error('[Migration] pending_confirmations upgrade:', e.message); }
 
   // Default configs
   const configs = [

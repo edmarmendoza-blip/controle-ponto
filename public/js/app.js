@@ -341,6 +341,7 @@
       case 'insights': renderInsightsIA(); break;
       case 'cargos': renderCargos(); break;
       case 'veiculos': renderVeiculos(); break;
+      case 'documentos': renderDocumentos(); break;
       case 'entregas': renderEntregas(); break;
       case 'tarefas': renderTarefas(); break;
       case 'accesslog': renderAccessLog(); break;
@@ -726,7 +727,63 @@
 
     openModal(title, body, footer);
 
-    // CPF mask
+    // CPF validation helper
+    function validarCPF(cpf) {
+      cpf = cpf.replace(/\D/g, '');
+      if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+      for (let t = 9; t < 11; t++) {
+        let d = 0;
+        for (let c = 0; c < t; c++) d += parseInt(cpf.charAt(c)) * ((t + 1) - c);
+        d = ((10 * d) % 11) % 10;
+        if (parseInt(cpf.charAt(t)) !== d) return false;
+      }
+      return true;
+    }
+
+    // CPF enrichment function (reusable)
+    async function enrichCPF(cpfVal, silent) {
+      const enrichBtn = document.getElementById('btn-enrich-cpf');
+      if (cpfVal.length !== 11 || !validarCPF(cpfVal)) { if (!silent) showToast('CPF inválido', 'warning'); return; }
+      if (enrichBtn) { enrichBtn.disabled = true; enrichBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>'; }
+      try {
+        const resp = await api('/api/funcionarios/enrich-cpf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cpf: cpfVal })
+        });
+        if (!resp.success) { if (!silent) showToast(resp.message || 'CPF não encontrado', 'warning'); return; }
+        const d = resp.data;
+        const setIf = (id, val) => { if (val) { const el = document.getElementById(id); if (el && !el.value) el.value = val; } };
+        setIf('func-nome', d.nome);
+        setIf('func-rg', d.rg);
+        setIf('func-data-nascimento', d.data_nascimento);
+        setIf('func-email-pessoal', d.email_pessoal);
+        if (d.telefone) {
+          const tel = document.getElementById('func-telefone');
+          if (tel && !tel.value) { tel.value = d.telefone; tel.dispatchEvent(new Event('input')); }
+        }
+        if (d.endereco_cep) {
+          const cep = document.getElementById('func-endereco-cep');
+          if (cep && !cep.value) { cep.value = d.endereco_cep; cep.dispatchEvent(new Event('input')); }
+        }
+        setIf('func-endereco-rua', d.endereco_rua);
+        setIf('func-endereco-numero', d.endereco_numero);
+        setIf('func-endereco-complemento', d.endereco_complemento);
+        setIf('func-endereco-bairro', d.endereco_bairro);
+        setIf('func-endereco-cidade', d.endereco_cidade);
+        if (d.endereco_estado) {
+          const uf = document.getElementById('func-endereco-estado');
+          if (uf && !uf.value) uf.value = d.endereco_estado;
+        }
+        showToast('Dados preenchidos via BigDataCorp', 'success');
+      } catch (err) {
+        if (!silent) showToast('Erro: ' + err.message, 'danger');
+      } finally {
+        if (enrichBtn) { enrichBtn.disabled = false; enrichBtn.innerHTML = '<i class="bi bi-search"></i>'; }
+      }
+    }
+
+    // CPF mask + real-time validation indicator
     const cpfInput = document.getElementById('func-cpf');
     if (cpfInput) {
       cpfInput.addEventListener('input', function() {
@@ -735,54 +792,35 @@
         else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
         else if (v.length > 3) v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
         this.value = v;
+        // Visual validation indicator
+        const raw = v.replace(/\D/g, '');
+        if (raw.length === 11) {
+          this.style.borderColor = validarCPF(raw) ? '#198754' : '#dc3545';
+          this.style.boxShadow = validarCPF(raw) ? '0 0 0 0.15rem rgba(25,135,84,.25)' : '0 0 0 0.15rem rgba(220,53,69,.25)';
+        } else {
+          this.style.borderColor = '';
+          this.style.boxShadow = '';
+        }
+      });
+      // Auto-search on blur
+      cpfInput.addEventListener('blur', function() {
+        const raw = this.value.replace(/\D/g, '');
+        if (raw.length === 11 && validarCPF(raw)) {
+          const nome = document.getElementById('func-nome');
+          const rg = document.getElementById('func-rg');
+          if ((!nome || !nome.value) || (!rg || !rg.value)) {
+            enrichCPF(raw, true);
+          }
+        }
       });
     }
 
     // Enrich CPF button
     const enrichBtn = document.getElementById('btn-enrich-cpf');
     if (enrichBtn) {
-      enrichBtn.addEventListener('click', async function() {
+      enrichBtn.addEventListener('click', function() {
         const cpfVal = (document.getElementById('func-cpf').value || '').replace(/\D/g, '');
-        if (cpfVal.length !== 11) { showToast('CPF deve ter 11 dígitos', 'warning'); return; }
-        enrichBtn.disabled = true;
-        enrichBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-        try {
-          const resp = await api('/api/funcionarios/enrich-cpf', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ cpf: cpfVal })
-          });
-          if (!resp.success) { showToast(resp.message || 'CPF não encontrado', 'warning'); return; }
-          const d = resp.data;
-          const setIf = (id, val) => { if (val) { const el = document.getElementById(id); if (el && !el.value) el.value = val; } };
-          setIf('func-nome', d.nome);
-          setIf('func-rg', d.rg);
-          setIf('func-data-nascimento', d.data_nascimento);
-          setIf('func-email', d.email_pessoal);
-          if (d.telefone) {
-            const tel = document.getElementById('func-telefone');
-            if (tel && !tel.value) { tel.value = d.telefone; tel.dispatchEvent(new Event('input')); }
-          }
-          if (d.endereco_cep) {
-            const cep = document.getElementById('func-endereco-cep');
-            if (cep && !cep.value) { cep.value = d.endereco_cep; cep.dispatchEvent(new Event('input')); }
-          }
-          setIf('func-endereco-rua', d.endereco_rua);
-          setIf('func-endereco-numero', d.endereco_numero);
-          setIf('func-endereco-complemento', d.endereco_complemento);
-          setIf('func-endereco-bairro', d.endereco_bairro);
-          setIf('func-endereco-cidade', d.endereco_cidade);
-          if (d.endereco_estado) {
-            const uf = document.getElementById('func-endereco-estado');
-            if (uf && !uf.value) uf.value = d.endereco_estado;
-          }
-          showToast('Dados preenchidos via BigDataCorp', 'success');
-        } catch (err) {
-          showToast('Erro: ' + err.message, 'danger');
-        } finally {
-          enrichBtn.disabled = false;
-          enrichBtn.innerHTML = '<i class="bi bi-search"></i>';
-        }
+        enrichCPF(cpfVal, false);
       });
     }
 
@@ -895,6 +933,16 @@
           }
           const statusEl = document.getElementById('func-status');
           if (statusEl) statusEl.value = f.status;
+          // Auto-enrich if CPF filled but key fields empty
+          if (f.cpf && f.cpf.replace(/\D/g, '').length === 11) {
+            const raw = f.cpf.replace(/\D/g, '');
+            if ((!f.rg && !f.data_nascimento) || (!f.endereco_rua && !f.endereco_cep)) {
+              setTimeout(() => enrichCPF(raw, true), 500);
+            }
+            // Trigger visual validation
+            const ci = document.getElementById('func-cpf');
+            if (ci) ci.dispatchEvent(new Event('input'));
+          }
         });
       }
     });
@@ -3911,6 +3959,236 @@
     loadAccessLog();
   }
 
+  // ===================== DOCUMENTOS =====================
+  async function renderDocumentos() {
+    const content = document.getElementById('page-content');
+    const canManage = currentUser && (currentUser.role === 'admin' || currentUser.role === 'gestor');
+    content.innerHTML = `
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+          <select class="form-select form-select-sm" id="doc-filter-tipo" style="width:auto">
+            <option value="">Todos os tipos</option>
+            <option value="crlv">CRLV</option><option value="rg">RG</option><option value="cpf">CPF</option>
+            <option value="cnh">CNH</option><option value="comprovante_endereco">Comprovante Endereço</option>
+            <option value="apolice_seguro">Apólice Seguro</option><option value="contrato">Contrato</option>
+            <option value="holerite">Holerite</option><option value="outro">Outro</option>
+          </select>
+          <select class="form-select form-select-sm" id="doc-filter-entidade" style="width:auto">
+            <option value="">Todas entidades</option>
+            <option value="funcionario">Funcionários</option>
+            <option value="veiculo">Veículos</option>
+          </select>
+          <button class="btn btn-outline-primary btn-sm" onclick="App.filterDocumentos()"><i class="bi bi-funnel"></i> Filtrar</button>
+        </div>
+        ${canManage ? '<button class="btn btn-success btn-sm" id="btn-upload-doc"><i class="bi bi-upload"></i> Enviar Documento</button>' : ''}
+      </div>
+      <div id="documentos-list"></div>`;
+    loadDocumentos();
+    const uploadBtn = document.getElementById('btn-upload-doc');
+    if (uploadBtn) uploadBtn.addEventListener('click', () => openUploadDocModal());
+  }
+
+  async function loadDocumentos() {
+    const container = document.getElementById('documentos-list');
+    if (!container) return;
+    container.innerHTML = '<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary"></div></div>';
+    try {
+      const tipo = document.getElementById('doc-filter-tipo')?.value || '';
+      const entidade = document.getElementById('doc-filter-entidade')?.value || '';
+      let url = '/api/documentos?';
+      if (tipo) url += 'tipo=' + tipo + '&';
+      if (entidade) url += 'entidade_tipo=' + entidade + '&';
+      const docs = await api(url);
+      if (!docs || docs.length === 0) {
+        container.innerHTML = '<div class="text-muted text-center py-4">Nenhum documento encontrado</div>';
+        return;
+      }
+      const typeLabels = { crlv:'CRLV', rg:'RG', cpf:'CPF', cnh:'CNH', comprovante_endereco:'Comp. Endereço', apolice_seguro:'Apólice Seguro', contrato:'Contrato', holerite:'Holerite', outro:'Outro' };
+      const typeBadges = { crlv:'primary', rg:'info', cpf:'warning', cnh:'success', comprovante_endereco:'secondary', apolice_seguro:'danger', contrato:'dark', holerite:'primary', outro:'secondary' };
+      let html = '<div class="row g-3">';
+      for (const doc of docs) {
+        const badge = typeBadges[doc.tipo] || 'secondary';
+        const label = typeLabels[doc.tipo] || doc.tipo;
+        const entLabel = doc.entidade_nome || (doc.entidade_tipo === 'funcionario' ? 'Funcionário #' + doc.entidade_id : 'Veículo #' + doc.entidade_id);
+        const isImage = doc.arquivo_path && /\.(jpg|jpeg|png|gif|webp)$/i.test(doc.arquivo_path);
+        const thumb = isImage ? `<img src="${doc.arquivo_path}" class="rounded" style="width:60px;height:60px;object-fit:cover;cursor:pointer" onclick="window.open('${doc.arquivo_path}')">` : '<div class="bg-light rounded d-flex align-items-center justify-content-center" style="width:60px;height:60px"><i class="bi bi-file-earmark-text fs-4 text-muted"></i></div>';
+        const date = doc.created_at ? new Date(doc.created_at.replace(' ', 'T')).toLocaleDateString('pt-BR') : '';
+        const via = doc.enviado_por_whatsapp ? '<span class="badge bg-success ms-1" style="font-size:0.65rem">WA</span>' : '';
+        html += `
+          <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+              <div class="card-body d-flex gap-3 p-2">
+                ${thumb}
+                <div class="flex-grow-1 overflow-hidden">
+                  <div><span class="badge bg-${badge}">${label}</span>${via} <small class="text-muted">${date}</small></div>
+                  <div class="small text-truncate mt-1">${doc.entidade_tipo === 'funcionario' ? '<i class="bi bi-person"></i>' : '<i class="bi bi-car-front"></i>'} ${entLabel}</div>
+                  ${doc.descricao ? '<div class="small text-muted text-truncate">' + doc.descricao + '</div>' : ''}
+                </div>
+                <div class="d-flex flex-column gap-1">
+                  <button class="btn btn-outline-danger btn-sm btn-del-doc" data-id="${doc.id}" title="Excluir"><i class="bi bi-trash"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      }
+      html += '</div>';
+      container.innerHTML = html;
+      container.querySelectorAll('.btn-del-doc').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (confirm('Excluir este documento?')) {
+            await api('/api/documentos/' + btn.dataset.id, { method: 'DELETE' });
+            loadDocumentos();
+          }
+        });
+      });
+    } catch (err) {
+      container.innerHTML = '<div class="alert alert-danger">Erro: ' + err.message + '</div>';
+    }
+  }
+
+  function openUploadDocModal() {
+    const title = 'Enviar Documento';
+    const body = `
+      <div class="mb-3">
+        <label class="form-label">Tipo de Documento</label>
+        <select class="form-select" id="upload-doc-tipo">
+          <option value="crlv">CRLV</option><option value="rg">RG</option><option value="cpf">CPF</option>
+          <option value="cnh">CNH</option><option value="comprovante_endereco">Comprovante de Endereço</option>
+          <option value="apolice_seguro">Apólice de Seguro</option><option value="contrato">Contrato</option>
+          <option value="holerite">Holerite</option><option value="outro">Outro</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Vincular a</label>
+        <select class="form-select" id="upload-doc-entidade-tipo">
+          <option value="funcionario">Funcionário</option>
+          <option value="veiculo">Veículo</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Entidade</label>
+        <select class="form-select" id="upload-doc-entidade-id"></select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Descrição (opcional)</label>
+        <input type="text" class="form-control" id="upload-doc-descricao" placeholder="Descrição do documento">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Arquivo (imagem ou PDF)</label>
+        <input type="file" class="form-control" id="upload-doc-arquivo" accept="image/*,application/pdf">
+      </div>
+      <div id="upload-doc-preview" class="text-center mb-2"></div>
+      <div class="mb-3">
+        <button type="button" class="btn btn-outline-info btn-sm w-100" id="btn-analyze-doc"><i class="bi bi-magic"></i> Analisar com IA</button>
+        <small class="text-muted">Analisa o documento e identifica tipo/dados automaticamente</small>
+      </div>`;
+    const footer = '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary" id="btn-save-doc">Enviar</button>';
+    openModal(title, body, footer);
+
+    // Load entities
+    async function loadEntities() {
+      const tipo = document.getElementById('upload-doc-entidade-tipo').value;
+      const sel = document.getElementById('upload-doc-entidade-id');
+      sel.innerHTML = '<option value="">Carregando...</option>';
+      try {
+        if (tipo === 'funcionario') {
+          const funcs = await api('/api/funcionarios');
+          sel.innerHTML = funcs.filter(f => f.status === 'ativo').map(f => '<option value="' + f.id + '">' + f.nome + '</option>').join('');
+        } else {
+          const veics = await api('/api/veiculos');
+          sel.innerHTML = veics.map(v => '<option value="' + v.id + '">' + (v.marca||'') + ' ' + (v.modelo||'') + ' - ' + (v.placa||'') + '</option>').join('');
+        }
+      } catch (e) { sel.innerHTML = '<option value="">Erro ao carregar</option>'; }
+    }
+    loadEntities();
+    document.getElementById('upload-doc-entidade-tipo').addEventListener('change', loadEntities);
+
+    // File preview
+    document.getElementById('upload-doc-arquivo').addEventListener('change', function() {
+      const file = this.files[0];
+      const preview = document.getElementById('upload-doc-preview');
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = e => { preview.innerHTML = '<img src="' + e.target.result + '" style="max-height:150px;border-radius:8px">'; };
+        reader.readAsDataURL(file);
+      } else { preview.innerHTML = ''; }
+    });
+
+    // AI Analyze button
+    document.getElementById('btn-analyze-doc').addEventListener('click', async function() {
+      const fileInput = document.getElementById('upload-doc-arquivo');
+      if (!fileInput.files[0]) { showToast('Selecione um arquivo primeiro', 'warning'); return; }
+      this.disabled = true;
+      this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Analisando...';
+      try {
+        const formData = new FormData();
+        formData.append('arquivo', fileInput.files[0]);
+        const resp = await fetch('/api/documentos/analyze', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('ponto_token') || localStorage.getItem('token')) },
+          body: formData
+        });
+        const result = await resp.json();
+        if (result.success && result.data) {
+          const d = result.data;
+          if (d.type) document.getElementById('upload-doc-tipo').value = d.type;
+          if (d.description) document.getElementById('upload-doc-descricao').value = d.description;
+          if (d._matches && d._matches.length > 0) {
+            const m = d._matches[0];
+            document.getElementById('upload-doc-entidade-tipo').value = m.entidade_tipo;
+            await loadEntities();
+            document.getElementById('upload-doc-entidade-id').value = m.entidade_id;
+            showToast('IA identificou: ' + (d.type || 'documento') + ' → ' + m.nome, 'success');
+          } else {
+            showToast('IA identificou: ' + (d.type || 'documento'), 'info');
+          }
+        } else {
+          showToast('Não foi possível analisar o documento', 'warning');
+        }
+      } catch (err) {
+        showToast('Erro na análise: ' + err.message, 'danger');
+      } finally {
+        this.disabled = false;
+        this.innerHTML = '<i class="bi bi-magic"></i> Analisar com IA';
+      }
+    });
+
+    // Save button
+    document.getElementById('btn-save-doc').addEventListener('click', async function() {
+      const fileInput = document.getElementById('upload-doc-arquivo');
+      if (!fileInput.files[0]) { showToast('Selecione um arquivo', 'warning'); return; }
+      const entidadeId = document.getElementById('upload-doc-entidade-id').value;
+      if (!entidadeId) { showToast('Selecione a entidade', 'warning'); return; }
+      this.disabled = true;
+      try {
+        const formData = new FormData();
+        formData.append('arquivo', fileInput.files[0]);
+        formData.append('tipo', document.getElementById('upload-doc-tipo').value);
+        formData.append('entidade_tipo', document.getElementById('upload-doc-entidade-tipo').value);
+        formData.append('entidade_id', entidadeId);
+        formData.append('descricao', document.getElementById('upload-doc-descricao').value);
+        const resp = await fetch('/api/documentos/upload', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('ponto_token') || localStorage.getItem('token')) },
+          body: formData
+        });
+        const result = await resp.json();
+        if (result.id) {
+          showToast('Documento enviado com sucesso', 'success');
+          bootstrap.Modal.getInstance(document.getElementById('app-modal'))?.hide();
+          loadDocumentos();
+        } else {
+          showToast(result.error || 'Erro ao enviar', 'danger');
+        }
+      } catch (err) {
+        showToast('Erro: ' + err.message, 'danger');
+      } finally {
+        this.disabled = false;
+      }
+    });
+  }
+
+  // ===================== LOG DE ACESSOS =====================
   async function loadAccessLog(page) {
     const container = document.getElementById('access-log-content');
     container.innerHTML = '<div class="loading-spinner"><div class="spinner-border spinner-border-sm text-primary"></div></div>';
@@ -4514,6 +4792,7 @@
     generateInsights: generateInsights,
     openCargoModal: openCargoModal,
     loadAccessLog: loadAccessLog,
+    filterDocumentos: loadDocumentos,
     saveCargo: saveCargo,
     filterTarefas: filterTarefas,
     openTarefaModal: openTarefaModal,

@@ -105,6 +105,8 @@ body {
   padding: 8px 0;
   margin: 0;
   flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .sidebar-nav a {
@@ -490,6 +492,14 @@ body {
   }
   .page-content { padding: 16px; }
   .filter-bar { flex-direction: column; }
+  .sidebar { max-height: 100vh; }
+}
+
+/* iOS Safari full-height sidebar fix */
+@supports (-webkit-touch-callout: none) {
+  .sidebar {
+    max-height: -webkit-fill-available;
+  }
 }
 
 /* Leaflet map in modal */
