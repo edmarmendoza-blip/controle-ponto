@@ -148,7 +148,7 @@ class DashboardPresenca {
         }
 
         // Only count working days up to today
-        if (dia.data > new Date().toISOString().split('T')[0]) {
+        if (dia.data > new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' })) {
           heatmap.push({ data: dia.data, funcionario_id: func.id, status: 'futuro' });
           continue;
         }
@@ -171,7 +171,7 @@ class DashboardPresenca {
       }
 
       // Count working days up to today for accurate rate
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
       const diasUteisPassados = diasUteisList.filter(d => d.tipo === 'normal' && d.data <= today).length;
       const taxa_assiduidade = diasUteisPassados > 0
         ? Math.round((dias_trabalhados / diasUteisPassados) * 10000) / 100

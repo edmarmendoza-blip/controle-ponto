@@ -11,7 +11,7 @@ const router = express.Router();
 // GET /api/registros/hoje
 router.get('/hoje', authenticateToken, (req, res) => {
   try {
-    const hoje = new Date().toISOString().split('T')[0];
+    const hoje = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
     const registros = Registro.getByDate(hoje);
     res.json(registros);
   } catch (err) {
@@ -23,7 +23,7 @@ router.get('/hoje', authenticateToken, (req, res) => {
 // GET /api/registros/dashboard
 router.get('/dashboard', authenticateToken, (req, res) => {
   try {
-    const hoje = new Date().toISOString().split('T')[0];
+    const hoje = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
     const summary = Registro.getDashboardSummary(hoje);
     res.json(summary);
   } catch (err) {
@@ -53,7 +53,7 @@ router.get('/', authenticateToken, [
     } else if (dataInicio && dataFim) {
       registros = Registro.getByPeriod(dataInicio, dataFim, funcionarioId || null);
     } else {
-      const hoje = new Date().toISOString().split('T')[0];
+      const hoje = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
       registros = Registro.getByDate(hoje, funcionarioId || null);
     }
 

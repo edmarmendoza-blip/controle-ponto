@@ -270,7 +270,7 @@ class WhatsAppService {
         const media = await msg.downloadMedia();
         if (media) {
           mediaType = media.mimetype.split('/')[0]; // image, video, audio, etc.
-          const today = new Date().toISOString().split('T')[0];
+          const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
           const uploadDir = path.join(__dirname, '..', '..', 'public', 'uploads', 'whatsapp', today);
           fs.mkdirSync(uploadDir, { recursive: true });
           const ext = media.mimetype.split('/')[1]?.split(';')[0] || 'bin';
@@ -409,7 +409,7 @@ class WhatsAppService {
         if (aiResult && aiResult.tipo && aiResult.confianca >= 50) {
           // If AI detected an explicit time (adjustment) -> ask for confirmation
           if (aiResult.horario && funcionario) {
-            const today = new Date().toISOString().split('T')[0];
+            const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
             const tipoLabel = aiResult.tipo === 'entrada' ? 'entrada' : 'saída';
             this.createPendingConfirmation(funcionario.id, aiResult.tipo, today, aiResult.horario, text);
             await this.sendGroupMessage(
@@ -424,8 +424,8 @@ class WhatsAppService {
           } else {
             // 50-79% confidence -> ask for confirmation with current time
             if (funcionario) {
-              const today = new Date().toISOString().split('T')[0];
-              const currentTime = new Date().toTimeString().slice(0, 5);
+              const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+              const currentTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
               const tipoLabel = aiResult.tipo === 'entrada' ? 'entrada' : 'saída';
               this.createPendingConfirmation(funcionario.id, aiResult.tipo, today, currentTime, text);
               await this.sendGroupMessage(
@@ -464,7 +464,7 @@ class WhatsAppService {
           whatsapp_mensagem_id: msgDbId
         });
         const funcId = funcionario?.id || 0;
-        this.createPendingConfirmation(funcId, 'entrega', new Date().toISOString().split('T')[0], '00:00', entregaData);
+        this.createPendingConfirmation(funcId, 'entrega', new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' }), '00:00', entregaData);
         const dest = visionAnalysis.destinatario ? ` para *${visionAnalysis.destinatario}*` : '';
         const rem = visionAnalysis.remetente ? ` de *${visionAnalysis.remetente}*` : '';
         await this.sendGroupMessage(
@@ -524,7 +524,7 @@ class WhatsAppService {
       const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
       const now = new Date();
-      const currentTime = now.toTimeString().slice(0, 5);
+      const currentTime = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
       const employeeNames = funcionarios.map(f => f.nome).join(', ');
 
       const prompt = `Você é um parser de mensagens de WhatsApp para controle de ponto de funcionários domésticos.
@@ -1245,7 +1245,7 @@ Retorne APENAS JSON válido.` }
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 300,
         messages: [{ role: 'user', content: `Interprete esta mensagem como uma tarefa doméstica. Funcionários disponíveis: ${funcNames}.
-Hoje é ${new Date().toISOString().split('T')[0]}.
+Hoje é ${new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' })}.
 
 Mensagem: "${taskContent}"
 

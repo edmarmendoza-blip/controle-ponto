@@ -20,7 +20,7 @@ function seedRegistros() {
   const mes = now.getMonth() + 1;
   const ano = now.getFullYear();
   const lastDay = new Date(ano, mes, 0).getDate();
-  const todayStr = now.toISOString().split('T')[0];
+  const todayStr = now.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
 
   let count = 0;
   for (let day = 1; day <= lastDay; day++) {
