@@ -3,6 +3,7 @@ const FeriadosService = require('../services/feriados');
 
 class DashboardPresenca {
   static getPresencaHoje(data) {
+    // Get all registros for the day grouped by employee
     const rows = db.prepare(`
       SELECT
         f.id,
@@ -10,45 +11,74 @@ class DashboardPresenca {
         COALESCE(c.nome, f.cargo) as cargo,
         f.horario_entrada,
         r.entrada,
-        r.saida
+        r.saida,
+        r.observacao
       FROM funcionarios f
       LEFT JOIN cargos c ON f.cargo_id = c.id
       LEFT JOIN registros r ON f.id = r.funcionario_id AND r.data = ?
       WHERE f.status = 'ativo'
         AND (c.precisa_bater_ponto = 1 OR (c.precisa_bater_ponto IS NULL AND c.id IS NULL))
+        AND (c.aparece_relatorios = 1 OR c.id IS NULL)
       ORDER BY f.nome
     `).all(data);
 
-    const funcionarios = rows.map(row => {
+    // Consolidate: 1 row per employee
+    const funcMap = {};
+    for (const row of rows) {
+      if (!funcMap[row.id]) {
+        funcMap[row.id] = {
+          id: row.id, nome: row.nome, cargo: row.cargo,
+          horario_entrada: row.horario_entrada,
+          entrada: null, saida: null,
+          almoco_saida: null, almoco_retorno: null,
+          registros: []
+        };
+      }
+      const f = funcMap[row.id];
+      if (row.entrada || row.saida) {
+        f.registros.push({ entrada: row.entrada, saida: row.saida, obs: (row.observacao || '').toLowerCase() });
+      }
+    }
+
+    // For each employee, determine entrada/almoço/saída from their registros
+    const funcionarios = Object.values(funcMap).map(f => {
+      for (const reg of f.registros) {
+        const obs = reg.obs;
+        if (obs.includes('saída almoço') || obs.includes('saida almoço') || obs.includes('saida almoco')) {
+          if (!f.almoco_saida) f.almoco_saida = reg.entrada || reg.saida;
+        } else if (obs.includes('retorno almoço') || obs.includes('retorno almoco')) {
+          if (!f.almoco_retorno) f.almoco_retorno = reg.entrada || reg.saida;
+        } else {
+          // Normal registro: first entrada, last saída
+          if (reg.entrada && (!f.entrada || reg.entrada < f.entrada)) f.entrada = reg.entrada;
+          if (reg.saida && (!f.saida || reg.saida > f.saida)) f.saida = reg.saida;
+        }
+      }
+
       let status = 'ausente';
       let minutos_atraso = 0;
+      const esperado = f.horario_entrada || '08:00';
 
-      if (row.entrada) {
-        if (row.saida) {
+      if (f.entrada) {
+        if (f.saida) {
           status = 'saiu';
         } else {
           status = 'presente';
         }
-
-        // Check lateness
-        const esperado = row.horario_entrada || '08:00';
-        if (row.entrada > esperado) {
-          status = 'atrasado';
+        if (f.entrada > esperado) {
+          if (!f.saida) status = 'atrasado';
           const [eh, em] = esperado.split(':').map(Number);
-          const [rh, rm] = row.entrada.split(':').map(Number);
+          const [rh, rm] = f.entrada.split(':').map(Number);
           minutos_atraso = (rh * 60 + rm) - (eh * 60 + em);
         }
       }
 
       return {
-        id: row.id,
-        nome: row.nome,
-        cargo: row.cargo,
-        horario_esperado: row.horario_entrada || '08:00',
-        entrada: row.entrada || null,
-        saida: row.saida || null,
-        status,
-        minutos_atraso
+        id: f.id, nome: f.nome, cargo: f.cargo,
+        horario_esperado: esperado,
+        entrada: f.entrada, saida: f.saida,
+        almoco_saida: f.almoco_saida, almoco_retorno: f.almoco_retorno,
+        status, minutos_atraso
       };
     });
 
@@ -75,6 +105,7 @@ class DashboardPresenca {
       LEFT JOIN cargos c ON f.cargo_id = c.id
       WHERE f.status = 'ativo'
         AND (c.precisa_bater_ponto = 1 OR (c.precisa_bater_ponto IS NULL AND c.id IS NULL))
+        AND (c.aparece_relatorios = 1 OR c.id IS NULL)
       ORDER BY f.nome
     `).all();
 

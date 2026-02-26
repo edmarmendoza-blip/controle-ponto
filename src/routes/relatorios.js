@@ -33,7 +33,7 @@ router.get('/mensal', authenticateToken, [
     }).map(f => {
       // Get cargo flags from the first registro (all share the same cargo)
       const reg0 = f.registros && f.registros[0];
-      const permiteHE = (reg0 && reg0.contabiliza_hora_extra) || (reg0 && reg0.cargo_permite_hora_extra) ? true : false;
+      const permiteHE = reg0 ? (reg0.contabiliza_hora_extra != null ? !!reg0.contabiliza_hora_extra : !!reg0.cargo_permite_hora_extra) : false;
       const permiteDE = (reg0 && reg0.cargo_permite_dia_extra) ? true : false;
       const precisaBaterPonto = reg0 ? (reg0.cargo_precisa_bater_ponto !== 0) : true;
       return { ...f, permiteHE, permiteDE, precisaBaterPonto };
@@ -159,17 +159,19 @@ router.get('/folha', authenticateToken, [
         cargo = db.prepare('SELECT * FROM cargos WHERE id = ?').get(func.cargo_id);
       }
 
-      // Skip "Dono(a) da Casa" entirely
+      // Skip cargos that should not appear in reports
       const cargoNome = (func.cargo_nome || func.cargo || '').toLowerCase();
       if (cargoNome.includes('dono') || cargoNome.includes('dona')) continue;
+      if (cargo && cargo.aparece_relatorios === 0) continue;
 
-      // Determine what applies: employee overrides, fallback to cargo
+      // Determine what applies: employee flag overrides cargo flag (explicit 0 = disabled)
       const precisaBaterPonto = cargo ? cargo.precisa_bater_ponto : 1;
-      const permiteHE = (func.contabiliza_hora_extra || (cargo && cargo.permite_hora_extra)) ? true : false;
+      // If employee has contabiliza_hora_extra explicitly set (not null), use it; else fallback to cargo
+      const permiteHE = func.contabiliza_hora_extra != null ? !!func.contabiliza_hora_extra : ((cargo && cargo.permite_hora_extra) ? true : false);
       const permiteDE = (cargo && cargo.permite_dia_extra) ? true : false;
-      const recebeVT = (func.recebe_vt || (cargo && cargo.recebe_vale_transporte)) ? true : false;
-      const recebeVA = (func.tem_vale_alimentacao || func.recebe_va || (cargo && cargo.recebe_vale_refeicao)) ? true : false;
-      const recebeCombustivel = (cargo && cargo.recebe_ajuda_combustivel) ? true : false;
+      const recebeVT = func.recebe_vt != null ? !!func.recebe_vt : ((cargo && cargo.recebe_vale_transporte) ? true : false);
+      const recebeVA = (func.tem_vale_alimentacao || func.recebe_va) ? true : ((cargo && cargo.recebe_vale_refeicao) ? true : false);
+      const recebeCombustivel = func.recebe_ajuda_combustivel != null ? !!func.recebe_ajuda_combustivel : ((cargo && cargo.recebe_ajuda_combustivel) ? true : false);
 
       // Use employee values first (non-zero), fallback to cargo defaults
       const valorHE = (func.valor_hora_extra && func.valor_hora_extra > 0) ? func.valor_hora_extra : ((cargo && cargo.valor_hora_extra) || 0);

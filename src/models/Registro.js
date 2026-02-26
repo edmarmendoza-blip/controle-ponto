@@ -138,8 +138,10 @@ class Registro {
           ELSE 'nao_registrou'
         END as status_atual
       FROM funcionarios f
+      LEFT JOIN cargos c ON f.cargo_id = c.id
       LEFT JOIN registros r ON f.id = r.funcionario_id AND r.data = ?
       WHERE f.status = 'ativo'
+        AND (c.aparece_relatorios = 1 OR c.id IS NULL)
       ORDER BY f.nome
     `).all(data);
   }

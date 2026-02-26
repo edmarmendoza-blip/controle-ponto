@@ -57,6 +57,18 @@ router.get('/qr', (req, res) => {
 });
 
 // POST /api/whatsapp/reconnect - Force reconnection (admin only)
+// POST /api/whatsapp/enable - Enable/disable WhatsApp service
+router.post('/enable', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const { enabled } = req.body;
+    const val = enabled ? 'true' : 'false';
+    db.prepare("UPDATE configuracoes SET valor = ? WHERE chave = 'whatsapp_enabled'").run(val);
+    res.json({ success: true, enabled: !!enabled, message: enabled ? 'WhatsApp habilitado. Use /reconnect para iniciar.' : 'WhatsApp desabilitado.' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 router.post('/reconnect', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const result = await whatsappService.reconnect();
@@ -78,6 +90,17 @@ router.post('/test', authenticateToken, requireAdmin, async (req, res) => {
     res.json({ success: true, message: 'Mensagem enviada!' });
   } else {
     res.status(500).json({ success: false, error: 'Falha ao enviar. Bot nao conectado ou grupo nao encontrado.' });
+  }
+});
+
+// POST /api/whatsapp/fetch-missed - Fetch and process missed messages from group history
+router.post('/fetch-missed', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const limit = parseInt(req.body.limit) || 100;
+    const result = await whatsappService.fetchMissedMessages(limit);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Erro ao buscar mensagens: ' + err.message });
   }
 });
 

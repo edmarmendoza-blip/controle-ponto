@@ -43,17 +43,40 @@ class WhatsAppService {
     console.log('[WhatsApp] Initializing client...');
     this.status = 'initializing';
 
+    // Kill orphan Chrome processes from previous runs (PM2 restart leaves them behind)
+    try {
+      const { execSync } = require('child_process');
+      const authPath = path.resolve('.wwebjs_auth/session');
+      const result = execSync(`ps aux | grep "[c]hrome.*${authPath.replace(/\//g, '\\/')}" | awk '{print $2}'`, { encoding: 'utf8' }).trim();
+      if (result) {
+        const pids = result.split('\n').filter(Boolean);
+        console.log(`[WhatsApp] Killing ${pids.length} orphan Chrome process(es): ${pids.join(', ')}`);
+        execSync(`kill -9 ${pids.join(' ')}`, { encoding: 'utf8' });
+        // Wait a moment for processes to fully terminate
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    } catch (err) {
+      // No orphan processes found or kill failed - safe to continue
+    }
+
     this.client = new Client({
       authStrategy: new LocalAuth({ dataPath: '.wwebjs_auth' }),
       puppeteer: {
         headless: true,
+        protocolTimeout: 120000,
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
           '--disable-gpu',
           '--single-process',
+          '--disable-extensions',
+          '--disable-translate',
+          '--no-zygote',
         ],
+      },
+      webVersionCache: {
+        type: 'none',
       },
     });
 
@@ -726,8 +749,21 @@ Mensagem: "${text}"`;
 
   async registerPunch(funcionario, intent, msg) {
     const now = new Date();
-    const today = now.toISOString().split('T')[0];
-    const currentTime = now.toTimeString().slice(0, 5); // HH:MM
+    // If this is a missed message, use the original timestamp
+    const effectiveTime = msg._originalTimestamp || now;
+    const today = effectiveTime.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' }); // YYYY-MM-DD
+    const currentTime = effectiveTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }); // HH:MM
+
+    // For missed messages: ask confirmation with the original time instead of auto-registering
+    if (msg._isMissed) {
+      const tipoLabel = intent === 'entrada' ? 'entrada' : intent === 'saida' ? 'saída' : intent === 'saida_almoco' ? 'saída almoço' : intent === 'retorno_almoco' ? 'retorno almoço' : intent;
+      this.createPendingConfirmation(funcionario.id, intent, today, currentTime, msg.body || '');
+      await this.sendGroupMessage(
+        `⏰ ${funcionario.nome}, o bot estava offline quando você enviou "${(msg.body || '').substring(0, 50)}". Deseja registrar *${tipoLabel}* às *${currentTime}* (${today})? Responda *SIM* ou *NÃO*.`
+      );
+      console.log(`[WhatsApp] Missed punch confirmation requested: ${funcionario.nome} ${intent} at ${currentTime} (${today})`);
+      return;
+    }
 
     try {
       if (intent === 'entrada') {
@@ -1001,6 +1037,7 @@ Retorne APENAS JSON válido.` }
 
                   // Create pending confirmation
                   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+                  const suggestedType = docResult.suggested_entity || (extData.placa ? 'veiculo' : 'funcionario');
                   db.prepare(`INSERT INTO pending_confirmations (tipo, funcionario_id, data, horario, message_text, status, whatsapp_chat_id, created_at) VALUES ('documento_upload', 0, ?, '00:00', ?, 'pending', ?, datetime('now','localtime'))`).run(
                     today,
                     JSON.stringify({
@@ -1008,7 +1045,8 @@ Retorne APENAS JSON válido.` }
                       description: docResult.description,
                       extracted_data: docResult.extracted_data,
                       arquivo_path: `/uploads/documentos/avulsos/${filename}`,
-                      matched_entity: matchedEntity
+                      matched_entity: matchedEntity,
+                      suggested_entity: suggestedType
                     }),
                     chatId
                   );
@@ -1019,7 +1057,18 @@ Retorne APENAS JSON válido.` }
                   if (matchedEntity) {
                     replyMsg += `\n✅ ${matchedEntity.tipo === 'funcionario' ? 'Funcionário' : 'Veículo'} encontrado no sistema`;
                   } else {
-                    replyMsg += `\n⚠️ Nenhuma entidade correspondente encontrada`;
+                    // Suggest creating entity based on document type
+                    const suggestedType = docResult.suggested_entity || (extData.placa ? 'veiculo' : 'funcionario');
+                    if (suggestedType === 'veiculo' && extData.placa) {
+                      replyMsg += `\n⚠️ Veículo com placa ${extData.placa} não encontrado`;
+                      replyMsg += `\n🆕 Um novo veículo será criado ao confirmar`;
+                    } else if (extData.cpf) {
+                      replyMsg += `\n⚠️ Funcionário com CPF não encontrado`;
+                      replyMsg += `\n🆕 Um novo funcionário será criado ao confirmar`;
+                    } else {
+                      replyMsg += `\n⚠️ Nenhuma entidade correspondente encontrada`;
+                      replyMsg += `\n📁 Documento será salvo como avulso`;
+                    }
                   }
                   replyMsg += `\n\nDeseja salvar este documento? (Sim/Não)`;
                   await msg.reply(replyMsg);
@@ -1043,11 +1092,50 @@ Retorne APENAS JSON válido.` }
           if (isYes) {
             const docData = JSON.parse(pendingDoc.data);
             const Documento = require('../models/Documento');
-            const entTipo = docData.matched_entity ? docData.matched_entity.tipo : 'funcionario';
-            const entId = docData.matched_entity ? docData.matched_entity.id : 0;
+            let entTipo = docData.matched_entity ? docData.matched_entity.tipo : (docData.suggested_entity || 'funcionario');
+            let entId = docData.matched_entity ? docData.matched_entity.id : 0;
+            let createdMsg = '';
 
-            // Move file to proper directory if entity matched
-            if (docData.matched_entity) {
+            // If no entity matched, CREATE one from extracted data
+            if (!docData.matched_entity && docData.extracted_data) {
+              const ext = docData.extracted_data;
+              try {
+                if (entTipo === 'veiculo' && ext.placa) {
+                  const Veiculo = require('../models/Veiculo');
+                  const newId = Veiculo.create({
+                    placa: String(ext.placa).replace(/[^a-zA-Z0-9]/g, '').toUpperCase(),
+                    marca: ext.marca || ext.fabricante || '',
+                    modelo: ext.modelo || '',
+                    ano_fabricacao: ext.ano_fabricacao || ext.ano || null,
+                    ano_modelo: ext.ano_modelo || ext.ano || null,
+                    cor: ext.cor || '',
+                    renavam: ext.renavam || '',
+                    chassi: ext.chassi || '',
+                    combustivel: ext.combustivel || 'flex'
+                  });
+                  entId = newId;
+                  createdMsg = `\n🆕 Veículo criado: ${ext.placa}`;
+                  console.log(`[WhatsApp] Created vehicle from document: ${ext.placa} id=${newId}`);
+                } else if (entTipo === 'funcionario' && (ext.cpf || ext.nome)) {
+                  const Funcionario = require('../models/Funcionario');
+                  const cpfClean = ext.cpf ? String(ext.cpf).replace(/\D/g, '') : '';
+                  const newId = Funcionario.create({
+                    nome: ext.nome || 'Funcionário (via documento)',
+                    cpf: cpfClean || null,
+                    rg: ext.rg || null,
+                    data_nascimento: ext.data_nascimento || null
+                  });
+                  entId = newId;
+                  createdMsg = `\n🆕 Funcionário criado: ${ext.nome || cpfClean}`;
+                  console.log(`[WhatsApp] Created employee from document: ${ext.nome || cpfClean} id=${newId}`);
+                }
+              } catch (createErr) {
+                console.error('[WhatsApp] Error creating entity from document:', createErr.message);
+              }
+            }
+
+            // Move file to proper directory if entity resolved
+            if (entId > 0) {
               const subdir = entTipo === 'funcionario' ? 'funcionarios' : 'veiculos';
               const newDir = path.join(__dirname, '..', '..', 'public', 'uploads', 'documentos', subdir, String(entId));
               fs.mkdirSync(newDir, { recursive: true });
@@ -1069,7 +1157,7 @@ Retorne APENAS JSON válido.` }
               whatsapp_mensagem_id: msg.id?._serialized || null
             });
             db.prepare("UPDATE pending_confirmations SET status = 'confirmed' WHERE id = ?").run(pendingDoc.id);
-            await msg.reply('✅ Documento salvo com sucesso!');
+            await msg.reply('✅ Documento salvo com sucesso!' + createdMsg);
             console.log(`[WhatsApp] Document saved: ${docData.doc_type} from ${senderName}`);
           } else {
             db.prepare("UPDATE pending_confirmations SET status = 'rejected' WHERE id = ?").run(pendingDoc.id);
@@ -1210,6 +1298,68 @@ Retorne APENAS JSON válido (sem markdown):
       console.log(`[WhatsApp] Task #${tarefaId} created via private message from ${senderName}`);
     } catch (err) {
       console.error('[WhatsApp] Private message error:', err.message);
+    }
+  }
+
+  async fetchMissedMessages(limit = 100) {
+    if (!this.ready || !this.groupChat) {
+      return { success: false, error: 'WhatsApp não conectado ou grupo não encontrado.' };
+    }
+
+    console.log(`[WhatsApp] Buscando últimas ${limit} mensagens do grupo...`);
+    const results = { total: 0, processed: 0, skipped: 0, errors: 0, details: [] };
+
+    try {
+      const messages = await this.groupChat.fetchMessages({ limit });
+      results.total = messages.length;
+      console.log(`[WhatsApp] ${messages.length} mensagens encontradas no histórico.`);
+
+      for (const msg of messages) {
+        try {
+          // Skip bot's own messages
+          if (msg.fromMe) {
+            results.skipped++;
+            continue;
+          }
+
+          // Check if already processed (stored in DB)
+          const existing = db.prepare('SELECT id FROM whatsapp_mensagens WHERE message_id = ?').get(msg.id._serialized);
+          if (existing) {
+            results.skipped++;
+            continue;
+          }
+
+          // Extract original timestamp from the message
+          const msgTimestamp = msg.timestamp ? new Date(msg.timestamp * 1000) : null;
+          if (msgTimestamp) {
+            // Tag the message with original time so registerPunch uses it
+            msg._originalTimestamp = msgTimestamp;
+            msg._isMissed = true;
+          }
+
+          // Process this missed message
+          const msgTime = msgTimestamp ? msgTimestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }) : '?';
+          console.log(`[WhatsApp] Processando mensagem perdida: type=${msg.type} body="${(msg.body || '').substring(0, 40)}" hora_original=${msgTime}`);
+          await this.onMessage(msg);
+          results.processed++;
+          results.details.push({
+            id: msg.id._serialized,
+            body: (msg.body || '').substring(0, 80),
+            timestamp: msg.timestamp,
+            originalTime: msgTime,
+            type: msg.type
+          });
+        } catch (err) {
+          console.error(`[WhatsApp] Erro ao processar mensagem perdida:`, err.message);
+          results.errors++;
+        }
+      }
+
+      console.log(`[WhatsApp] Fetch concluído: ${results.processed} processadas, ${results.skipped} já existentes, ${results.errors} erros.`);
+      return { success: true, ...results };
+    } catch (err) {
+      console.error('[WhatsApp] Erro ao buscar mensagens:', err.message);
+      return { success: false, error: err.message };
     }
   }
 

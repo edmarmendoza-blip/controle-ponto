@@ -3,6 +3,7 @@ const { body, param, query, validationResult } = require('express-validator');
 const multer = require('multer');
 const path = require('path');
 const Funcionario = require('../models/Funcionario');
+const { db } = require('../config/database');
 const { authenticateToken, requireAdmin, requireGestor } = require('../middleware/auth');
 const AuditLog = require('../services/auditLog');
 const EmailService = require('../services/emailService');
@@ -117,7 +118,7 @@ router.post('/enrich-cpf', authenticateToken, requireGestor, async (req, res) =>
     const response = await fetch('https://bigboost.bigdatacorp.com.br/peoplev2', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + token,
+        'AccessToken': token,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -139,6 +140,15 @@ router.post('/enrich-cpf', authenticateToken, requireGestor, async (req, res) =>
     const result = await response.json();
     AuditLog.log(req.user.id, 'enrich_cpf', 'funcionario', null, { cpf: cleanCpf.substring(0, 3) + '***' }, req.ip);
 
+    // Check for BigDataCorp API-level errors (token invalid, etc.)
+    if (result && result.Status && result.Status.login) {
+      const loginStatus = Array.isArray(result.Status.login) ? result.Status.login[0] : result.Status.login;
+      if (loginStatus && loginStatus.Code && loginStatus.Code < 0) {
+        console.error('[BigDataCorp] API error:', loginStatus.Code, loginStatus.Message);
+        return res.status(403).json({ success: false, error: 'Erro na API BigDataCorp: ' + (loginStatus.Message || 'Token inválido') });
+      }
+    }
+
     // Extract person data from BigDataCorp response
     let personData = null;
 
@@ -151,8 +161,11 @@ router.post('/enrich-cpf', authenticateToken, requireGestor, async (req, res) =>
           const bd = Array.isArray(ds.BasicData) ? ds.BasicData[0] : ds.BasicData;
           if (bd) {
             data.nome = bd.Name || bd.FullName || null;
-            data.data_nascimento = bd.BirthDate ? bd.BirthDate.split('T')[0] : null;
+            data.data_nascimento = bd.CapturedBirthDateFromRFSource || (bd.BirthDate ? bd.BirthDate.split('T')[0] : null);
             data.rg = bd.RG || null;
+            if (bd.AlternativeIdNumbers && bd.AlternativeIdNumbers.SocialSecurityNumber) {
+              data.nis_pis = bd.AlternativeIdNumbers.SocialSecurityNumber;
+            }
           }
         }
         // Emails
@@ -209,7 +222,15 @@ router.post('/enrich-cpf', authenticateToken, requireGestor, async (req, res) =>
       return res.json({ success: false, message: 'Pessoa não encontrada', raw: result });
     }
 
-    res.json({ success: true, data: personData });
+    // Save raw BigDataCorp response to employee record if funcionario_id provided
+    const { funcionario_id } = req.body;
+    if (funcionario_id) {
+      try {
+        db.prepare('UPDATE funcionarios SET bigdatacorp_data = ? WHERE id = ?').run(JSON.stringify(result), funcionario_id);
+      } catch (e) { console.error('[BigDataCorp] Error saving raw data:', e.message); }
+    }
+
+    res.json({ success: true, data: personData, raw: result });
   } catch (err) {
     console.error('Enrich CPF error:', err);
     res.status(500).json({ error: 'Erro ao consultar CPF: ' + err.message });

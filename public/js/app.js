@@ -343,6 +343,7 @@
       case 'veiculos': renderVeiculos(); break;
       case 'documentos': renderDocumentos(); break;
       case 'entregas': renderEntregas(); break;
+      case 'estoque': renderEstoque(); break;
       case 'tarefas': renderTarefas(); break;
       case 'accesslog': renderAccessLog(); break;
       default: content.innerHTML = '<p>Página não encontrada</p>';
@@ -510,6 +511,7 @@
 
     const body = `
       <form id="func-form">
+        <input type="hidden" id="func-edit-id" value="${id || ''}">
         <h6 class="text-muted mb-2"><i class="bi bi-person me-1"></i>Dados Pessoais</h6>
         <div class="row">
           <div class="col-md-6 mb-3">
@@ -711,6 +713,24 @@
               <option value="inativo">Inativo</option>
             </select>
           </div>` : ''}
+
+        <div id="bigdatacorp-accordion-wrapper" style="display:none">
+          <hr>
+          <div class="accordion" id="accordionBigDataCorp">
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button py-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBDC" aria-expanded="true">
+                  <i class="bi bi-database me-2"></i> Log Consulta CPF (BigDataCorp)
+                </button>
+              </h2>
+              <div id="collapseBDC" class="accordion-collapse collapse show" data-bs-parent="#accordionBigDataCorp">
+                <div class="accordion-body p-2" id="bigdatacorp-content" style="max-height:400px;overflow-y:auto;font-size:0.85rem">
+                  <span class="text-muted">Nenhum dado disponível.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </form>`;
 
     const footer = `
@@ -746,40 +766,164 @@
       if (cpfVal.length !== 11 || !validarCPF(cpfVal)) { if (!silent) showToast('CPF inválido', 'warning'); return; }
       if (enrichBtn) { enrichBtn.disabled = true; enrichBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>'; }
       try {
+        // Get funcionario_id if editing
+        const funcIdEl = document.getElementById('func-edit-id');
+        const funcId = funcIdEl ? funcIdEl.value : null;
         const resp = await api('/api/funcionarios/enrich-cpf', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ cpf: cpfVal })
+          body: JSON.stringify({ cpf: cpfVal, funcionario_id: funcId || undefined })
         });
         if (!resp.success) { if (!silent) showToast(resp.message || 'CPF não encontrado', 'warning'); return; }
         const d = resp.data;
-        const setIf = (id, val) => { if (val) { const el = document.getElementById(id); if (el && !el.value) el.value = val; } };
-        setIf('func-nome', d.nome);
-        setIf('func-rg', d.rg);
-        setIf('func-data-nascimento', d.data_nascimento);
-        setIf('func-email-pessoal', d.email_pessoal);
+        let preenchidos = [];
+        // setEmpty: preenche só se campo vazio (para nome, que o usuário pode ter digitado diferente)
+        const setEmpty = (id, val, label) => { if (val) { const el = document.getElementById(id); if (el && !el.value) { el.value = val; preenchidos.push(label); } } };
+        // setAlways: preenche sempre que BigDataCorp retornar dado (dados autoritativos da Receita Federal)
+        const setAlways = (id, val, label) => { if (val) { const el = document.getElementById(id); if (el) { const changed = el.value !== val; el.value = val; if (changed) preenchidos.push(label); } } };
+        setEmpty('func-nome', d.nome, 'Nome');
+        setAlways('func-rg', d.rg, 'RG');
+        setAlways('func-data-nascimento', d.data_nascimento, 'Nascimento');
+        setAlways('func-email-pessoal', d.email_pessoal, 'Email');
         if (d.telefone) {
           const tel = document.getElementById('func-telefone');
-          if (tel && !tel.value) { tel.value = d.telefone; tel.dispatchEvent(new Event('input')); }
+          if (tel && !tel.value) { tel.value = d.telefone; tel.dispatchEvent(new Event('input')); preenchidos.push('Telefone'); }
         }
         if (d.endereco_cep) {
           const cep = document.getElementById('func-endereco-cep');
-          if (cep && !cep.value) { cep.value = d.endereco_cep; cep.dispatchEvent(new Event('input')); }
+          if (cep) { const changed = cep.value !== d.endereco_cep; cep.value = d.endereco_cep; cep.dispatchEvent(new Event('input')); if (changed) preenchidos.push('CEP'); }
         }
-        setIf('func-endereco-rua', d.endereco_rua);
-        setIf('func-endereco-numero', d.endereco_numero);
-        setIf('func-endereco-complemento', d.endereco_complemento);
-        setIf('func-endereco-bairro', d.endereco_bairro);
-        setIf('func-endereco-cidade', d.endereco_cidade);
+        setAlways('func-endereco-rua', d.endereco_rua, 'Rua');
+        setAlways('func-endereco-numero', d.endereco_numero, 'Número');
+        setAlways('func-endereco-complemento', d.endereco_complemento, 'Complemento');
+        setAlways('func-endereco-bairro', d.endereco_bairro, 'Bairro');
+        setAlways('func-endereco-cidade', d.endereco_cidade, 'Cidade');
         if (d.endereco_estado) {
           const uf = document.getElementById('func-endereco-estado');
-          if (uf && !uf.value) uf.value = d.endereco_estado;
+          if (uf) { const changed = uf.value !== d.endereco_estado; uf.value = d.endereco_estado; if (changed) preenchidos.push('Estado'); }
         }
-        showToast('Dados preenchidos via BigDataCorp', 'success');
+        const msg = preenchidos.length > 0
+          ? 'BigDataCorp: preenchido ' + preenchidos.join(', ')
+          : 'BigDataCorp: consulta OK, nenhum campo novo para preencher';
+        showToast(msg, 'success');
+        // Show raw data in accordion
+        if (resp.raw) showBigDataCorpAccordion(resp.raw);
       } catch (err) {
         if (!silent) showToast('Erro: ' + err.message, 'danger');
       } finally {
         if (enrichBtn) { enrichBtn.disabled = false; enrichBtn.innerHTML = '<i class="bi bi-search"></i>'; }
+      }
+    }
+
+    function showBigDataCorpAccordion(rawData) {
+      const wrapper = document.getElementById('bigdatacorp-accordion-wrapper');
+      const content = document.getElementById('bigdatacorp-content');
+      if (!wrapper || !content) return;
+      wrapper.style.display = 'block';
+      try {
+        const data = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+        let html = '';
+
+        // Header: query metadata
+        const queryDate = data.QueryDate ? new Date(data.QueryDate).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : null;
+        const elapsed = data.ElapsedMilliseconds;
+        html += '<div class="bg-light rounded p-2 mb-2 border">';
+        html += '<div class="d-flex justify-content-between align-items-center">';
+        html += '<span class="badge bg-info"><i class="bi bi-clock-history me-1"></i>Consulta realizada</span>';
+        if (queryDate) html += '<small class="text-muted">' + queryDate + '</small>';
+        html += '</div>';
+        if (elapsed != null) html += '<small class="text-muted">Tempo de resposta: ' + elapsed + 'ms</small>';
+        if (data.QueryId) html += '<br><small class="text-muted">ID: ' + data.QueryId + '</small>';
+        html += '</div>';
+
+        // Status dos datasets
+        if (data.Status) {
+          html += '<div class="mb-2"><strong class="small text-uppercase text-muted">Status dos Datasets</strong>';
+          html += '<div class="d-flex flex-wrap gap-1 mt-1">';
+          for (const [ds, arr] of Object.entries(data.Status)) {
+            const st = Array.isArray(arr) ? arr[0] : arr;
+            const ok = st && st.Code === 0;
+            const badge = ok ? 'bg-success' : 'bg-warning text-dark';
+            const msg = ok ? 'OK' : (st.Message || 'Erro');
+            html += '<span class="badge ' + badge + '" title="' + msg + '">' + ds + (ok ? ' ✓' : ' ✗') + '</span>';
+          }
+          html += '</div></div>';
+        }
+
+        // Extract key sections from BigDataCorp response
+        const datasets = data.Result || data.result || [];
+        const results = Array.isArray(datasets) ? datasets : [datasets];
+        for (const ds of results) {
+          const matchKey = ds.MatchKeys ? (typeof ds.MatchKeys === 'string' ? ds.MatchKeys : ds.MatchKeys) : '';
+          const bd = ds.BasicData || ds;
+
+          // Dados Pessoais
+          html += '<div class="mb-2"><strong class="small text-uppercase text-muted">Dados Pessoais</strong>';
+          html += '<table class="table table-sm table-borderless mb-0" style="font-size:0.83rem">';
+          const addRow = (label, val) => { if (val) html += '<tr><td class="text-muted fw-semibold" style="width:140px">' + label + '</td><td>' + val + '</td></tr>'; };
+          if (bd.TaxIdNumber) addRow('CPF', bd.TaxIdNumber.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4'));
+          if (bd.TaxIdStatus) {
+            const statusColor = bd.TaxIdStatus === 'REGULAR' ? 'success' : 'danger';
+            addRow('Status CPF', '<span class="badge bg-' + statusColor + '">' + bd.TaxIdStatus + '</span>');
+          }
+          addRow('Origem', bd.TaxIdOrigin);
+          addRow('Nome Completo', bd.Name);
+          if (bd.Aliases) {
+            addRow('Nome Social', bd.Aliases.CommonName);
+          }
+          if (bd.BirthDate) addRow('Nascimento', new Date(bd.BirthDate).toLocaleDateString('pt-BR') + (bd.Age ? ' (' + bd.Age + ' anos)' : ''));
+          addRow('Gênero', bd.Gender === 'F' ? 'Feminino' : bd.Gender === 'M' ? 'Masculino' : bd.Gender);
+          addRow('Nacionalidade', bd.BirthCountry);
+          addRow('Nome da Mãe', bd.MotherName);
+          if (bd.FatherName) addRow('Nome do Pai', bd.FatherName);
+          addRow('Região Fiscal', bd.TaxIdFiscalRegion);
+          if (bd.AlternativeIdNumbers && bd.AlternativeIdNumbers.SocialSecurityNumber) {
+            addRow('NIS/PIS', bd.AlternativeIdNumbers.SocialSecurityNumber);
+          }
+          if (bd.HasObitIndication != null) addRow('Óbito', bd.HasObitIndication ? '<span class="badge bg-danger">Sim</span>' : '<span class="badge bg-success">Não</span>');
+          if (bd.LastUpdateDate) addRow('Última Atualização', new Date(bd.LastUpdateDate).toLocaleDateString('pt-BR'));
+          html += '</table></div>';
+
+          // Telefones
+          const phones = ds.Phones || bd.Phones;
+          if (phones && phones.length > 0) {
+            html += '<div class="mb-2"><strong class="small text-uppercase text-muted">Telefones (' + phones.length + ')</strong>';
+            html += '<table class="table table-sm table-borderless mb-0" style="font-size:0.83rem">';
+            phones.slice(0, 8).forEach(p => {
+              const num = p.Number || ((p.AreaCode || '') + (p.PhoneNumber || ''));
+              const tipo = p.PhoneType || p.Type || '';
+              html += '<tr><td class="text-muted" style="width:80px">' + (tipo === 'Mobile' ? '📱 Celular' : tipo === 'Landline' ? '📞 Fixo' : tipo || '-') + '</td><td>' + num + '</td></tr>';
+            });
+            html += '</table></div>';
+          }
+
+          // Endereços
+          const addrs = ds.Addresses || bd.Addresses;
+          if (addrs && addrs.length > 0) {
+            html += '<div class="mb-2"><strong class="small text-uppercase text-muted">Endereços (' + addrs.length + ')</strong>';
+            addrs.slice(0, 5).forEach(a => {
+              const parts = [a.Typology, a.AddressMain, a.Number].filter(Boolean).join(' ');
+              const parts2 = [a.Complement, a.Neighborhood].filter(Boolean).join(', ');
+              const parts3 = [a.City, a.State, a.ZipCode].filter(Boolean).join(' - ');
+              html += '<div class="ms-1 mb-1 p-1 bg-light rounded small">' + parts + (parts2 ? ', ' + parts2 : '') + '<br><span class="text-muted">' + parts3 + '</span></div>';
+            });
+            html += '</div>';
+          }
+
+          // Emails
+          const emails = ds.Emails || bd.Emails;
+          if (emails && emails.length > 0) {
+            html += '<div class="mb-2"><strong class="small text-uppercase text-muted">E-mails (' + emails.length + ')</strong>';
+            html += '<ul class="mb-0 small">';
+            emails.slice(0, 5).forEach(e => { html += '<li>' + (e.EmailAddress || e.Email || e) + '</li>'; });
+            html += '</ul></div>';
+          }
+        }
+
+        if (!html || results.length === 0) html = '<pre class="mb-0" style="white-space:pre-wrap;font-size:0.8rem">' + JSON.stringify(data, null, 2).substring(0, 3000) + '</pre>';
+        content.innerHTML = html;
+      } catch (e) {
+        content.innerHTML = '<pre class="mb-0" style="white-space:pre-wrap;font-size:0.8rem">' + String(rawData).substring(0, 3000) + '</pre>';
       }
     }
 
@@ -933,6 +1077,10 @@
           }
           const statusEl = document.getElementById('func-status');
           if (statusEl) statusEl.value = f.status;
+          // Show BigDataCorp accordion if data exists
+          if (f.bigdatacorp_data) {
+            try { showBigDataCorpAccordion(f.bigdatacorp_data); } catch(e) {}
+          }
           // Auto-enrich if CPF filled but key fields empty
           if (f.cpf && f.cpf.replace(/\D/g, '').length === 11) {
             const raw = f.cpf.replace(/\D/g, '');
@@ -2091,7 +2239,7 @@
 
     try {
       const allFuncionarios = await api('/api/funcionarios');
-      const funcionarios = allFuncionarios.filter(f => f.cargo_nome !== 'Dono(a) da Casa' && f.precisa_bater_ponto !== 0);
+      const funcionarios = allFuncionarios.filter(f => f.cargo_nome !== 'Dono(a) da Casa' && f.precisa_bater_ponto !== 0 && f.aparece_relatorios !== 0);
 
       content.innerHTML = `
         <div class="filter-bar">
@@ -2409,8 +2557,10 @@
             <tr>
               <th>Funcionário</th>
               <th>Cargo</th>
-              <th>Horário Esperado</th>
+              <th>Esperado</th>
               <th>Entrada</th>
+              <th title="Saída Almoço">Almoço ↗</th>
+              <th title="Retorno Almoço">Almoço ↙</th>
               <th>Saída</th>
               <th>Status</th>
               <th>Atraso</th>
@@ -2423,6 +2573,8 @@
                 <td>${f.cargo}</td>
                 <td>${f.horario_esperado}</td>
                 <td>${f.entrada || '-'}</td>
+                <td>${f.almoco_saida || '-'}</td>
+                <td>${f.almoco_retorno || '-'}</td>
                 <td>${f.saida || '-'}</td>
                 <td>${statusBadge(f.status)}</td>
                 <td>${f.minutos_atraso > 0 ? f.minutos_atraso + ' min' : '-'}</td>
@@ -3511,6 +3663,7 @@
         <div class="mb-3"><label class="form-label">Nome</label><input type="text" class="form-control" id="cargo-nome" required></div>
         <hr><h6 class="text-muted">Configurações</h6>
         <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-ponto" checked><label class="form-check-label" for="cargo-ponto">Precisa bater ponto</label></div>
+        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-aparece-relatorios" checked><label class="form-check-label" for="cargo-aparece-relatorios">Aparece nos relatórios e cálculos</label></div>
         <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cargo-hora-extra" checked onchange="document.getElementById('cargo-he-fields').style.display=this.checked?'':'none'"><label class="form-check-label" for="cargo-hora-extra">Permite hora extra</label></div>
         <div id="cargo-he-fields">
           <div class="mb-3"><label class="form-label">Valor Hora Extra (R$)</label><input type="number" class="form-control" id="cargo-val-hora-extra" step="0.01" min="0" value="0"></div>
@@ -3549,6 +3702,7 @@
       api('/api/cargos/' + id).then(c => {
         document.getElementById('cargo-nome').value = c.nome || '';
         document.getElementById('cargo-ponto').checked = !!c.precisa_bater_ponto;
+        document.getElementById('cargo-aparece-relatorios').checked = c.aparece_relatorios !== 0;
         document.getElementById('cargo-hora-extra').checked = !!c.permite_hora_extra;
         document.getElementById('cargo-dia-extra').checked = !!c.permite_dia_extra;
         document.getElementById('cargo-val-hora-extra').value = c.valor_hora_extra || 0;
@@ -3578,6 +3732,7 @@
     const data = {
       nome: document.getElementById('cargo-nome').value,
       precisa_bater_ponto: document.getElementById('cargo-ponto').checked ? 1 : 0,
+      aparece_relatorios: document.getElementById('cargo-aparece-relatorios').checked ? 1 : 0,
       permite_hora_extra: document.getElementById('cargo-hora-extra').checked ? 1 : 0,
       permite_dia_extra: document.getElementById('cargo-dia-extra').checked ? 1 : 0,
       valor_hora_extra: parseFloat(document.getElementById('cargo-val-hora-extra').value) || 0,
@@ -4750,6 +4905,285 @@
   }
 
   // ============================================================
+  // ESTOQUE
+  // ============================================================
+  let _estoqueShowInactive = false;
+  const ESTOQUE_CATEGORIAS = ['limpeza', 'cozinha', 'escritorio', 'banheiro', 'jardim', 'pet', 'medicamentos', 'ferramentas', 'outros'];
+  const ESTOQUE_UNIDADES = ['un', 'kg', 'g', 'L', 'ml', 'cx', 'pct', 'rolo', 'par', 'kit'];
+
+  async function renderEstoque() {
+    const canManage = currentUser && (currentUser.role === 'admin' || currentUser.role === 'gestor');
+    const content = document.getElementById('content');
+    content.innerHTML = `
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0"><i class="bi bi-cart3 me-2"></i>Estoque</h4>
+        <div>
+          <button class="btn btn-outline-secondary btn-sm me-1" id="estoque-toggle-inactive"><i class="bi bi-eye"></i> Inativos</button>
+          ${canManage ? '<button class="btn btn-primary btn-sm" onclick="App.openEstoqueModal()"><i class="bi bi-plus-lg"></i> Novo Item</button>' : ''}
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <select class="form-select form-select-sm" id="estoque-filtro-categoria">
+            <option value="">Todas as categorias</option>
+            ${ESTOQUE_CATEGORIAS.map(c => '<option value="'+c+'">'+c.charAt(0).toUpperCase()+c.slice(1)+'</option>').join('')}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <input type="text" class="form-control form-control-sm" id="estoque-busca" placeholder="Buscar item...">
+        </div>
+        <div class="col-md-4 text-end">
+          <button class="btn btn-outline-info btn-sm" onclick="App.showMovimentacoes()"><i class="bi bi-clock-history"></i> Histórico</button>
+        </div>
+      </div>
+      <div id="estoque-alertas"></div>
+      <div class="table-responsive">
+        <table class="table table-hover table-sm">
+          <thead><tr>
+            <th>Item</th><th>Categoria</th><th>Qtd Atual</th><th>Mínimo</th><th>Unidade</th><th>Local</th>
+            ${canManage ? '<th>Ações</th>' : ''}
+          </tr></thead>
+          <tbody id="estoque-tbody"></tbody>
+        </table>
+      </div>`;
+
+    try {
+      const resp = await api('/api/estoque?includeInactive=' + _estoqueShowInactive);
+      const items = resp.data || [];
+      const alertas = items.filter(i => i.quantidade_minima > 0 && i.quantidade_atual <= i.quantidade_minima);
+
+      // Show alerts
+      if (alertas.length > 0) {
+        document.getElementById('estoque-alertas').innerHTML = `
+          <div class="alert alert-warning py-2 mb-2">
+            <i class="bi bi-exclamation-triangle me-1"></i> <strong>${alertas.length}</strong> ite${alertas.length === 1 ? 'm' : 'ns'} com estoque baixo:
+            ${alertas.map(a => '<span class="badge bg-warning text-dark me-1">' + a.nome + ' (' + a.quantidade_atual + '/' + a.quantidade_minima + ')</span>').join('')}
+          </div>`;
+      }
+
+      function renderTable(filter, search) {
+        const filtered = items.filter(i => {
+          if (filter && i.categoria !== filter) return false;
+          if (search && !i.nome.toLowerCase().includes(search.toLowerCase())) return false;
+          return true;
+        });
+        const tbody = document.getElementById('estoque-tbody');
+        if (filtered.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Nenhum item encontrado</td></tr>';
+          return;
+        }
+        tbody.innerHTML = filtered.map(i => {
+          const lowStock = i.quantidade_minima > 0 && i.quantidade_atual <= i.quantidade_minima;
+          const qtyClass = lowStock ? 'text-danger fw-bold' : '';
+          const inactiveClass = !i.ativo ? 'text-decoration-line-through text-muted' : '';
+          return `<tr class="${inactiveClass}">
+            <td>${i.nome}</td>
+            <td><span class="badge bg-secondary">${i.categoria || 'outros'}</span></td>
+            <td class="${qtyClass}">${i.quantidade_atual}</td>
+            <td>${i.quantidade_minima || '-'}</td>
+            <td>${i.unidade || 'un'}</td>
+            <td>${i.localizacao || '-'}</td>
+            ${canManage ? `<td>
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-success" onclick="App.openMovimentacaoModal(${i.id},'${i.nome}')" title="Movimentar"><i class="bi bi-arrow-left-right"></i></button>
+                <button class="btn btn-outline-primary" onclick="App.openEstoqueModal(${i.id})" title="Editar"><i class="bi bi-pencil"></i></button>
+                <button class="btn btn-outline-danger" onclick="App.deleteEstoqueItem(${i.id},'${i.nome.replace(/'/g, "\\'")}')" title="Excluir"><i class="bi bi-trash"></i></button>
+              </div>
+            </td>` : ''}
+          </tr>`;
+        }).join('');
+      }
+
+      renderTable('', '');
+
+      // Filters
+      document.getElementById('estoque-filtro-categoria').addEventListener('change', function() {
+        renderTable(this.value, document.getElementById('estoque-busca').value);
+      });
+      document.getElementById('estoque-busca').addEventListener('input', function() {
+        renderTable(document.getElementById('estoque-filtro-categoria').value, this.value);
+      });
+      document.getElementById('estoque-toggle-inactive').addEventListener('click', function() {
+        _estoqueShowInactive = !_estoqueShowInactive;
+        renderEstoque();
+      });
+    } catch (err) {
+      document.getElementById('estoque-tbody').innerHTML = '<tr><td colspan="7" class="text-danger">Erro: ' + err.message + '</td></tr>';
+    }
+  }
+
+  function openEstoqueModal(id) {
+    const isEdit = !!id;
+    const title = isEdit ? 'Editar Item' : 'Novo Item';
+    const body = `
+      <form id="estoque-form">
+        <input type="hidden" id="estoque-edit-id" value="${id || ''}">
+        <div class="mb-3">
+          <label class="form-label">Nome <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="estoque-nome" required>
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Categoria</label>
+            <select class="form-select" id="estoque-categoria">
+              ${ESTOQUE_CATEGORIAS.map(c => '<option value="'+c+'">'+c.charAt(0).toUpperCase()+c.slice(1)+'</option>').join('')}
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Unidade</label>
+            <select class="form-select" id="estoque-unidade">
+              ${ESTOQUE_UNIDADES.map(u => '<option value="'+u+'">'+u+'</option>').join('')}
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Qtd Atual</label>
+            <input type="number" class="form-control" id="estoque-qtd-atual" step="0.01" min="0" value="0">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Qtd Mínima</label>
+            <input type="number" class="form-control" id="estoque-qtd-minima" step="0.01" min="0" value="0">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Localização</label>
+            <input type="text" class="form-control" id="estoque-localizacao" placeholder="Ex: Despensa, Garagem">
+          </div>
+        </div>
+      </form>`;
+    const footer = `
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      <button type="button" class="btn btn-primary" onclick="App.saveEstoqueItem(${id || 'null'})">Salvar</button>`;
+    openModal(title, body, footer);
+
+    if (isEdit) {
+      api('/api/estoque/' + id).then(resp => {
+        const i = resp.data;
+        document.getElementById('estoque-nome').value = i.nome;
+        document.getElementById('estoque-categoria').value = i.categoria || 'outros';
+        document.getElementById('estoque-unidade').value = i.unidade || 'un';
+        document.getElementById('estoque-qtd-atual').value = i.quantidade_atual || 0;
+        document.getElementById('estoque-qtd-minima').value = i.quantidade_minima || 0;
+        document.getElementById('estoque-localizacao').value = i.localizacao || '';
+      });
+    }
+  }
+
+  async function saveEstoqueItem(id) {
+    const data = {
+      nome: document.getElementById('estoque-nome').value.trim(),
+      categoria: document.getElementById('estoque-categoria').value,
+      unidade: document.getElementById('estoque-unidade').value,
+      quantidade_atual: parseFloat(document.getElementById('estoque-qtd-atual').value) || 0,
+      quantidade_minima: parseFloat(document.getElementById('estoque-qtd-minima').value) || 0,
+      localizacao: document.getElementById('estoque-localizacao').value.trim() || null
+    };
+    if (!data.nome) { showToast('Nome é obrigatório', 'warning'); return; }
+    try {
+      if (id) {
+        await api('/api/estoque/' + id, { method: 'PUT', body: JSON.stringify(data) });
+        showToast('Item atualizado');
+      } else {
+        await api('/api/estoque', { method: 'POST', body: JSON.stringify(data) });
+        showToast('Item criado');
+      }
+      bootstrap.Modal.getInstance(document.getElementById('app-modal'))?.hide();
+      renderEstoque();
+    } catch (err) {
+      showToast('Erro: ' + err.message, 'danger');
+    }
+  }
+
+  async function deleteEstoqueItem(id, nome) {
+    if (!confirm('Desativar item "' + nome + '"?')) return;
+    try {
+      await api('/api/estoque/' + id, { method: 'DELETE' });
+      showToast('Item desativado');
+      renderEstoque();
+    } catch (err) {
+      showToast('Erro: ' + err.message, 'danger');
+    }
+  }
+
+  function openMovimentacaoModal(itemId, itemNome) {
+    const body = `
+      <form id="mov-form">
+        <p class="mb-2">Item: <strong>${itemNome}</strong></p>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Tipo</label>
+            <select class="form-select" id="mov-tipo">
+              <option value="entrada">Entrada (compra/reposição)</option>
+              <option value="saida">Saída (uso/consumo)</option>
+              <option value="ajuste">Ajuste (inventário)</option>
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Quantidade</label>
+            <input type="number" class="form-control" id="mov-quantidade" step="0.01" min="0.01" required>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Observação</label>
+          <input type="text" class="form-control" id="mov-observacao" placeholder="Ex: Compra no supermercado">
+        </div>
+      </form>`;
+    const footer = `
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      <button type="button" class="btn btn-success" onclick="App.saveMovimentacao(${itemId})">Registrar</button>`;
+    openModal('Movimentar Estoque', body, footer);
+  }
+
+  async function saveMovimentacao(itemId) {
+    const tipo = document.getElementById('mov-tipo').value;
+    const quantidade = parseFloat(document.getElementById('mov-quantidade').value);
+    const observacao = document.getElementById('mov-observacao').value.trim();
+    if (!quantidade || quantidade <= 0) { showToast('Quantidade inválida', 'warning'); return; }
+    try {
+      await api('/api/estoque/' + itemId + '/movimentacao', {
+        method: 'POST',
+        body: JSON.stringify({ tipo, quantidade, observacao })
+      });
+      bootstrap.Modal.getInstance(document.getElementById('app-modal'))?.hide();
+      showToast('Movimentação registrada');
+      renderEstoque();
+    } catch (err) {
+      showToast('Erro: ' + err.message, 'danger');
+    }
+  }
+
+  async function showMovimentacoes() {
+    try {
+      const resp = await api('/api/estoque/movimentacoes?limit=50');
+      const movs = resp.data || [];
+      const tipoLabels = { entrada: 'Entrada', saida: 'Saída', ajuste: 'Ajuste', compra: 'Compra' };
+      const tipoBadge = { entrada: 'bg-success', saida: 'bg-danger', ajuste: 'bg-info', compra: 'bg-primary' };
+      const body = movs.length === 0
+        ? '<p class="text-muted text-center">Nenhuma movimentação registrada.</p>'
+        : `<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Data</th><th>Item</th><th>Tipo</th><th>Qtd</th><th>Obs</th><th>Por</th></tr></thead><tbody>
+          ${movs.map(m => `<tr>
+            <td class="small">${new Date(m.created_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</td>
+            <td>${m.item_nome || '-'}</td>
+            <td><span class="badge ${tipoBadge[m.tipo] || 'bg-secondary'}">${tipoLabels[m.tipo] || m.tipo}</span></td>
+            <td>${m.quantidade} ${m.unidade || ''}</td>
+            <td class="small">${m.observacao || '-'}</td>
+            <td class="small">${m.registrado_por_nome || '-'}</td>
+          </tr>`).join('')}
+          </tbody></table></div>`;
+
+      const modalEl = document.getElementById('app-modal');
+      modalEl.querySelector('.modal-dialog').classList.add('modal-lg');
+      modalEl.addEventListener('hidden.bs.modal', function handler() {
+        modalEl.querySelector('.modal-dialog').classList.remove('modal-lg');
+        modalEl.removeEventListener('hidden.bs.modal', handler);
+      });
+      openModal('Histórico de Movimentações', body, '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>');
+    } catch (err) {
+      showToast('Erro: ' + err.message, 'danger');
+    }
+  }
+
+  // ============================================================
   // Public API (for onclick handlers in HTML)
   // ============================================================
   window.App = {
@@ -4794,6 +5228,12 @@
     loadAccessLog: loadAccessLog,
     filterDocumentos: loadDocumentos,
     saveCargo: saveCargo,
+    openEstoqueModal: openEstoqueModal,
+    saveEstoqueItem: saveEstoqueItem,
+    deleteEstoqueItem: deleteEstoqueItem,
+    openMovimentacaoModal: openMovimentacaoModal,
+    saveMovimentacao: saveMovimentacao,
+    showMovimentacoes: showMovimentacoes,
     filterTarefas: filterTarefas,
     openTarefaModal: openTarefaModal,
     saveTarefa: saveTarefa,

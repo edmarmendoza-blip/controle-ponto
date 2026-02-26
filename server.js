@@ -65,6 +65,7 @@ app.use('/api/tarefas', require('./src/routes/tarefas'));
 app.use('/api/audit-log', require('./src/routes/auditLog'));
 app.use('/api/veiculos', require('./src/routes/veiculos'));
 app.use('/api/documentos', require('./src/routes/documentos'));
+app.use('/api/estoque', require('./src/routes/estoque'));
 
 // Version endpoint
 app.get('/api/version', (req, res) => {
@@ -145,4 +146,25 @@ if (require.main === module || process.env.NODE_ENV === 'production' || process.
     const Schedulers = require('./src/services/schedulers');
     Schedulers.init();
   });
+
+  // Graceful shutdown: destroy WhatsApp client (kill Chrome) before PM2 restart
+  const gracefulShutdown = async (signal) => {
+    console.log(`[Server] ${signal} received, shutting down gracefully...`);
+    try {
+      if (whatsappService.client) {
+        console.log('[Server] Destroying WhatsApp client...');
+        whatsappService.client.removeAllListeners();
+        await Promise.race([
+          whatsappService.client.destroy(),
+          new Promise(resolve => setTimeout(resolve, 5000)) // 5s timeout
+        ]);
+        console.log('[Server] WhatsApp client destroyed.');
+      }
+    } catch (err) {
+      console.error('[Server] Error destroying WhatsApp:', err.message);
+    }
+    process.exit(0);
+  };
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 }

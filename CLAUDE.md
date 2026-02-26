@@ -194,18 +194,20 @@ APP_NAME=Lar Digital
 10. **Veículos** - CRUD, CRLV Vision AI, busca por placa (BigDataCorp), alertas IPVA/revisão
 11. **Documentos** - Upload, análise Vision AI, vinculação a funcionário/veículo, via WhatsApp
 12. **Entregas** - Cards com thumbnail, upload manual com foto, confirmação WhatsApp (SIM/NÃO)
-13. **Tarefas** - CRUD, multi-assign funcionários, prioridade/prazo, integração WhatsApp
-14. **Insights IA** - Operacional + Melhorias (admin only)
-15. **Usuários** - CRUD, roles, permissões tarefas, excluir com confirmação, reenviar senha (admin only)
-16. **Audit Log** - Log de ações (admin only)
-17. **Log de Acessos** - Login/logout/falhas com IP e navegador (admin only, bi-door-open)
-18. **Perfil** - Editar dados, trocar senha, 2FA
+13. **Estoque** - CRUD itens, movimentações (entrada/saída/ajuste), alertas estoque baixo, categorias
+14. **Tarefas** - CRUD, multi-assign funcionários, prioridade/prazo, integração WhatsApp
+15. **Insights IA** - Operacional + Melhorias (admin only)
+16. **Usuários** - CRUD, roles, permissões tarefas, excluir com confirmação, reenviar senha (admin only)
+17. **Audit Log** - Log de ações (admin only)
+18. **Log de Acessos** - Login/logout/falhas com IP e navegador (admin only, bi-door-open)
+19. **Perfil** - Editar dados, trocar senha, 2FA
 
 ## CADASTRO DE CARGOS
 nome, precisa_bater_ponto, permite_hora_extra, permite_dia_extra,
 valor_hora_extra, valor_dia_extra, recebe_vale_transporte, valor_vale_transporte,
 recebe_vale_refeicao, valor_vale_refeicao, recebe_ajuda_combustivel,
 valor_ajuda_combustivel, dorme_no_local, dias_dormida (JSON), tipo_dias_dormida (uteis|todos|customizado),
+aparece_relatorios (default 1, exclui de todos os relatórios/gráficos quando 0),
 ativo, created_at, updated_at
 - Frontend: inativos ocultos por padrão, toggle "Mostrar inativos (X)" com contagem
 
@@ -242,7 +244,8 @@ Texto livre ou JSON: dias_semana, entrada, saída, carga diária
 users, funcionarios, cargos, registros, feriados (com manual boolean),
 funcionario_transportes, entregas, holerites, email_logs,
 audit_log, access_log, ferias, pending_confirmations,
-tarefas, tarefa_funcionarios, whatsapp_chats, veiculos, documentos
+tarefas, tarefa_funcionarios, whatsapp_chats, veiculos, documentos,
+estoque_itens, estoque_movimentacoes
 
 ## ENTREGAS - FLUXO COMPLETO
 ### Via WhatsApp (automático com confirmação):
@@ -447,7 +450,7 @@ NÃO usar parser manual de palavras-chave. Usar IA para interpretar.
 - Endpoint: GET `/api/version` (retorna {version, date, env})
 - Exibida no rodapé do index.html (canto inferior direito) e no copyright do login.html
 - Formato de exibição: "v2.0.0 | Sandbox | 24/02/2026" (versão | ambiente capitalizado | data DD/MM/YYYY)
-- Versão atual: 2.2.0
+- Versão atual: 2.3.0
 
 ## REGISTROS DE PONTO - FILTROS
 - Filtro por mês/ano (dropdown) ou período manual (data início/fim)
@@ -525,6 +528,79 @@ NÃO usar parser manual de palavras-chave. Usar IA para interpretar.
 - Presença hoje usa `toLocaleDateString('sv-SE', {timeZone:'America/Sao_Paulo'})` para data correta (não UTC)
 - Dropdown de funcionários nos gráficos também filtra por precisa_bater_ponto
 - API funcionarios.getAll() retorna campo `precisa_bater_ponto` do cargo
+
+### Status de Hoje (tabela consolidada)
+- 1 linha por funcionário por dia (consolida todos os registros)
+- Colunas: Funcionário | Cargo | Esperado | Entrada | Almoço ↗ | Almoço ↙ | Saída | Status | Atraso
+- Entrada = primeiro registro tipo entrada do dia
+- Almoço ↗ = primeiro registro "saída almoço"
+- Almoço ↙ = primeiro registro "retorno almoço"
+- Saída = último registro tipo saída do dia
+- Status: Presente (verde), Saiu (azul), Ausente (vermelho), Atrasado (amarelo)
+- Atraso = diferença entre entrada e horário esperado (apenas se entrada > esperado)
+
+### Regra de permissão HE no relatório mensal
+- Se funcionário tem `contabiliza_hora_extra` definido (inclusive 0): usa o valor do funcionário
+- Se funcionário tem `contabiliza_hora_extra` NULL: herda do cargo (`cargo_permite_hora_extra`)
+- Mesma lógica em `/api/relatorios/folha` e `/api/relatorios/mensal`
+
+## ESTOQUE E COMPRAS DA CASA
+### Tabelas
+- `estoque_itens` (id, nome, categoria, unidade, quantidade_atual, quantidade_minima, localizacao, ativo, created_at)
+- `estoque_movimentacoes` (id, item_id FK→estoque_itens, tipo [entrada|saida|ajuste|compra], quantidade, observacao, registrado_por FK→users, fonte [manual|whatsapp], created_at)
+
+### Categorias padrão
+limpeza, cozinha, escritorio, banheiro, jardim, pet, medicamentos, ferramentas, outros
+
+### Unidades
+un, kg, g, L, ml, cx, pct, rolo, par, kit
+
+### API Endpoints
+- GET /api/estoque — lista itens (param: includeInactive=true)
+- GET /api/estoque/alertas — itens com estoque abaixo do mínimo
+- GET /api/estoque/categorias — categorias em uso
+- GET /api/estoque/movimentacoes — últimas movimentações (param: limit)
+- GET /api/estoque/:id — detalhes do item com movimentações
+- POST /api/estoque — criar item (gestor)
+- PUT /api/estoque/:id — atualizar item (gestor)
+- DELETE /api/estoque/:id — soft delete (gestor)
+- POST /api/estoque/:id/movimentacao — registrar movimentação
+
+### Movimentação automática de quantidade
+- Entrada/Compra: quantidade_atual += quantidade
+- Saída: quantidade_atual -= quantidade (mín 0)
+- Ajuste: quantidade_atual = quantidade (inventário)
+
+### Frontend
+- Sidebar: bi-cart3, após Entregas
+- Tabela com filtro por categoria e busca por nome
+- Alerta de estoque baixo (quantidade_atual <= quantidade_minima)
+- Modal CRUD para itens
+- Modal de movimentação (entrada/saída/ajuste)
+- Histórico de movimentações em modal modal-lg
+- Toggle inativos (mesmo padrão)
+
+## APARECE_RELATORIOS - FILTRO POR CARGO
+- Campo `aparece_relatorios INTEGER DEFAULT 1` na tabela cargos
+- Cargos com aparece_relatorios=0 são excluídos de: Dashboard Presença, Relatórios, Folha, Gráficos
+- Dono(a) da Casa auto-configurado com aparece_relatorios=0
+- Checkbox no modal de cargo: "Aparece nos Relatórios"
+- Filtro aplicado em: DashboardPresenca, Registro.getDashboardSummary, relatorios.js, renderGraficos
+
+## BIGDATACORP - DADOS SALVOS
+- Campo `bigdatacorp_data TEXT` na tabela funcionarios
+- Ao consultar CPF via BigDataCorp, resposta raw é salva automaticamente
+- Accordion colapsável no modal de funcionário: "Dados BigDataCorp (API)"
+- Mostra: Status CPF, Nome, Nascimento, Telefones, Endereços, E-mails
+- Accordion populado tanto na consulta quanto ao abrir funcionário com dados salvos
+
+## WHATSAPP - DOCUMENTOS CREATE
+- Ao receber documento via WhatsApp e não encontrar entidade correspondente:
+  - Se placa: cria novo veículo automaticamente com dados extraídos
+  - Se CPF/nome: cria novo funcionário automaticamente com dados extraídos
+  - Mensagem de confirmação informa sobre a criação
+- Confirmação "SIM": cria entidade + salva documento vinculado
+- Confirmação "NÃO": rejeita sem criar
 
 ## COMANDOS ÚTEIS
 ```bash

@@ -194,7 +194,7 @@ router.post('/buscar-placa', authenticateToken, async (req, res) => {
     const response = await fetch('https://bigboost.bigdatacorp.com.br/vehiclesv2', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + token,
+        'AccessToken': token,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({

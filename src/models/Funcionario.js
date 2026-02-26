@@ -16,7 +16,8 @@ const ALL_FIELDS = [
   'endereco_cep', 'endereco_rua', 'endereco_numero', 'endereco_complemento',
   'endereco_bairro', 'endereco_cidade', 'endereco_estado',
   'telefone_contato2', 'telefone_emergencia', 'nome_contato_emergencia',
-  'recebe_ajuda_combustivel', 'valor_ajuda_combustivel'
+  'recebe_ajuda_combustivel', 'valor_ajuda_combustivel',
+  'bigdatacorp_data'
 ];
 
 class Funcionario {
@@ -26,6 +27,7 @@ class Funcionario {
       SELECT f.*,
         c.nome as cargo_nome,
         c.precisa_bater_ponto,
+        c.aparece_relatorios,
         COALESCE(NULLIF(f.salario_hora, 0), c.valor_hora_extra, 0) as salario_hora_display,
         COALESCE(NULLIF(f.valor_hora_extra, 0), c.valor_hora_extra, 0) as valor_hora_extra_display,
         COALESCE(NULLIF(f.valor_dia_especial, 0), c.valor_dia_extra, 0) as valor_dia_extra_display

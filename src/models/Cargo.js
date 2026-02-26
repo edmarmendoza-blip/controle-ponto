@@ -16,8 +16,8 @@ class Cargo {
 
   static create(data) {
     const result = db.prepare(`
-      INSERT INTO cargos (nome, precisa_bater_ponto, permite_hora_extra, permite_dia_extra, valor_hora_extra, valor_dia_extra, recebe_vale_transporte, valor_vale_transporte, recebe_vale_refeicao, valor_vale_refeicao, recebe_ajuda_combustivel, valor_ajuda_combustivel, dorme_no_local, dias_dormida, tipo_dias_dormida)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO cargos (nome, precisa_bater_ponto, permite_hora_extra, permite_dia_extra, valor_hora_extra, valor_dia_extra, recebe_vale_transporte, valor_vale_transporte, recebe_vale_refeicao, valor_vale_refeicao, recebe_ajuda_combustivel, valor_ajuda_combustivel, dorme_no_local, dias_dormida, tipo_dias_dormida, aparece_relatorios)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       data.nome,
       data.precisa_bater_ponto ?? 1,
@@ -33,7 +33,8 @@ class Cargo {
       data.valor_ajuda_combustivel ?? 0,
       data.dorme_no_local ?? 0,
       data.dias_dormida ?? 0,
-      data.tipo_dias_dormida || 'semana'
+      data.tipo_dias_dormida || 'semana',
+      data.aparece_relatorios ?? 1
     );
     return result.lastInsertRowid;
   }
@@ -45,7 +46,7 @@ class Cargo {
       'nome', 'precisa_bater_ponto', 'permite_hora_extra', 'permite_dia_extra',
       'valor_hora_extra', 'valor_dia_extra', 'recebe_vale_transporte', 'valor_vale_transporte',
       'recebe_vale_refeicao', 'valor_vale_refeicao', 'recebe_ajuda_combustivel', 'valor_ajuda_combustivel',
-      'dorme_no_local', 'dias_dormida', 'tipo_dias_dormida', 'ativo'
+      'dorme_no_local', 'dias_dormida', 'tipo_dias_dormida', 'ativo', 'aparece_relatorios'
     ];
     for (const [key, value] of Object.entries(data)) {
       if (allowed.includes(key)) {

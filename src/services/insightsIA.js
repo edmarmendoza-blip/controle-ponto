@@ -30,15 +30,18 @@ class InsightsIA {
     `).all(date);
   }
 
-  // Convert datetime string to São Paulo timezone display
+  // Format datetime string for display (already stored in local time via datetime('now','localtime'))
   static _toSaoPaulo(dateStr) {
     if (!dateStr) return dateStr;
     try {
-      // If the stored datetime is UTC (datetime('now')), convert to SP
-      // If already local (datetime('now','localtime')), return as-is
-      const d = new Date(dateStr.replace(' ', 'T') + (dateStr.includes('+') || dateStr.includes('Z') ? '' : 'Z'));
-      if (isNaN(d.getTime())) return dateStr;
-      return d.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', hour12: false });
+      // Data is stored as local time (America/Sao_Paulo) via datetime('now','localtime')
+      // Do NOT append 'Z' as that would treat it as UTC and subtract 3 hours
+      const parts = dateStr.replace('T', ' ').split(/[- :]/);
+      if (parts.length >= 5) {
+        const d = parts[2] + '/' + parts[1] + '/' + parts[0] + ' ' + parts[3] + ':' + parts[4] + (parts[5] ? ':' + parts[5].split('.')[0] : '');
+        return d;
+      }
+      return dateStr;
     } catch (e) {
       return dateStr;
     }

@@ -646,6 +646,53 @@ function initializeDatabase() {
     }
   } catch (e) { console.error('[Migration] pending_confirmations upgrade:', e.message); }
 
+  // Migration: cargos.aparece_relatorios
+  try {
+    const cols = db.prepare("PRAGMA table_info(cargos)").all();
+    if (!cols.find(c => c.name === 'aparece_relatorios')) {
+      db.exec("ALTER TABLE cargos ADD COLUMN aparece_relatorios INTEGER DEFAULT 1");
+      // Dono(a) da Casa should not appear in reports
+      db.prepare("UPDATE cargos SET aparece_relatorios = 0 WHERE nome LIKE '%Dono%' OR nome LIKE '%Dona%'").run();
+      console.log('[Migration] cargos: added aparece_relatorios');
+    }
+  } catch (e) { console.error('[Migration] cargos aparece_relatorios:', e.message); }
+
+  // Migration: funcionarios.bigdatacorp_data
+  try {
+    const cols = db.prepare("PRAGMA table_info(funcionarios)").all();
+    if (!cols.find(c => c.name === 'bigdatacorp_data')) {
+      db.exec("ALTER TABLE funcionarios ADD COLUMN bigdatacorp_data TEXT");
+      console.log('[Migration] funcionarios: added bigdatacorp_data');
+    }
+  } catch (e) { console.error('[Migration] funcionarios bigdatacorp_data:', e.message); }
+
+  // Migration: estoque tables
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS estoque_itens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        categoria TEXT DEFAULT 'outros',
+        unidade TEXT DEFAULT 'un',
+        quantidade_atual REAL DEFAULT 0,
+        quantidade_minima REAL DEFAULT 0,
+        localizacao TEXT,
+        ativo INTEGER DEFAULT 1,
+        created_at TEXT DEFAULT (datetime('now','localtime'))
+      );
+      CREATE TABLE IF NOT EXISTS estoque_movimentacoes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        item_id INTEGER REFERENCES estoque_itens(id),
+        tipo TEXT,
+        quantidade REAL,
+        observacao TEXT,
+        registrado_por INTEGER,
+        fonte TEXT DEFAULT 'manual',
+        created_at TEXT DEFAULT (datetime('now','localtime'))
+      );
+    `);
+  } catch (e) { console.error('[Migration] estoque tables:', e.message); }
+
   // Default configs
   const configs = [
     ['multiplicador_hora_extra', '1.5'],
