@@ -314,6 +314,58 @@ class WhatsAppService {
         if (response === 'confirmed') {
           this.resolvePendingConfirmation(pending.id, 'confirmed');
 
+          // Handle documento confirmation
+          if (pending.tipo === 'documento') {
+            try {
+              const docData = JSON.parse(pending.message_text);
+              const ext = docData.extracted_data || {};
+              const entTipo = docData.suggested_entity;
+
+              if (entTipo === 'veiculo' && ext.placa) {
+                const Veiculo = require('../models/Veiculo');
+                const existing = Veiculo.findByPlaca(ext.placa);
+                if (existing) {
+                  // Update existing vehicle with new data
+                  const updates = {};
+                  if (ext.renavam && !existing.renavam) updates.renavam = ext.renavam;
+                  if (ext.chassi && !existing.chassi) updates.chassi = ext.chassi;
+                  if (ext.combustivel && !existing.combustivel) updates.combustivel = ext.combustivel;
+                  if (ext.cor && !existing.cor) updates.cor = ext.cor;
+                  if (Object.keys(updates).length > 0) {
+                    Veiculo.update(existing.id, updates);
+                  }
+                  if (docData.imagem_path) Veiculo.update(existing.id, { crlv_foto_path: docData.imagem_path });
+                  await this.sendGroupMessage(`✅ Documento vinculado ao veículo ${existing.marca} ${existing.modelo} (${ext.placa}).`);
+                } else {
+                  const newId = Veiculo.create({
+                    placa: ext.placa, marca: ext.marca || '', modelo: ext.modelo || '',
+                    ano_fabricacao: ext.ano ? parseInt(ext.ano) : null, cor: ext.cor || '',
+                    renavam: ext.renavam || '', chassi: ext.chassi || '',
+                    combustivel: ext.combustivel || 'flex', crlv_foto_path: docData.imagem_path
+                  });
+                  await this.sendGroupMessage(`✅ Veículo criado (#${newId}): ${ext.placa} ${ext.marca || ''} ${ext.modelo || ''}.`);
+                }
+              } else if (entTipo === 'funcionario') {
+                const Funcionario = require('../models/Funcionario');
+                let func = ext.cpf ? db.prepare('SELECT id, nome FROM funcionarios WHERE cpf = ?').get(ext.cpf.replace(/\D/g, '')) : null;
+                if (func) {
+                  await this.sendGroupMessage(`✅ Documento vinculado a ${func.nome}.`);
+                } else if (ext.nome || ext.cpf) {
+                  const newId = Funcionario.create({ nome: ext.nome || 'Novo Funcionário', cpf: ext.cpf ? ext.cpf.replace(/\D/g, '') : null, rg: ext.rg || null });
+                  await this.sendGroupMessage(`✅ Funcionário criado (#${newId}): ${ext.nome || ext.cpf}.`);
+                }
+              } else {
+                await this.sendGroupMessage(`✅ Documento ${docData.document_type || ''} registrado.`);
+              }
+              console.log(`[WhatsApp] Document ${docData.document_type} confirmed by ${senderName}`);
+            } catch (err) {
+              console.error('[WhatsApp] Error handling document confirmation:', err.message);
+              await this.sendGroupMessage(`❌ Erro ao registrar documento: ${err.message}`);
+            }
+            this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, storedText, 'other', mediaType, mediaPath);
+            return;
+          }
+
           // Handle entrega confirmation
           if (pending.tipo === 'entrega') {
             try {
@@ -376,6 +428,40 @@ class WhatsAppService {
                 });
                 await this.sendGroupMessage(`✅ Saída registrada para ${funcionario.nome} às ${pending.horario} (ajuste confirmado, sem entrada)`);
               }
+            } else if (pending.tipo === 'saida_almoco') {
+              const existingAlmoco = db.prepare(
+                "SELECT id FROM registros WHERE funcionario_id = ? AND data = ? AND saida IS NOT NULL AND entrada IS NULL AND observacao LIKE '%saída almoço%'"
+              ).get(funcionario.id, pending.data);
+              if (!existingAlmoco) {
+                Registro.create({
+                  funcionario_id: funcionario.id,
+                  data: pending.data,
+                  entrada: null,
+                  saida: pending.horario,
+                  tipo: 'whatsapp',
+                  observacao: `Via WhatsApp (saída almoço, ajuste confirmado): "${pending.message_text || ''}"`,
+                });
+                await this.sendGroupMessage(`✅ Saída almoço registrada para ${funcionario.nome} às ${pending.horario} (ajuste confirmado)`);
+              } else {
+                await this.sendGroupMessage(`${funcionario.nome}, saída para almoço já registrada hoje.`);
+              }
+            } else if (pending.tipo === 'retorno_almoco') {
+              const existingRetorno = db.prepare(
+                "SELECT id FROM registros WHERE funcionario_id = ? AND data = ? AND entrada IS NOT NULL AND saida IS NULL AND observacao LIKE '%retorno almoço%'"
+              ).get(funcionario.id, pending.data);
+              if (!existingRetorno) {
+                Registro.create({
+                  funcionario_id: funcionario.id,
+                  data: pending.data,
+                  entrada: pending.horario,
+                  saida: null,
+                  tipo: 'whatsapp',
+                  observacao: `Via WhatsApp (retorno almoço, ajuste confirmado): "${pending.message_text || ''}"`,
+                });
+                await this.sendGroupMessage(`✅ Retorno almoço registrado para ${funcionario.nome} às ${pending.horario} (ajuste confirmado)`);
+              } else {
+                await this.sendGroupMessage(`${funcionario.nome}, retorno do almoço já registrado hoje.`);
+              }
             }
           } catch (err) {
             console.error(`[WhatsApp] Error registering adjusted punch:`, err.message);
@@ -386,7 +472,9 @@ class WhatsAppService {
           return;
         } else if (response === 'denied') {
           this.resolvePendingConfirmation(pending.id, 'denied');
-          if (pending.tipo === 'entrega') {
+          if (pending.tipo === 'documento') {
+            await this.sendGroupMessage(`📄 Documento ignorado.`);
+          } else if (pending.tipo === 'entrega') {
             await this.sendGroupMessage(`📦 Entrega ignorada.`);
           } else {
             await this.sendGroupMessage(`❌ Ajuste cancelado para ${funcionario.nome}.`);
@@ -450,7 +538,51 @@ class WhatsAppService {
     const msgType = (intent === 'entrada' || intent === 'saida') ? intent : 'other';
     const msgDbId = this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, storedText, msgType, mediaType, mediaPath);
 
-    // Ask for confirmation when AI detects a delivery photo
+    // PRIORITY 1: Document detection (CRLV, RG, CPF, etc.) — runs BEFORE entregas
+    if (visionAnalysis?.is_document && mediaPath) {
+      try {
+        const docType = visionAnalysis.document_type || 'desconhecido';
+        const ext = visionAnalysis.extracted_data || {};
+        const entTipo = visionAnalysis.suggested_entity || 'desconhecido';
+        let matchMsg = '';
+
+        if (entTipo === 'veiculo' && ext.placa) {
+          const Veiculo = require('../models/Veiculo');
+          const existing = Veiculo.findByPlaca ? Veiculo.findByPlaca(ext.placa) : null;
+          if (existing) {
+            matchMsg = `Veículo encontrado: ${existing.marca} ${existing.modelo} (${ext.placa})`;
+          } else {
+            matchMsg = `Veículo com placa *${ext.placa}* não cadastrado`;
+          }
+        } else if (entTipo === 'funcionario' && (ext.cpf || ext.nome)) {
+          const label = ext.cpf ? `CPF ${ext.cpf}` : ext.nome;
+          matchMsg = `Documento de funcionário: ${label}`;
+        }
+
+        const docData = JSON.stringify({
+          type: 'documento',
+          document_type: docType,
+          extracted_data: ext,
+          suggested_entity: entTipo,
+          matched_entity: matchMsg ? true : false,
+          imagem_path: mediaPath,
+          descricao: visionAnalysis.descricao,
+          whatsapp_mensagem_id: msgDbId
+        });
+        const funcId = funcionario?.id || 0;
+        this.createPendingConfirmation(funcId, 'documento', new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' }), '00:00', docData);
+        const typeLabel = { crlv: 'CRLV', rg: 'RG', cpf: 'CPF', cnh: 'CNH', apolice: 'Apólice', ipva: 'IPVA' }[docType] || docType.toUpperCase();
+        await this.sendGroupMessage(
+          `📄 ${senderName}, identifiquei um documento *${typeLabel}*. ${matchMsg || ''}\nDeseja registrar? Responda *SIM* ou *NÃO*.`
+        );
+        console.log(`[WhatsApp] Document ${docType} detected from ${senderName}, confirmation requested`);
+      } catch (err) {
+        console.error('[WhatsApp] Error handling document photo:', err.message);
+      }
+      return; // Don't process further (prevent task/entrega creation)
+    }
+
+    // PRIORITY 2: Ask for confirmation when AI detects a delivery photo
     if (visionAnalysis?.is_entrega && mediaPath) {
       try {
         const entregaData = JSON.stringify({
@@ -823,7 +955,18 @@ Mensagem: "${text}"`;
           );
         }
       } else if (intent === 'saida_almoco') {
-        // Register lunch break start
+        // Check if already has a saida_almoco today
+        const existingAlmoco = db.prepare(
+          "SELECT id FROM registros WHERE funcionario_id = ? AND data = ? AND saida IS NOT NULL AND entrada IS NULL AND observacao LIKE '%saída almoço%'"
+        ).get(funcionario.id, today);
+
+        if (existingAlmoco) {
+          await this.sendGroupMessage(
+            `${funcionario.nome}, saída para almoço já registrada hoje.`
+          );
+          return;
+        }
+
         Registro.create({
           funcionario_id: funcionario.id,
           data: today,
@@ -839,7 +982,18 @@ Mensagem: "${text}"`;
         );
 
       } else if (intent === 'retorno_almoco') {
-        // Register lunch break return
+        // Check if already has a retorno_almoco today
+        const existingRetorno = db.prepare(
+          "SELECT id FROM registros WHERE funcionario_id = ? AND data = ? AND entrada IS NOT NULL AND saida IS NULL AND observacao LIKE '%retorno almoço%'"
+        ).get(funcionario.id, today);
+
+        if (existingRetorno) {
+          await this.sendGroupMessage(
+            `${funcionario.nome}, retorno do almoço já registrado hoje.`
+          );
+          return;
+        }
+
         Registro.create({
           funcionario_id: funcionario.id,
           data: today,
@@ -873,21 +1027,21 @@ Mensagem: "${text}"`;
       const prompt = `Analise esta foto enviada por "${senderName}" no grupo de trabalho da residência "Lar Digital".
 ${captionText ? `Legenda da foto: "${captionText}"` : 'Sem legenda.'}
 
-Descreva brevemente:
-1. O que aparece na foto (entrega, serviço realizado, local, produto, etc.)
-2. Se parece ser um registro de trabalho/entrega, descreva o que foi feito
-3. Qualquer detalhe relevante (quantidade, estado, marca, etc.)
+Descreva brevemente o que aparece na foto em 2-3 frases curtas, em português.
 
-Responda em 2-3 frases curtas, direto ao ponto, em português.
+PRIORIDADE DE CLASSIFICAÇÃO (nesta ordem):
+1. DOCUMENTO: Se é um documento brasileiro (CRLV, RG, CPF, CNH, apólice de seguro, IPVA, comprovante de endereço, contrato, holerite), extraia TODOS os dados legíveis.
+2. ENTREGA: Se é um pacote, encomenda, caixa, correspondência ou similar.
+3. OUTRO: Foto casual, selfie, serviço realizado, etc.
 
-Ao final da sua resposta, inclua um bloco JSON no formato:
+Ao final, inclua um bloco JSON:
 \`\`\`json
-{"is_entrega": true/false, "destinatario": "nome ou null", "remetente": "empresa ou null", "transportadora": "empresa ou null"}
+{"is_document": true/false, "document_type": "crlv|rg|cpf|cnh|apolice|ipva|comprovante|contrato|holerite|outro", "extracted_data": {"placa": "", "marca": "", "modelo": "", "ano": "", "renavam": "", "chassi": "", "cor": "", "combustivel": "", "cpf": "", "nome": "", "rg": "", "data_nascimento": ""}, "suggested_entity": "veiculo|funcionario", "is_entrega": true/false, "destinatario": "nome ou null", "remetente": "empresa ou null", "transportadora": "empresa ou null"}
 \`\`\`
-- is_entrega: true se a foto mostra pacote, encomenda, caixa de entrega, correspondência ou similar
-- destinatario: nome do destinatário se visível na etiqueta
-- remetente: empresa/loja remetente se visível (Amazon, Mercado Livre, etc.)
-- transportadora: empresa de transporte se visível (Correios, Jadlog, etc.)`;
+- is_document: true se for documento oficial (CRLV, RG, CPF, CNH, apólice, IPVA, etc.)
+- Se is_document=true: preencha document_type, extracted_data com dados legíveis, suggested_entity
+- is_entrega: true SOMENTE se NÃO for documento e for pacote/encomenda
+- Um item NÃO pode ser document=true E entrega=true ao mesmo tempo`;
 
       const response = await client.messages.create({
         model: 'claude-haiku-4-5-20251001',
@@ -905,9 +1059,9 @@ Ao final da sua resposta, inclua um bloco JSON no formato:
       console.log(`[WhatsApp] Vision analysis: ${analysis.substring(0, 100)}...`);
 
       // Parse structured JSON from end of response
-      let structured = { is_entrega: false, destinatario: null, remetente: null, transportadora: null };
+      let structured = { is_document: false, is_entrega: false, destinatario: null, remetente: null, transportadora: null };
       try {
-        const jsonMatch = analysis.match(/```json\s*([\s\S]*?)```/) || analysis.match(/(\{[^{}]*"is_entrega"[^{}]*\})/);
+        const jsonMatch = analysis.match(/```json\s*([\s\S]*?)```/) || analysis.match(/(\{[\s\S]*?"is_(?:document|entrega)"[\s\S]*?\})/);
         if (jsonMatch) {
           structured = JSON.parse(jsonMatch[1].trim());
         }
@@ -916,12 +1070,16 @@ Ao final da sua resposta, inclua um bloco JSON no formato:
       }
 
       // Extract description text (everything before the JSON block)
-      let descricao = analysis.replace(/```json[\s\S]*?```/, '').replace(/\{[^{}]*"is_entrega"[^{}]*\}/, '').trim();
+      let descricao = analysis.replace(/```json[\s\S]*?```/, '').trim();
       if (!descricao) descricao = analysis;
 
       return {
         descricao,
-        is_entrega: !!structured.is_entrega,
+        is_document: !!structured.is_document,
+        document_type: structured.document_type || null,
+        extracted_data: structured.extracted_data || null,
+        suggested_entity: structured.suggested_entity || null,
+        is_entrega: !!structured.is_entrega && !structured.is_document,
         destinatario: structured.destinatario || null,
         remetente: structured.remetente || null,
         transportadora: structured.transportadora || null
@@ -976,10 +1134,22 @@ Ao final da sua resposta, inclua um bloco JSON no formato:
         `).run(func.id, tipo, text || '', mediaPath);
       }
 
-      // Document detection for admin users with images
-      if (user && user.role === 'admin' && msg.hasMedia && !text) {
+      // Document detection for admin users with images (runs BEFORE task creation)
+      // Flag prevents falling through to task creation when doc detection was attempted
+      let _privateMediaAlreadyDownloaded = null;
+      let _isDocumentDetected = false;
+      let _imageAnalyzedForDocs = false;
+      if (user && user.role === 'admin' && msg.hasMedia) {
+        _imageAnalyzedForDocs = true; // Block task creation from this image regardless of outcome
         try {
-          const media = msg.hasMedia ? await msg.downloadMedia().catch(() => null) : null;
+          // Reuse media from chat storage if available, otherwise download
+          _privateMediaAlreadyDownloaded = func ? null : await msg.downloadMedia().catch(() => null);
+          let media = _privateMediaAlreadyDownloaded;
+          if (!media && mediaPath) {
+            media = await msg.downloadMedia().catch(() => null);
+          } else if (!media) {
+            media = await msg.downloadMedia().catch(() => null);
+          }
           if (media && media.mimetype.startsWith('image')) {
             // Check if there's a pending document confirmation for this chat
             const chatId = msg.from;
@@ -1009,6 +1179,7 @@ Retorne APENAS JSON válido.` }
                 }
 
                 if (docResult && docResult.is_document) {
+                  _isDocumentDetected = true;
                   // Save the image
                   const docDir = path.join(__dirname, '..', '..', 'public', 'uploads', 'documentos', 'avulsos');
                   fs.mkdirSync(docDir, { recursive: true });
@@ -1057,7 +1228,6 @@ Retorne APENAS JSON válido.` }
                   if (matchedEntity) {
                     replyMsg += `\n✅ ${matchedEntity.tipo === 'funcionario' ? 'Funcionário' : 'Veículo'} encontrado no sistema`;
                   } else {
-                    // Suggest creating entity based on document type
                     const suggestedType = docResult.suggested_entity || (extData.placa ? 'veiculo' : 'funcionario');
                     if (suggestedType === 'veiculo' && extData.placa) {
                       replyMsg += `\n⚠️ Veículo com placa ${extData.placa} não encontrado`;
@@ -1072,14 +1242,16 @@ Retorne APENAS JSON válido.` }
                   }
                   replyMsg += `\n\nDeseja salvar este documento? (Sim/Não)`;
                   await msg.reply(replyMsg);
-                  console.log(`[WhatsApp] Document detected: ${docResult.type} from ${senderName}`);
+                  console.log(`[WhatsApp] Document detected in private: ${docResult.type} from ${senderName}`);
                   return;
+                } else {
+                  console.log(`[WhatsApp] Image from ${senderName} is NOT a document, proceeding to task creation`);
                 }
               }
             }
           }
         } catch (docErr) {
-          console.error('[WhatsApp] Document detection error:', docErr.message);
+          console.error('[WhatsApp] Document detection error (task creation blocked for this image):', docErr.message);
         }
       }
 
@@ -1203,9 +1375,9 @@ Retorne APENAS JSON válido.` }
           await msg.reply('🎤 Recebi seu áudio! Infelizmente ainda não consigo transcrever áudios automaticamente.\n\nPor favor, envie como *texto* para eu criar a tarefa. Exemplo:\n_"Pedir para Roberto limpar a piscina amanhã"_');
           console.log(`[WhatsApp] Audio from ${senderName} - replied asking for text`);
           return;
-        } else if (media && media.mimetype.startsWith('image')) {
+        } else if (media && media.mimetype.startsWith('image') && !_imageAnalyzedForDocs) {
           fonte = 'whatsapp_foto';
-          // Use Vision API if available
+          // Use Vision API if available (only if doc detection was NOT already attempted)
           if (process.env.ANTHROPIC_API_KEY && media) {
             try {
               const Anthropic = require('@anthropic-ai/sdk');
