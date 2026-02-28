@@ -143,6 +143,75 @@ CREATE TABLE IF NOT EXISTS nova_tabela (...);
 - **E-mail SMTP:** Brevo (smtp-relay.brevo.com:587)
 - **IMAP:** Gmail (imap.gmail.com:993)
 
+## BRAND DESIGN SYSTEM (v2.9.0)
+### Paleta de Cores
+- **Graphite** `#0E1625` — sidebar bg, botões primários
+- **Eucalyptus** `#697F71` — sidebar active, accents, links
+- **Porcelain** `#F7F4EE` — body background
+- **Mist** `#E7ECE8` — hover states, input backgrounds
+- **Sand** `#D8CCB8` — secondary accent
+- **Indigo** `#7279F8` — highlights, special badges
+- **Ink** `#1B2430` — text principal
+- **Muted** `#667085` — text secundário
+- **Success** `#1F8F5F` / **Warning** `#C98A2E` / **Danger** `#B5473C`
+- **Border** `#E8E4DE` — bordas de cards/tabelas
+
+### Arquivos do Brand System
+- `public/img/logo.svg` — logo grafite (para fundo claro)
+- `public/img/logo-light.svg` — logo branco (para sidebar)
+- `public/img/favicon.svg` — favicon (logo em fundo grafite)
+- `public/css/brand.css` — variáveis CSS, classes ld-* (sidebar, cards, tables, badges, buttons, inputs, modals)
+- `public/components/sidebar.html` — sidebar compartilhada (carregada via JS)
+
+### Sidebar Compartilhada
+- Arquivo: `public/components/sidebar.html`
+- Carregada por `Shared.loadSidebar()` em `public/js/shared.js`
+- Ativada com `<aside id="sidebar" class="ld-sidebar"></aside>` no HTML
+- 6 grupos colapsáveis: Operação, Pessoas, Patrimônio, Financeiro, Comunicação, Sistema
+- Estado dos grupos salvo em localStorage (`ld_sidebar_groups`)
+- Classes: `.ld-sidebar`, `.ld-sidebar-item`, `.ld-sidebar-group`, `.ld-sidebar-item.active`
+- User avatar com iniciais, role badge, botão sair
+
+### Tailwind Config (todas as páginas)
+```javascript
+tailwind.config = {
+  theme: { extend: {
+    colors: { graphite:'#0E1625', eucalyptus:'#697F71', porcelain:'#F7F4EE',
+      mist:'#E7ECE8', sand:'#D8CCB8', indigo:'#7279F8', ink:'#1B2430',
+      muted:'#667085', success:'#1F8F5F', warning:'#C98A2E', danger:'#B5473C', border:'#E8E4DE' },
+    borderRadius: { sm:'8px', md:'12px', lg:'16px' },
+    boxShadow: { sm:'0 1px 3px rgba(14,22,37,0.04)', md:'0 4px 16px rgba(14,22,37,0.06)', lg:'0 8px 40px rgba(14,22,37,0.08)' },
+    fontFamily: { sans: ['Inter','-apple-system','BlinkMacSystemFont','sans-serif'] }
+  }}
+}
+```
+
+### Padrão de Página (standalone Tailwind)
+```html
+<head>
+  <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
+  <meta name="theme-color" content="#0E1625">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { /* brand colors */ }</script>
+  <link rel="stylesheet" href="/css/brand.css">
+  <link href="bootstrap-icons CDN" rel="stylesheet">
+</head>
+<body class="bg-porcelain text-ink">
+  <aside id="sidebar" class="ld-sidebar"></aside>
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-30 hidden md:hidden"></div>
+  <main class="ld-content min-h-screen">
+    <header class="ld-header">...</header>
+    <div class="p-4 md:p-6">...</div>
+  </main>
+</body>
+```
+
+### Regras de Design
+- **SEM dark mode** — tema light-only (porcelain/white)
+- **Prefixo ld-** em classes do brand.css para evitar conflito com Tailwind
+- login.html usa Tailwind + brand.css (sem Bootstrap)
+- index.html SPA mantém Bootstrap 5 + style.css (que tem as mesmas variáveis)
+
 ## VARIÁVEIS DE AMBIENTE (.env)
 ```
 PORT=3001  # sandbox (produção=3000)
@@ -549,7 +618,7 @@ IMAP_PASSWORD=*** (app password Gmail)
 - Endpoint: GET `/api/version` (retorna {version, date, env})
 - Exibida no rodapé do index.html (canto inferior direito) e no copyright do login.html
 - Formato de exibição: "v2.0.0 | Sandbox | 24/02/2026" (versão | ambiente capitalizado | data DD/MM/YYYY)
-- Versão atual: 2.8.0
+- Versão atual: 2.9.0
 
 ## REGISTROS DE PONTO - FILTROS
 - Filtro por mês/ano (dropdown) ou período manual (data início/fim)

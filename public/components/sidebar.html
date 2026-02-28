@@ -1,0 +1,151 @@
+<!-- Lar Digital — Shared Sidebar Component -->
+<!-- Loaded by Shared.loadSidebar() -->
+
+<div class="ld-sidebar-header">
+  <a href="/dashboard.html" class="flex items-center gap-2.5 no-underline text-white">
+    <img src="/img/logo-light.svg" alt="Lar Digital" width="28" height="28">
+    <div>
+      <div class="ld-brand-name">Lar Digital</div>
+      <div class="ld-brand-tagline">Gestão da Casa</div>
+    </div>
+  </a>
+</div>
+
+<nav class="ld-sidebar-nav">
+  <!-- Operação -->
+  <div class="ld-sidebar-group" data-group="operacao">
+    <div class="ld-sidebar-group-label">
+      <span>Operação</span>
+      <i class="bi bi-chevron-down ld-chevron"></i>
+    </div>
+    <div class="ld-sidebar-group-items">
+      <a href="/dashboard.html" data-page="dashboard" class="ld-sidebar-item">
+        <i class="bi bi-grid-1x2"></i><span>Dashboard</span>
+      </a>
+      <a href="/registros.html" data-page="registros" class="ld-sidebar-item">
+        <i class="bi bi-clock-history"></i><span>Registros</span>
+      </a>
+      <a href="/presenca.html" data-page="presenca" class="ld-sidebar-item">
+        <i class="bi bi-clipboard-check"></i><span>Presença</span>
+      </a>
+      <a href="/entregas.html" data-page="entregas" class="ld-sidebar-item admin-only hidden">
+        <i class="bi bi-box-seam"></i><span>Entregas</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Pessoas -->
+  <div class="ld-sidebar-group" data-group="pessoas">
+    <div class="ld-sidebar-group-label">
+      <span>Pessoas</span>
+      <i class="bi bi-chevron-down ld-chevron"></i>
+    </div>
+    <div class="ld-sidebar-group-items">
+      <a href="/funcionarios.html" data-page="funcionarios" class="ld-sidebar-item">
+        <i class="bi bi-people"></i><span>Funcionários</span>
+      </a>
+      <a href="/cargos.html" data-page="cargos" class="ld-sidebar-item admin-only hidden">
+        <i class="bi bi-briefcase"></i><span>Cargos</span>
+      </a>
+      <a href="/prestadores.html" data-page="prestadores" class="ld-sidebar-item admin-only hidden">
+        <i class="bi bi-person-badge"></i><span>Prestadores</span>
+      </a>
+      <a href="/holerites.html" data-page="holerites" class="ld-sidebar-item admin-only hidden">
+        <i class="bi bi-receipt"></i><span>Holerites</span>
+      </a>
+      <a href="/ferias.html" data-page="ferias" class="ld-sidebar-item admin-only hidden">
+        <i class="bi bi-calendar-heart"></i><span>Férias</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Casa -->
+  <div class="ld-sidebar-group" data-group="casa">
+    <div class="ld-sidebar-group-label">
+      <span>Casa</span>
+      <i class="bi bi-chevron-down ld-chevron"></i>
+    </div>
+    <div class="ld-sidebar-group-items">
+      <a href="/estoque.html" data-page="estoque" class="ld-sidebar-item admin-only hidden">
+        <i class="bi bi-archive"></i><span>Estoque</span>
+      </a>
+      <a href="/compras.html" data-page="compras" class="ld-sidebar-item admin-only hidden">
+        <i class="bi bi-cart4"></i><span>Compras</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Financeiro -->
+  <div class="ld-sidebar-group" data-group="financeiro">
+    <div class="ld-sidebar-group-label">
+      <span>Financeiro</span>
+      <i class="bi bi-chevron-down ld-chevron"></i>
+    </div>
+    <div class="ld-sidebar-group-items">
+      <a href="/relatorios.html" data-page="relatorios" class="ld-sidebar-item">
+        <i class="bi bi-file-earmark-text"></i><span>Relatórios</span>
+      </a>
+      <a href="/relatorios-graficos.html" data-page="relatorios-graficos" class="ld-sidebar-item">
+        <i class="bi bi-bar-chart-line"></i><span>Gráficos</span>
+      </a>
+      <a href="/despesas.html" data-page="despesas" class="ld-sidebar-item admin-only hidden">
+        <i class="bi bi-receipt-cutoff"></i><span>Despesas</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Comunicação -->
+  <div class="ld-sidebar-group" data-group="comunicacao">
+    <div class="ld-sidebar-group-label">
+      <span>Comunicação</span>
+      <i class="bi bi-chevron-down ld-chevron"></i>
+    </div>
+    <div class="ld-sidebar-group-items">
+      <a href="/whatsapp.html" data-page="whatsapp" class="ld-sidebar-item admin-only hidden">
+        <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
+      </a>
+      <a href="/sugestoes.html" data-page="sugestoes" class="ld-sidebar-item admin-only hidden">
+        <i class="bi bi-lightbulb"></i><span>Sugestões</span>
+      </a>
+      <a href="/insights.html" data-page="insights" class="ld-sidebar-item admin-only hidden">
+        <i class="bi bi-stars"></i><span>Insights IA</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Sistema -->
+  <div class="ld-sidebar-group" data-group="sistema">
+    <div class="ld-sidebar-group-label">
+      <span>Sistema</span>
+      <i class="bi bi-chevron-down ld-chevron"></i>
+    </div>
+    <div class="ld-sidebar-group-items">
+      <a href="/usuarios.html" data-page="usuarios" class="ld-sidebar-item admin-only hidden">
+        <i class="bi bi-shield-lock"></i><span>Usuários</span>
+      </a>
+      <a href="/feriados.html" data-page="feriados" class="ld-sidebar-item admin-only hidden">
+        <i class="bi bi-calendar-event"></i><span>Feriados</span>
+      </a>
+      <a href="/audit-log.html" data-page="audit-log" class="ld-sidebar-item admin-only hidden">
+        <i class="bi bi-journal-text"></i><span>Audit Log</span>
+      </a>
+      <a href="/ajuda.html" data-page="ajuda" class="ld-sidebar-item">
+        <i class="bi bi-chat-left-dots"></i><span>Ajuda</span>
+      </a>
+      <a href="/perfil.html" data-page="perfil" class="ld-sidebar-item">
+        <i class="bi bi-person-gear"></i><span>Perfil</span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<div class="ld-sidebar-footer">
+  <div class="ld-user-info">
+    <div class="ld-user-avatar" id="user-avatar">—</div>
+    <div class="min-w-0 flex-1">
+      <div id="user-name" class="truncate">—</div>
+      <div id="user-role">—</div>
+    </div>
+  </div>
+  <button id="logout-btn" type="button">Sair</button>
+</div>

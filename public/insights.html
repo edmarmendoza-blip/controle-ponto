@@ -1,270 +1,170 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#0E1625">
+  <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
   <title>Insights IA - Lar Digital</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
-      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+      theme: { extend: {
+        colors: {
+          graphite: '#0E1625', eucalyptus: '#697F71', porcelain: '#F7F4EE',
+          mist: '#E7ECE8', sand: '#D8CCB8', indigo: '#7279F8',
+          ink: '#1B2430', muted: '#667085', success: '#1F8F5F',
+          warning: '#C98A2E', danger: '#B5473C', border: '#E8E4DE',
+        },
+        borderRadius: { sm: '8px', md: '12px', lg: '16px' },
+        boxShadow: {
+          sm: '0 1px 3px rgba(14,22,37,0.04)',
+          md: '0 4px 16px rgba(14,22,37,0.06)',
+          lg: '0 8px 40px rgba(14,22,37,0.08)'
+        },
+        fontFamily: { sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'] }
+      }}
     }
   </script>
+  <link rel="stylesheet" href="/css/brand.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+<body class="bg-porcelain text-ink">
 
-  <!-- Sidebar -->
-  <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen bg-blue-800 text-white transition-transform -translate-x-full md:translate-x-0">
-    <div class="p-4 border-b border-blue-700">
-      <a href="/dashboard.html" class="flex items-center gap-2">
-        <i class="bi bi-clock-history text-2xl"></i>
-        <span class="text-xl font-bold">Lar Digital</span>
-      </a>
-      <p class="text-blue-200 text-xs mt-1">Gestão da Casa</p>
-    </div>
-    <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-180px)]">
-      <a href="/dashboard.html" data-page="dashboard" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-speedometer2"></i><span>Dashboard</span>
-      </a>
-      <a href="/funcionarios.html" data-page="funcionarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-people"></i><span>Funcionários</span>
-      </a>
-      <a href="/cargos.html" data-page="cargos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-briefcase"></i><span>Cargos</span>
-      </a>
-      <a href="/registros.html" data-page="registros" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-clock"></i><span>Registros</span>
-      </a>
-      <a href="/relatorios.html" data-page="relatorios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-file-earmark-text"></i><span>Relatórios</span>
-      </a>
-      <a href="/relatorios-graficos.html" data-page="relatorios-graficos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-bar-chart-line"></i><span>Gráficos</span>
-      </a>
-      <a href="/presenca.html" data-page="presenca" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-calendar-check"></i><span>Presença</span>
-      </a>
-      <a href="/entregas.html" data-page="entregas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-box-seam"></i><span>Entregas</span>
-      </a>
-      <a href="/compras.html" data-page="compras" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-cart4"></i><span>Compras</span>
-      </a>
-      <a href="/despesas.html" data-page="despesas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-receipt-cutoff"></i><span>Despesas</span>
-      </a>
-      <a href="/prestadores.html" data-page="prestadores" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-person-badge"></i><span>Prestadores</span>
-      </a>
-      <a href="/holerites.html" data-page="holerites" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-receipt"></i><span>Holerites</span>
-      </a>
-      <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-calendar-heart"></i><span>Férias</span>
-      </a>
-      <a href="/sugestoes.html" data-page="sugestoes" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-lightbulb"></i><span>Sugestões</span>
-      </a>
-      <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-shield-lock"></i><span>Usuários</span>
-      </a>
-      <a href="/feriados.html" data-page="feriados" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-calendar-event"></i><span>Feriados</span>
-      </a>
-      <a href="/insights.html" data-page="insights" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-stars"></i><span>Insights IA</span>
-      </a>
-      <a href="/whatsapp.html" data-page="whatsapp" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
-      </a>
-      <a href="/audit-log.html" data-page="audit-log" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-journal-text"></i><span>Audit Log</span>
-      </a>
-      <hr class="border-blue-700 my-2">
-      <a href="/ajuda.html" data-page="ajuda" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-chat-left-dots"></i><span>Ajuda</span>
-      </a>
-      <a href="/perfil.html" data-page="perfil" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-person-gear"></i><span>Perfil</span>
-      </a>
-    </nav>
-    <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-blue-700 bg-blue-800">
-      <div class="flex items-center justify-between mb-2">
-        <div class="flex items-center gap-2 text-sm">
-          <i class="bi bi-person-circle"></i>
-          <div>
-            <div id="user-name" class="font-medium">-</div>
-            <div id="user-role" class="text-blue-300 text-xs">-</div>
-          </div>
-        </div>
-        <button id="theme-toggle" class="p-1.5 rounded-lg hover:bg-blue-700 transition-colors">
-          <i id="theme-icon" class="bi bi-moon-fill"></i>
-        </button>
-      </div>
-      <button id="logout-btn" class="w-full py-1.5 text-sm bg-blue-700 hover:bg-blue-600 rounded-lg transition-colors">Sair</button>
-    </div>
-  </aside>
-  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+  <aside id="sidebar" class="ld-sidebar"></aside>
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-30 hidden md:hidden"></div>
 
   <!-- Main Content -->
-  <main class="md:ml-64 min-h-screen">
-    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+  <main class="ld-content min-h-screen">
+    <header class="ld-header">
       <div class="flex items-center gap-3">
-        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300">
+        <button id="sidebar-toggle" class="md:hidden text-muted hover:text-ink transition-colors">
           <i class="bi bi-list text-xl"></i>
         </button>
         <h1 class="text-xl font-semibold">Insights IA</h1>
       </div>
-      <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
+      <span class="text-sm text-muted" id="current-date"></span>
     </header>
 
     <div class="p-4 md:p-6" id="page-content">
-      <!-- Action Bar -->
-      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-            <i class="bi bi-stars text-purple-600 dark:text-purple-400 text-lg"></i>
-          </div>
-          <div>
-            <h2 class="text-lg font-semibold">Análise Inteligente</h2>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Insights gerados por IA sobre a equipe</p>
-          </div>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          <button onclick="generateDaily()" id="btn-daily" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
-            <i class="bi bi-lightning-charge-fill mr-1"></i>
-            Gerar Insight Diário
-          </button>
-          <button onclick="showPeriodModal()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium">
-            <i class="bi bi-calendar-range mr-1"></i>
-            Gerar por Período
-          </button>
-          <button onclick="generateMelhorias()" id="btn-melhorias" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-sm font-medium">
-            <i class="bi bi-lightbulb-fill mr-1"></i>
-            Insights de Melhorias
-          </button>
-        </div>
-      </div>
 
-      <!-- Stats Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Total de Insights</p>
-              <p class="text-3xl font-bold mt-1" id="stat-total">0</p>
-            </div>
-            <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
-              <i class="bi bi-stars text-xl text-purple-600 dark:text-purple-400"></i>
-            </div>
+      <!-- Period Filter Bar -->
+      <div class="bg-white rounded-xl shadow-sm border border-border p-4 mb-6">
+        <div class="flex flex-wrap items-center gap-3">
+          <!-- Period tabs -->
+          <div class="flex items-center bg-porcelain rounded-lg p-1 gap-1">
+            <button onclick="selectPeriod('hoje')" data-period="hoje" class="period-tab px-3 py-1.5 rounded-md text-sm font-medium transition-colors bg-graphite text-white">
+              Hoje
+            </button>
+            <button onclick="selectPeriod('semana')" data-period="semana" class="period-tab px-3 py-1.5 rounded-md text-sm font-medium transition-colors text-muted hover:text-ink">
+              Semana
+            </button>
+            <button onclick="selectPeriod('mes')" data-period="mes" class="period-tab px-3 py-1.5 rounded-md text-sm font-medium transition-colors text-muted hover:text-ink">
+              Mês
+            </button>
+            <button onclick="selectPeriod('personalizado')" data-period="personalizado" class="period-tab px-3 py-1.5 rounded-md text-sm font-medium transition-colors text-muted hover:text-ink">
+              Personalizado
+            </button>
           </div>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Mensagens Analisadas</p>
-              <p class="text-3xl font-bold mt-1 text-blue-600 dark:text-blue-400" id="stat-messages">0</p>
-            </div>
-            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-              <i class="bi bi-chat-square-text text-xl text-blue-600 dark:text-blue-400"></i>
-            </div>
+
+          <!-- Custom date range (hidden by default) -->
+          <div id="custom-range" class="hidden flex items-center gap-2">
+            <input type="date" id="period-start" class="border border-border rounded-lg px-3 py-1.5 bg-white text-sm focus:ring-2 focus:ring-eucalyptus focus:border-eucalyptus outline-none">
+            <span class="text-muted text-sm">até</span>
+            <input type="date" id="period-end" class="border border-border rounded-lg px-3 py-1.5 bg-white text-sm focus:ring-2 focus:ring-eucalyptus focus:border-eucalyptus outline-none">
           </div>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Ultimo Insight</p>
-              <p class="text-3xl font-bold mt-1 text-green-600 dark:text-green-400" id="stat-latest">-</p>
-            </div>
-            <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
-              <i class="bi bi-calendar-check text-xl text-green-600 dark:text-green-400"></i>
-            </div>
+
+          <!-- Period label -->
+          <span id="period-label" class="text-sm text-muted hidden sm:inline"></span>
+
+          <!-- Spacer -->
+          <div class="flex-1"></div>
+
+          <!-- Action buttons -->
+          <div class="flex items-center gap-2">
+            <button onclick="generateInsight()" id="btn-generate" class="px-4 py-2 bg-graphite text-white rounded-lg hover:bg-graphite/90 transition-colors text-sm font-medium">
+              <i class="bi bi-stars mr-1"></i>
+              Gerar Insight
+            </button>
+            <button onclick="generateMelhorias()" id="btn-melhorias" class="px-3 py-2 bg-success hover:bg-success/90 text-white rounded-lg transition-colors text-sm font-medium" title="Insights de Melhorias">
+              <i class="bi bi-lightbulb-fill mr-1"></i>
+              <span class="hidden sm:inline">Melhorias</span>
+            </button>
+            <button onclick="openHistory()" class="px-3 py-2 border border-border text-ink rounded-lg hover:bg-mist transition-colors text-sm font-medium" title="Histórico de insights">
+              <i class="bi bi-clock-history mr-1"></i>
+              <span class="hidden sm:inline">Histórico</span>
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Insights List -->
-      <div id="insights-list" class="space-y-4">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 text-center">
-          <i class="bi bi-arrow-repeat animate-spin text-2xl text-gray-400"></i>
-          <p class="mt-2 text-sm text-gray-400">Carregando insights...</p>
+      <!-- Insight Display Area -->
+      <div id="insight-area">
+        <div class="bg-white rounded-xl shadow-sm border border-border p-8 text-center">
+          <i class="bi bi-arrow-repeat animate-spin text-2xl text-muted"></i>
+          <p class="mt-2 text-sm text-muted">Carregando insight do dia...</p>
         </div>
       </div>
 
-      <!-- Pagination -->
-      <div class="flex items-center justify-between mt-6" id="pagination-area">
-        <span class="text-sm text-gray-500 dark:text-gray-400" id="page-info"></span>
-        <div class="flex gap-2">
-          <button onclick="prevPage()" id="btn-prev" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-            <i class="bi bi-chevron-left mr-1"></i> Anterior
-          </button>
-          <button onclick="nextPage()" id="btn-next" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-            Proximo <i class="bi bi-chevron-right ml-1"></i>
-          </button>
-        </div>
-      </div>
     </div>
   </main>
 
-  <!-- Period Modal -->
-  <div id="period-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full">
-      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
-        <h3 class="text-lg font-semibold">Gerar Insights por Período</h3>
-        <button onclick="closePeriodModal()" class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+  <!-- History Modal -->
+  <div id="history-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between p-5 border-b border-border shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo/10 flex items-center justify-center">
+            <i class="bi bi-clock-history text-indigo text-lg"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold">Histórico de Insights</h3>
+            <p class="text-xs text-muted" id="history-subtitle">Todos os insights gerados</p>
+          </div>
+        </div>
+        <button onclick="closeHistory()" class="w-8 h-8 rounded-lg bg-porcelain flex items-center justify-center text-muted hover:text-ink transition-colors">
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
-      <div class="p-5 space-y-4">
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data Início</label>
-            <input type="date" id="period-start" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data Fim</label>
-            <input type="date" id="period-end" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
-          </div>
-        </div>
-        <p class="text-xs text-gray-500 dark:text-gray-400">
-          <i class="bi bi-info-circle mr-1"></i>
-          A IA analisará todos os registros e mensagens do período selecionado.
-        </p>
+      <div class="p-5 overflow-y-auto flex-1" id="history-content">
+        <p class="text-muted text-center">Carregando...</p>
       </div>
-      <div class="flex justify-end gap-3 p-5 border-t border-gray-100 dark:border-gray-700">
-        <button onclick="closePeriodModal()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium">Cancelar</button>
-        <button onclick="generatePeriod()" id="btn-gen-period" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
-          <i class="bi bi-stars mr-1"></i> Gerar
-        </button>
+      <div class="flex items-center justify-between p-5 border-t border-border shrink-0">
+        <span class="text-sm text-muted" id="history-page-info"></span>
+        <div class="flex gap-2">
+          <button onclick="historyPrev()" id="history-btn-prev" class="px-3 py-1.5 border border-border rounded-lg text-sm hover:bg-porcelain transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            <i class="bi bi-chevron-left mr-1"></i> Anterior
+          </button>
+          <button onclick="historyNext()" id="history-btn-next" class="px-3 py-1.5 border border-border rounded-lg text-sm hover:bg-porcelain transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            Próximo <i class="bi bi-chevron-right ml-1"></i>
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Melhorias Modal -->
   <div id="melhorias-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[85vh] flex flex-col">
-      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700 shrink-0">
+    <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between p-5 border-b border-border shrink-0">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-            <i class="bi bi-lightbulb-fill text-emerald-600 dark:text-emerald-400 text-lg"></i>
+          <div class="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
+            <i class="bi bi-lightbulb-fill text-success text-lg"></i>
           </div>
           <div>
             <h3 class="text-lg font-semibold">Insights de Melhorias</h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Sugestões de melhorias geradas por IA</p>
+            <p class="text-xs text-muted">Sugestões geradas por IA</p>
           </div>
         </div>
-        <button onclick="closeMelhoriasModal()" class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+        <button onclick="closeMelhoriasModal()" class="w-8 h-8 rounded-lg bg-porcelain flex items-center justify-center text-muted hover:text-ink transition-colors">
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
       <div class="p-5 overflow-y-auto" id="melhorias-content">
-        <p class="text-gray-400 text-center">Carregando...</p>
+        <p class="text-muted text-center">Carregando...</p>
       </div>
-      <div class="flex justify-end p-5 border-t border-gray-100 dark:border-gray-700 shrink-0">
-        <button onclick="closeMelhoriasModal()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium">Fechar</button>
+      <div class="flex justify-end p-5 border-t border-border shrink-0">
+        <button onclick="closeMelhoriasModal()" class="px-4 py-2 border border-border text-ink rounded-lg hover:bg-porcelain transition-colors text-sm font-medium">Fechar</button>
       </div>
     </div>
   </div>
@@ -275,8 +175,9 @@
   <script src="/js/utils.js?v=1"></script>
   <script src="/js/shared.js"></script>
   <script>
-    let currentPage = 1;
-    let totalPages = 1;
+    let currentPeriod = 'hoje';
+    let historyPage = 1;
+    let historyTotalPages = 1;
 
     function escapeHtml(text) {
       const div = document.createElement('div');
@@ -284,42 +185,424 @@
       return div.innerHTML;
     }
 
-    async function loadInsights(page) {
-      currentPage = page || 1;
-      const list = document.getElementById('insights-list');
-      list.innerHTML = '<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 text-center"><i class="bi bi-arrow-repeat animate-spin text-2xl text-gray-400"></i><p class="mt-2 text-sm text-gray-400">Carregando...</p></div>';
+    // ── Date helpers ──
+    function todayStr() {
+      return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+    }
+
+    function weekRange() {
+      const now = new Date();
+      const day = now.getDay(); // 0=sun
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
+      return {
+        start: monday.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }),
+        end: todayStr()
+      };
+    }
+
+    function monthRange() {
+      const now = new Date();
+      const first = new Date(now.getFullYear(), now.getMonth(), 1);
+      return {
+        start: first.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }),
+        end: todayStr()
+      };
+    }
+
+    function getSelectedRange() {
+      if (currentPeriod === 'hoje') {
+        const t = todayStr();
+        return { start: t, end: t };
+      }
+      if (currentPeriod === 'semana') return weekRange();
+      if (currentPeriod === 'mes') return monthRange();
+      // personalizado
+      return {
+        start: document.getElementById('period-start').value,
+        end: document.getElementById('period-end').value
+      };
+    }
+
+    function formatRange(start, end) {
+      const fmt = d => {
+        const [y, m, dd] = d.split('-');
+        return `${dd}/${m}/${y}`;
+      };
+      if (start === end) return fmt(start);
+      return `${fmt(start)} a ${fmt(end)}`;
+    }
+
+    // ── Period selection ──
+    function selectPeriod(period) {
+      currentPeriod = period;
+      // Update tab styles
+      document.querySelectorAll('.period-tab').forEach(btn => {
+        if (btn.dataset.period === period) {
+          btn.classList.add('bg-graphite', 'text-white');
+          btn.classList.remove('text-muted', 'hover:text-ink');
+        } else {
+          btn.classList.remove('bg-graphite', 'text-white');
+          btn.classList.add('text-muted', 'hover:text-ink');
+        }
+      });
+      // Toggle custom range
+      const customRange = document.getElementById('custom-range');
+      if (period === 'personalizado') {
+        customRange.classList.remove('hidden');
+        if (!document.getElementById('period-start').value) {
+          const r = weekRange();
+          document.getElementById('period-start').value = r.start;
+          document.getElementById('period-end').value = r.end;
+        }
+      } else {
+        customRange.classList.add('hidden');
+      }
+      // Update label
+      const range = getSelectedRange();
+      document.getElementById('period-label').textContent = formatRange(range.start, range.end);
+    }
+
+    // ── Generate insight for selected period ──
+    async function generateInsight() {
+      const range = getSelectedRange();
+      if (!range.start || !range.end) {
+        showToast('Selecione as datas do período.', 'warning');
+        return;
+      }
+
+      const btn = document.getElementById('btn-generate');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin mr-1"></i> Gerando...';
+
+      const area = document.getElementById('insight-area');
+      area.innerHTML = `
+        <div class="bg-white rounded-xl shadow-sm border border-border p-12 text-center">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo/10 mb-4">
+            <i class="bi bi-stars text-3xl text-indigo animate-pulse"></i>
+          </div>
+          <p class="font-medium text-ink">Analisando dados...</p>
+          <p class="text-sm text-muted mt-1">A IA está processando registros e mensagens do período.</p>
+        </div>`;
 
       try {
-        const data = await Shared.api(`/api/insights?page=${currentPage}&limit=10`);
-        const insights = data.data || data.insights || [];
-        const total = data.total || 0;
-        totalPages = data.totalPages || data.pages || 1;
-
-        document.getElementById('stat-total').textContent = total;
-
-        let totalMsgs = 0;
-        insights.forEach(i => { totalMsgs += (i.mensagens_analisadas || 0); });
-        document.getElementById('stat-messages').textContent = totalMsgs;
-
-        if (insights.length > 0) {
-          const latest = insights[0];
-          document.getElementById('stat-latest').textContent = Shared.formatDate(latest.data);
+        let result;
+        if (range.start === range.end) {
+          // Single day — use daily endpoint
+          result = await Shared.api('/api/insights/generate', {
+            method: 'POST',
+            body: JSON.stringify({ date: range.start })
+          });
+        } else {
+          // Range — use period endpoint
+          result = await Shared.api('/api/insights/generate-period', {
+            method: 'POST',
+            body: JSON.stringify({ startDate: range.start, endDate: range.end })
+          });
         }
 
-        if (insights.length === 0) {
-          list.innerHTML = `
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 text-center">
-              <div class="w-16 h-16 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mx-auto mb-4">
-                <i class="bi bi-stars text-3xl text-purple-400"></i>
+        const insights = result.insights;
+        const msgCount = result.mensagens_analisadas || 0;
+        const label = range.start === range.end ? 'Insight do Dia' : 'Insight do Período';
+        renderInsight(insights, label, formatRange(range.start, range.end), msgCount);
+        showToast('Insight gerado com sucesso!');
+      } catch (err) {
+        area.innerHTML = `
+          <div class="bg-white rounded-xl shadow-sm border border-border p-8 text-center">
+            <div class="w-16 h-16 rounded-full bg-danger/10 flex items-center justify-center mx-auto mb-4">
+              <i class="bi bi-exclamation-circle text-3xl text-danger"></i>
+            </div>
+            <p class="font-medium text-danger">Erro ao gerar insight</p>
+            <p class="text-sm text-muted mt-1">${escapeHtml(err.message)}</p>
+            <button onclick="generateInsight()" class="mt-4 px-4 py-2 bg-graphite text-white rounded-lg hover:bg-graphite/90 transition-colors text-sm font-medium">
+              <i class="bi bi-arrow-clockwise mr-1"></i> Tentar novamente
+            </button>
+          </div>`;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-stars mr-1"></i> Gerar Insight';
+      }
+    }
+
+    // ── Render a single insight inline ──
+    function renderInsight(data, title, periodLabel, msgCount) {
+      const area = document.getElementById('insight-area');
+
+      // Normalize: data could be the parsed JSON
+      const insights = data || {};
+
+      let html = '';
+
+      // Header
+      html += `
+        <div class="bg-white rounded-xl shadow-sm border border-border overflow-hidden mb-4">
+          <div class="p-5 border-b border-border bg-gradient-to-r from-indigo/5 to-transparent">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo/10 flex items-center justify-center">
+                  <i class="bi bi-stars text-indigo text-lg"></i>
+                </div>
+                <div>
+                  <h3 class="font-semibold text-lg">${escapeHtml(title)}</h3>
+                  <p class="text-xs text-muted">${escapeHtml(periodLabel)} &bull; ${msgCount} mensagens analisadas</p>
+                </div>
               </div>
-              <p class="font-medium text-gray-500 dark:text-gray-400">Nenhum insight gerado ainda</p>
-              <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Clique em "Gerar Insight Diário" para começar.</p>
-            </div>`;
-          updatePagination();
+            </div>
+          </div>`;
+
+      // Resumo
+      if (insights.resumo) {
+        html += `
+          <div class="p-5">
+            <p class="text-sm leading-relaxed">${escapeHtml(insights.resumo)}</p>
+          </div>`;
+      }
+      html += '</div>';
+
+      // Presença section
+      if (insights.presenca) {
+        html += '<div class="bg-white rounded-xl shadow-sm border border-border overflow-hidden mb-4">';
+        html += '<div class="p-4 border-b border-border"><h4 class="font-semibold text-sm flex items-center gap-2"><i class="bi bi-people text-eucalyptus"></i> Presença</h4></div>';
+        html += '<div class="p-4 space-y-3">';
+
+        // Daily format
+        if (insights.presenca.presentes?.length) {
+          html += `<div class="flex flex-wrap gap-2">
+            <span class="text-xs font-medium text-muted uppercase tracking-wide">Presentes:</span>
+            ${insights.presenca.presentes.map(n => `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-success/10 text-success">${escapeHtml(n)}</span>`).join('')}
+          </div>`;
+        }
+        if (insights.presenca.ausentes?.length) {
+          html += `<div class="flex flex-wrap gap-2">
+            <span class="text-xs font-medium text-muted uppercase tracking-wide">Ausentes:</span>
+            ${insights.presenca.ausentes.map(n => `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-danger/10 text-danger">${escapeHtml(n)}</span>`).join('')}
+          </div>`;
+        }
+
+        // Period format (ranking)
+        if (insights.presenca.ranking?.length) {
+          html += '<div class="overflow-x-auto"><table class="w-full text-sm">';
+          html += '<thead><tr class="text-left text-xs text-muted uppercase"><th class="pb-2">Nome</th><th class="pb-2 text-center">Dias</th><th class="pb-2 text-center">1a Msg</th><th class="pb-2 text-center">Última Msg</th></tr></thead><tbody>';
+          insights.presenca.ranking.forEach(r => {
+            html += `<tr class="border-t border-border">
+              <td class="py-2 font-medium">${escapeHtml(r.nome)}</td>
+              <td class="py-2 text-center"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-success/10 text-success">${r.dias_presentes}</span></td>
+              <td class="py-2 text-center text-muted">${escapeHtml(r.primeira_msg_media || '-')}</td>
+              <td class="py-2 text-center text-muted">${escapeHtml(r.ultima_msg_media || '-')}</td>
+            </tr>`;
+          });
+          html += '</tbody></table></div>';
+        }
+
+        if (insights.presenca.ausencias_frequentes?.length) {
+          html += `<div class="flex flex-wrap gap-2 mt-2">
+            <span class="text-xs font-medium text-muted uppercase tracking-wide">Ausências frequentes:</span>
+            ${insights.presenca.ausencias_frequentes.map(n => `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-warning/10 text-warning">${escapeHtml(n)}</span>`).join('')}
+          </div>`;
+        }
+
+        if (insights.presenca.observacoes) {
+          html += `<p class="text-xs text-muted mt-2"><i class="bi bi-info-circle mr-1"></i>${escapeHtml(insights.presenca.observacoes)}</p>`;
+        }
+        html += '</div></div>';
+      }
+
+      // Problemas (daily) or Problemas recorrentes (period)
+      const problemas = insights.problemas || insights.problemas_recorrentes || [];
+      if (problemas.length) {
+        html += '<div class="bg-white rounded-xl shadow-sm border border-border overflow-hidden mb-4">';
+        html += '<div class="p-4 border-b border-border"><h4 class="font-semibold text-sm flex items-center gap-2"><i class="bi bi-exclamation-triangle text-warning"></i> Problemas</h4></div>';
+        html += '<div class="p-4 space-y-2">';
+        problemas.forEach(p => {
+          const gravBadge = { alta: 'bg-danger/10 text-danger', media: 'bg-warning/10 text-warning', baixa: 'bg-mist text-muted' };
+          html += `<div class="p-3 rounded-lg border border-border">
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <span class="text-sm font-medium">${escapeHtml(p.descricao)}</span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${gravBadge[p.gravidade] || gravBadge.media}">${escapeHtml(p.gravidade || 'média')}</span>
+            </div>
+            ${p.frequencia ? `<p class="text-xs text-muted"><i class="bi bi-arrow-repeat mr-1"></i>${escapeHtml(p.frequencia)}</p>` : ''}
+            ${p.sugestao ? `<p class="text-xs text-eucalyptus mt-1"><i class="bi bi-lightbulb mr-1"></i>${escapeHtml(p.sugestao)}</p>` : ''}
+          </div>`;
+        });
+        html += '</div></div>';
+      }
+
+      // Entregas (daily)
+      if (insights.entregas?.length) {
+        html += '<div class="bg-white rounded-xl shadow-sm border border-border overflow-hidden mb-4">';
+        html += '<div class="p-4 border-b border-border"><h4 class="font-semibold text-sm flex items-center gap-2"><i class="bi bi-box-seam text-eucalyptus"></i> Entregas / Trabalhos</h4></div>';
+        html += '<div class="p-4 space-y-2">';
+        insights.entregas.forEach(e => {
+          html += `<div class="flex items-start gap-3 p-3 rounded-lg border border-border">
+            <div class="w-8 h-8 rounded-lg bg-eucalyptus/10 flex items-center justify-center shrink-0 mt-0.5">
+              <i class="bi bi-check2-circle text-eucalyptus"></i>
+            </div>
+            <div>
+              <p class="text-sm font-medium">${escapeHtml(e.descricao)}</p>
+              <p class="text-xs text-muted">${escapeHtml(e.responsavel || '')}</p>
+            </div>
+          </div>`;
+        });
+        html += '</div></div>';
+      }
+
+      // Destaques (period)
+      if (insights.destaques?.length) {
+        html += '<div class="bg-white rounded-xl shadow-sm border border-border overflow-hidden mb-4">';
+        html += '<div class="p-4 border-b border-border"><h4 class="font-semibold text-sm flex items-center gap-2"><i class="bi bi-star text-warning"></i> Destaques</h4></div>';
+        html += '<div class="p-4 space-y-2">';
+        insights.destaques.forEach(d => {
+          html += `<div class="flex items-start gap-3 p-3 rounded-lg border border-border">
+            <div class="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center shrink-0 mt-0.5">
+              <i class="bi bi-star-fill text-warning text-sm"></i>
+            </div>
+            <div>
+              <p class="text-sm font-medium">${escapeHtml(d.descricao)}</p>
+              ${d.responsavel ? `<p class="text-xs text-muted">${escapeHtml(d.responsavel)}</p>` : ''}
+            </div>
+          </div>`;
+        });
+        html += '</div></div>';
+      }
+
+      // Padrões (period)
+      if (insights.padroes?.length) {
+        html += '<div class="bg-white rounded-xl shadow-sm border border-border overflow-hidden mb-4">';
+        html += '<div class="p-4 border-b border-border"><h4 class="font-semibold text-sm flex items-center gap-2"><i class="bi bi-graph-up text-indigo"></i> Padrões Observados</h4></div>';
+        html += '<div class="p-4 space-y-2">';
+        insights.padroes.forEach(p => {
+          const tipoIcon = { positivo: 'bi-arrow-up-circle text-success', negativo: 'bi-arrow-down-circle text-danger', neutro: 'bi-dash-circle text-muted' };
+          html += `<div class="flex items-start gap-3 p-3 rounded-lg border border-border">
+            <i class="bi ${tipoIcon[p.tipo] || tipoIcon.neutro} mt-0.5"></i>
+            <p class="text-sm">${escapeHtml(p.descricao)}</p>
+          </div>`;
+        });
+        html += '</div></div>';
+      }
+
+      // Tarefas (daily)
+      if (insights.tarefas?.length) {
+        html += '<div class="bg-white rounded-xl shadow-sm border border-border overflow-hidden mb-4">';
+        html += '<div class="p-4 border-b border-border"><h4 class="font-semibold text-sm flex items-center gap-2"><i class="bi bi-list-task text-indigo"></i> Tarefas</h4></div>';
+        html += '<div class="p-4 space-y-2">';
+        insights.tarefas.forEach(t => {
+          const statusBadge = { concluida: 'bg-success/10 text-success', em_andamento: 'bg-indigo/10 text-indigo', pendente: 'bg-warning/10 text-warning' };
+          html += `<div class="flex items-center justify-between p-3 rounded-lg border border-border">
+            <div class="flex items-center gap-2">
+              <i class="bi bi-${t.status === 'concluida' ? 'check-circle-fill text-success' : 'circle text-muted'}"></i>
+              <span class="text-sm">${escapeHtml(t.descricao)}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              ${t.responsavel ? `<span class="text-xs text-muted">${escapeHtml(t.responsavel)}</span>` : ''}
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusBadge[t.status] || statusBadge.pendente}">${escapeHtml(t.status || 'pendente')}</span>
+            </div>
+          </div>`;
+        });
+        html += '</div></div>';
+      }
+
+      // Sugestões
+      if (insights.sugestoes?.length) {
+        html += '<div class="bg-white rounded-xl shadow-sm border border-border overflow-hidden mb-4">';
+        html += '<div class="p-4 border-b border-border"><h4 class="font-semibold text-sm flex items-center gap-2"><i class="bi bi-lightbulb text-success"></i> Sugestões</h4></div>';
+        html += '<div class="p-4 space-y-2">';
+        insights.sugestoes.forEach(s => {
+          const prioBadge = { alta: 'bg-danger/10 text-danger', media: 'bg-warning/10 text-warning', baixa: 'bg-success/10 text-success' };
+          html += `<div class="p-3 rounded-lg border border-border">
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <span class="text-sm font-medium">${escapeHtml(s.titulo)}</span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${prioBadge[s.prioridade] || prioBadge.media}">${escapeHtml(s.prioridade || 'média')}</span>
+            </div>
+            <p class="text-xs text-muted">${escapeHtml(s.descricao)}</p>
+          </div>`;
+        });
+        html += '</div></div>';
+      }
+
+      // If nothing at all
+      if (!html || html.trim() === '') {
+        html = `<div class="bg-white rounded-xl shadow-sm border border-border p-12 text-center">
+          <p class="text-muted">Sem dados suficientes para gerar insight.</p>
+        </div>`;
+      }
+
+      area.innerHTML = html;
+    }
+
+    // ── Load today's insight on page load ──
+    async function loadTodayInsight() {
+      const today = todayStr();
+      const area = document.getElementById('insight-area');
+
+      try {
+        // Try to fetch existing insight for today
+        const result = await Shared.api(`/api/insights/${today}`);
+        if (result && result.insights) {
+          renderInsight(result.insights, 'Insight do Dia', formatRange(today, today), result.mensagens_analisadas || 0);
+          return;
+        }
+      } catch (e) {
+        // 404 means no insight yet — auto-generate
+      }
+
+      // Auto-generate today's insight
+      area.innerHTML = `
+        <div class="bg-white rounded-xl shadow-sm border border-border p-12 text-center">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo/10 mb-4">
+            <i class="bi bi-stars text-3xl text-indigo animate-pulse"></i>
+          </div>
+          <p class="font-medium text-ink">Gerando insight do dia...</p>
+          <p class="text-sm text-muted mt-1">Analisando registros e mensagens de hoje.</p>
+        </div>`;
+
+      try {
+        const result = await Shared.api('/api/insights/generate', {
+          method: 'POST',
+          body: JSON.stringify({ date: today })
+        });
+        renderInsight(result.insights, 'Insight do Dia', formatRange(today, today), result.mensagens_analisadas || 0);
+      } catch (err) {
+        area.innerHTML = `
+          <div class="bg-white rounded-xl shadow-sm border border-border p-12 text-center">
+            <div class="w-16 h-16 rounded-full bg-mist flex items-center justify-center mx-auto mb-4">
+              <i class="bi bi-stars text-3xl text-muted"></i>
+            </div>
+            <p class="font-medium text-muted">Nenhum dado disponível para hoje</p>
+            <p class="text-sm text-muted mt-1">${escapeHtml(err.message)}</p>
+            <p class="text-xs text-muted mt-3">Selecione outro período ou aguarde registros do dia.</p>
+          </div>`;
+      }
+    }
+
+    // ── History modal ──
+    async function openHistory() {
+      document.getElementById('history-modal').classList.remove('hidden');
+      historyPage = 1;
+      await loadHistory();
+    }
+
+    function closeHistory() {
+      document.getElementById('history-modal').classList.add('hidden');
+    }
+
+    async function loadHistory() {
+      const content = document.getElementById('history-content');
+      content.innerHTML = '<div class="text-center py-8"><i class="bi bi-arrow-repeat animate-spin text-2xl text-muted"></i><p class="mt-2 text-sm text-muted">Carregando...</p></div>';
+
+      try {
+        const data = await Shared.api(`/api/insights?page=${historyPage}&limit=10`);
+        const insights = data.data || [];
+        historyTotalPages = data.totalPages || 1;
+
+        document.getElementById('history-subtitle').textContent = `${data.total || 0} insights no total`;
+
+        if (insights.length === 0) {
+          content.innerHTML = '<div class="text-center py-8"><p class="text-muted">Nenhum insight no histórico.</p></div>';
+          updateHistoryPagination();
           return;
         }
 
-        list.innerHTML = insights.map(insight => {
+        content.innerHTML = insights.map(insight => {
           const dt = insight.created_at ? new Date(insight.created_at) : null;
           const dateStr = dt ? dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-';
           let insightData;
@@ -328,109 +611,92 @@
           } catch (e) {
             insightData = { resumo: insight.insights_json || 'Sem dados' };
           }
-
-          const resumo = insightData.resumo || insightData.summary || (typeof insightData === 'string' ? insightData : JSON.stringify(insightData).substring(0, 300));
+          const resumo = insightData.resumo || insightData.summary || (typeof insightData === 'string' ? insightData : JSON.stringify(insightData).substring(0, 200));
+          const isPeriod = insight.data && insight.data.startsWith('period_');
+          const isMelhoria = insight.data && insight.data.startsWith('melhorias_');
+          let label = Shared.formatDate ? Shared.formatDate(insight.data) : insight.data;
+          let badge = '<span class="px-2 py-0.5 rounded-full text-xs font-medium bg-indigo/10 text-indigo">Diário</span>';
+          if (isPeriod) {
+            const parts = insight.data.replace('period_', '').split('_');
+            label = parts.length === 2 ? `${parts[0]} a ${parts[1]}` : insight.data;
+            badge = '<span class="px-2 py-0.5 rounded-full text-xs font-medium bg-eucalyptus/10 text-eucalyptus">Período</span>';
+          }
+          if (isMelhoria) {
+            label = 'Melhorias - ' + (Shared.formatDate ? Shared.formatDate(insight.data.replace('melhorias_', '')) : insight.data.replace('melhorias_', ''));
+            badge = '<span class="px-2 py-0.5 rounded-full text-xs font-medium bg-success/10 text-success">Melhorias</span>';
+          }
 
           return `
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-              <div class="p-5">
-                <div class="flex items-start justify-between mb-3">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
-                      <i class="bi bi-stars text-purple-600 dark:text-purple-400"></i>
-                    </div>
-                    <div>
-                      <h3 class="font-semibold">${Shared.formatDate(insight.data)}</h3>
-                      <p class="text-xs text-gray-500 dark:text-gray-400">${insight.mensagens_analisadas || 0} mensagens analisadas &bull; ${insight.modelo || 'claude'}</p>
-                    </div>
-                  </div>
-                  <span class="text-xs text-gray-400">${dateStr}</span>
+            <div class="p-4 border border-border rounded-lg mb-3 hover:bg-porcelain/50 transition-colors cursor-pointer" onclick="viewHistoryInsight(${insight.id})">
+              <div class="flex items-start justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  ${badge}
+                  <span class="font-medium text-sm">${escapeHtml(label)}</span>
                 </div>
-                <div class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">${escapeHtml(typeof resumo === 'string' ? resumo : JSON.stringify(resumo, null, 2))}</div>
+                <span class="text-xs text-muted">${dateStr}</span>
               </div>
+              <p class="text-xs text-muted line-clamp-2">${escapeHtml(typeof resumo === 'string' ? resumo : JSON.stringify(resumo).substring(0, 200))}</p>
+              <p class="text-xs text-muted mt-1"><i class="bi bi-chat-square-text mr-1"></i>${insight.mensagens_analisadas || 0} mensagens</p>
             </div>`;
         }).join('');
 
-        updatePagination();
+        updateHistoryPagination();
       } catch (err) {
-        list.innerHTML = `
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 text-center">
-            <i class="bi bi-exclamation-circle text-3xl text-red-400 mb-3"></i>
-            <p class="text-red-500">${err.message}</p>
-          </div>`;
+        content.innerHTML = `<div class="text-center py-8"><p class="text-danger">${escapeHtml(err.message)}</p></div>`;
       }
     }
 
-    function updatePagination() {
-      document.getElementById('page-info').textContent = `Página ${currentPage} de ${totalPages}`;
-      document.getElementById('btn-prev').disabled = currentPage <= 1;
-      document.getElementById('btn-next').disabled = currentPage >= totalPages;
+    function updateHistoryPagination() {
+      document.getElementById('history-page-info').textContent = `Página ${historyPage} de ${historyTotalPages}`;
+      document.getElementById('history-btn-prev').disabled = historyPage <= 1;
+      document.getElementById('history-btn-next').disabled = historyPage >= historyTotalPages;
     }
 
-    function prevPage() { if (currentPage > 1) loadInsights(currentPage - 1); }
-    function nextPage() { if (currentPage < totalPages) loadInsights(currentPage + 1); }
+    function historyPrev() { if (historyPage > 1) { historyPage--; loadHistory(); } }
+    function historyNext() { if (historyPage < historyTotalPages) { historyPage++; loadHistory(); } }
 
-    async function generateDaily() {
-      const btn = document.getElementById('btn-daily');
-      btn.disabled = true;
-      btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin mr-1"></i> Gerando...';
+    async function viewHistoryInsight(id) {
+      // Close history modal, load the specific insight in main area
+      closeHistory();
+      const area = document.getElementById('insight-area');
+      area.innerHTML = '<div class="bg-white rounded-xl shadow-sm border border-border p-8 text-center"><i class="bi bi-arrow-repeat animate-spin text-2xl text-muted"></i><p class="mt-2 text-sm text-muted">Carregando...</p></div>';
 
       try {
-        const today = new Date().toISOString().split('T')[0];
-        await Shared.api('/api/insights/generate', {
-          method: 'POST',
-          body: JSON.stringify({ date: today })
-        });
-        showToast('Insight diário gerado com sucesso!');
-        await loadInsights(1);
+        const data = await Shared.api(`/api/insights?page=1&limit=100`);
+        const all = data.data || [];
+        const insight = all.find(i => i.id === id);
+        if (!insight) { showToast('Insight não encontrado.', 'danger'); return; }
+
+        let insightData;
+        try {
+          insightData = typeof insight.insights_json === 'string' ? JSON.parse(insight.insights_json) : insight.insights_json;
+        } catch (e) {
+          insightData = { resumo: insight.insights_json || 'Sem dados' };
+        }
+
+        const isPeriod = insight.data && insight.data.startsWith('period_');
+        const isMelhoria = insight.data && insight.data.startsWith('melhorias_');
+        let label = Shared.formatDate ? Shared.formatDate(insight.data) : insight.data;
+        let title = 'Insight do Dia';
+        if (isPeriod) {
+          const parts = insight.data.replace('period_', '').split('_');
+          label = parts.length === 2 ? formatRange(parts[0], parts[1]) : insight.data;
+          title = 'Insight do Período';
+        }
+        if (isMelhoria) {
+          label = Shared.formatDate ? Shared.formatDate(insight.data.replace('melhorias_', '')) : insight.data.replace('melhorias_', '');
+          title = 'Insights de Melhorias';
+          showMelhoriasContent(insightData);
+          return;
+        }
+
+        renderInsight(insightData, title, label, insight.mensagens_analisadas || 0);
       } catch (err) {
-        showToast('Erro: ' + err.message, 'danger');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-lightning-charge-fill mr-1"></i> Gerar Insight Diário';
+        area.innerHTML = `<div class="bg-white rounded-xl shadow-sm border border-border p-8 text-center"><p class="text-danger">${escapeHtml(err.message)}</p></div>`;
       }
     }
 
-    function showPeriodModal() {
-      const today = new Date().toISOString().split('T')[0];
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      document.getElementById('period-start').value = thirtyDaysAgo;
-      document.getElementById('period-end').value = today;
-      document.getElementById('period-modal').classList.remove('hidden');
-    }
-
-    function closePeriodModal() {
-      document.getElementById('period-modal').classList.add('hidden');
-    }
-
-    async function generatePeriod() {
-      const startDate = document.getElementById('period-start').value;
-      const endDate = document.getElementById('period-end').value;
-      if (!startDate || !endDate) {
-        showToast('Preencha as datas.', 'warning');
-        return;
-      }
-
-      const btn = document.getElementById('btn-gen-period');
-      btn.disabled = true;
-      btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin mr-1"></i> Gerando...';
-
-      try {
-        await Shared.api('/api/insights/generate-period', {
-          method: 'POST',
-          body: JSON.stringify({ startDate, endDate })
-        });
-        showToast('Insights do período gerados com sucesso!');
-        closePeriodModal();
-        await loadInsights(1);
-      } catch (err) {
-        showToast('Erro: ' + err.message, 'danger');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-stars mr-1"></i> Gerar';
-      }
-    }
-
+    // ── Melhorias ──
     async function generateMelhorias() {
       const btn = document.getElementById('btn-melhorias');
       btn.disabled = true;
@@ -442,85 +708,108 @@
           body: JSON.stringify({})
         });
         showMelhoriasModal(data.insights);
-        showToast('Insights de melhorias gerados com sucesso!');
-        await loadInsights(1);
+        showToast('Insights de melhorias gerados!');
       } catch (err) {
         showToast('Erro: ' + err.message, 'danger');
       } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-lightbulb-fill mr-1"></i> Insights de Melhorias';
+        btn.innerHTML = '<i class="bi bi-lightbulb-fill mr-1"></i><span class="hidden sm:inline">Melhorias</span>';
       }
     }
 
     function showMelhoriasModal(insights) {
-      const modal = document.getElementById('melhorias-modal');
       const content = document.getElementById('melhorias-content');
+      content.innerHTML = buildMelhoriasHtml(insights);
+      document.getElementById('melhorias-modal').classList.remove('hidden');
+    }
 
+    function showMelhoriasContent(insights) {
+      // Show melhorias in the main area instead of modal
+      const area = document.getElementById('insight-area');
+      area.innerHTML = `
+        <div class="bg-white rounded-xl shadow-sm border border-border overflow-hidden mb-4">
+          <div class="p-5 border-b border-border bg-gradient-to-r from-success/5 to-transparent">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
+                <i class="bi bi-lightbulb-fill text-success text-lg"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold text-lg">Insights de Melhorias</h3>
+                <p class="text-xs text-muted">Sugestões geradas por IA</p>
+              </div>
+            </div>
+          </div>
+          <div class="p-5">${buildMelhoriasHtml(insights)}</div>
+        </div>`;
+    }
+
+    function buildMelhoriasHtml(insights) {
       const prioridadeBadge = (p) => {
-        const map = { alta: 'bg-red-100 text-red-700', media: 'bg-yellow-100 text-yellow-700', baixa: 'bg-green-100 text-green-700' };
+        const map = { alta: 'bg-danger/10 text-danger', media: 'bg-warning/10 text-warning', baixa: 'bg-success/10 text-success' };
         return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${map[p] || map.media}">${p || 'média'}</span>`;
       };
 
       let html = '';
 
       if (insights.resumo) {
-        html += `<div class="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800 mb-4">
-          <p class="text-sm text-emerald-700 dark:text-emerald-300">${escapeHtml(insights.resumo)}</p>
+        html += `<div class="p-4 bg-success/10 rounded-lg border border-success/20 mb-4">
+          <p class="text-sm text-success">${escapeHtml(insights.resumo)}</p>
         </div>`;
       }
 
       if (insights.dados_incompletos?.length) {
-        html += `<h4 class="font-semibold text-sm mb-2 flex items-center gap-2"><i class="bi bi-exclamation-triangle text-yellow-500"></i> Dados Incompletos</h4>
+        html += `<h4 class="font-semibold text-sm mb-2 flex items-center gap-2"><i class="bi bi-exclamation-triangle text-warning"></i> Dados Incompletos</h4>
           <div class="space-y-2 mb-4">${insights.dados_incompletos.map(d => `
-            <div class="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+            <div class="p-3 bg-warning/10 rounded-lg border border-warning/20">
               <div class="flex items-center justify-between mb-1"><span class="text-sm font-medium">${escapeHtml(d.problema)}</span>${prioridadeBadge(d.impacto)}</div>
-              <p class="text-xs text-gray-600 dark:text-gray-400">${escapeHtml(d.solucao)}</p>
+              <p class="text-xs text-muted">${escapeHtml(d.solucao)}</p>
             </div>`).join('')}</div>`;
       }
 
       if (insights.melhorias_existentes?.length) {
-        html += `<h4 class="font-semibold text-sm mb-2 flex items-center gap-2"><i class="bi bi-tools text-blue-500"></i> Melhorias em Funcionalidades</h4>
+        html += `<h4 class="font-semibold text-sm mb-2 flex items-center gap-2"><i class="bi bi-tools text-eucalyptus"></i> Melhorias em Funcionalidades</h4>
           <div class="space-y-2 mb-4">${insights.melhorias_existentes.map(m => `
-            <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div class="p-3 bg-eucalyptus/10 rounded-lg border border-eucalyptus/20">
               <div class="flex items-center justify-between mb-1"><span class="text-sm font-medium">${escapeHtml(m.funcionalidade)}</span>${prioridadeBadge(m.prioridade)}</div>
-              <p class="text-xs text-gray-600 dark:text-gray-400">${escapeHtml(m.melhoria)}</p>
+              <p class="text-xs text-muted">${escapeHtml(m.melhoria)}</p>
             </div>`).join('')}</div>`;
       }
 
       if (insights.novas_features?.length) {
-        html += `<h4 class="font-semibold text-sm mb-2 flex items-center gap-2"><i class="bi bi-lightbulb text-emerald-500"></i> Novas Features Sugeridas</h4>
+        html += `<h4 class="font-semibold text-sm mb-2 flex items-center gap-2"><i class="bi bi-lightbulb text-success"></i> Novas Features Sugeridas</h4>
           <div class="space-y-2 mb-4">${insights.novas_features.map(f => `
-            <div class="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
+            <div class="p-3 bg-success/10 rounded-lg border border-success/20">
               <div class="flex items-center justify-between mb-1"><span class="text-sm font-medium">${escapeHtml(f.titulo)}</span>${prioridadeBadge(f.prioridade)}</div>
-              <p class="text-xs text-gray-600 dark:text-gray-400">${escapeHtml(f.descricao)}</p>
-              <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-1"><i class="bi bi-check-circle mr-1"></i>${escapeHtml(f.beneficio)}</p>
+              <p class="text-xs text-muted">${escapeHtml(f.descricao)}</p>
+              <p class="text-xs text-success mt-1"><i class="bi bi-check-circle mr-1"></i>${escapeHtml(f.beneficio)}</p>
             </div>`).join('')}</div>`;
       }
 
       if (insights.automacoes?.length) {
-        html += `<h4 class="font-semibold text-sm mb-2 flex items-center gap-2"><i class="bi bi-gear text-purple-500"></i> Automações Sugeridas</h4>
+        html += `<h4 class="font-semibold text-sm mb-2 flex items-center gap-2"><i class="bi bi-gear text-indigo"></i> Automações Sugeridas</h4>
           <div class="space-y-2 mb-4">${insights.automacoes.map(a => `
-            <div class="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+            <div class="p-3 bg-indigo/10 rounded-lg border border-indigo/20">
               <span class="text-sm font-medium">${escapeHtml(a.titulo)}</span>
-              <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">${escapeHtml(a.descricao)}</p>
-              <p class="text-xs text-purple-600 dark:text-purple-400 mt-1"><i class="bi bi-clock mr-1"></i>${escapeHtml(a.gatilho)}</p>
+              <p class="text-xs text-muted mt-1">${escapeHtml(a.descricao)}</p>
+              <p class="text-xs text-indigo mt-1"><i class="bi bi-clock mr-1"></i>${escapeHtml(a.gatilho)}</p>
             </div>`).join('')}</div>`;
       }
 
-      content.innerHTML = html;
-      modal.classList.remove('hidden');
+      return html || '<p class="text-muted text-center">Sem dados de melhorias.</p>';
     }
 
     function closeMelhoriasModal() {
       document.getElementById('melhorias-modal').classList.add('hidden');
     }
 
+    // ── Init ──
     window.onAuthReady = function(user) {
       if (user.role !== 'admin') {
         window.location.href = '/dashboard.html';
         return;
       }
-      loadInsights(1);
+      selectPeriod('hoje');
+      loadTodayInsight();
     };
   </script>
 </body>

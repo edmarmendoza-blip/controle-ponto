@@ -3,46 +3,43 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0E1625">
   <title>Login - Lar Digital</title>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <meta name="theme-color" content="#1e40af">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
+  <link rel="stylesheet" href="/css/brand.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            graphite: '#0E1625',
+            eucalyptus: '#697F71',
+            porcelain: '#F7F4EE',
+            mist: '#E7ECE8',
+            sand: '#D8CCB8',
+            indigo: '#7279F8',
+            ink: '#1B2430',
+            muted: '#667085',
+            success: '#1F8F5F',
+            warning: '#C98A2E',
+            danger: '#B5473C',
+            border: '#E8E4DE',
+          },
+          borderRadius: { sm: '8px', md: '12px', lg: '16px' },
+          boxShadow: {
+            sm: '0 1px 3px rgba(14,22,37,0.04)',
+            md: '0 4px 16px rgba(14,22,37,0.06)',
+            lg: '0 8px 40px rgba(14,22,37,0.08)',
+          },
+          fontFamily: { sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'] },
+        }
+      }
+    }
+  </script>
   <style>
-    :root {
-      --primary: #1e40af;
-      --primary-light: #3b82f6;
-      --primary-dark: #1e3a8a;
-    }
-    html.dark { color-scheme: dark; }
-    body {
-      transition: background-color 0.3s ease, color 0.3s ease;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #f1f5f9, #eff6ff, #e2e8f0);
-    }
-    html.dark body {
-      background: linear-gradient(135deg, #030712, #111827, #030712);
-    }
     .hidden { display: none !important; }
-
-    /* Floating animation */
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-6px); }
-    }
-    .float-animation { animation: float 3s ease-in-out infinite; }
-
-    /* Gradient animation for icon */
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    .animated-gradient {
-      background: linear-gradient(135deg, var(--primary), var(--primary-light));
-      background-size: 200% 200%;
-      animation: gradientShift 8s ease infinite;
-    }
 
     /* Spinner */
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -51,226 +48,10 @@
       border: 2px solid rgba(255,255,255,0.3);
       border-top-color: #fff;
       border-radius: 50%;
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       display: inline-block;
-    }
-
-    /* Login card */
-    .login-card-wrapper {
-      max-width: 440px;
-      width: 100%;
-    }
-    .login-card-glass {
-      background: rgba(255,255,255,0.7);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-radius: 1rem;
-      border: 1px solid rgba(255,255,255,0.5);
-      box-shadow: 0 25px 50px -12px rgba(30, 64, 175, 0.1);
-    }
-    html.dark .login-card-glass {
-      background: rgba(17,24,39,0.7);
-      border-color: rgba(55,65,81,0.5);
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3);
-    }
-
-    /* Icon box */
-    .icon-box {
-      width: 80px; height: 80px;
-      border-radius: 1rem;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 10px 15px -3px rgba(30,64,175,0.3);
-    }
-
-    /* Inputs */
-    .login-input {
-      border-radius: 0.75rem;
-      padding: 0.75rem 1rem 0.75rem 2.5rem;
-      border: 1px solid #d1d5db;
-      background: #fff;
-      font-size: 0.875rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .login-input:hover { border-color: var(--primary-light); }
-    .login-input:focus {
-      border-color: var(--primary-light);
-      box-shadow: 0 0 0 3px rgba(59,130,246,0.3);
-      outline: none;
-    }
-    html.dark .login-input {
-      background: #1f2937;
-      border-color: #4b5563;
-      color: #f3f4f6;
-    }
-    html.dark .login-input::placeholder { color: #6b7280; }
-    html.dark .login-input:focus { box-shadow: 0 0 0 3px rgba(59,130,246,0.4); }
-
-    .input-icon {
-      position: absolute;
-      left: 0.875rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #9ca3af;
-      pointer-events: none;
-    }
-    html.dark .input-icon { color: #6b7280; }
-
-    .toggle-pw-btn {
-      position: absolute;
-      right: 0.875rem;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      color: #9ca3af;
-      cursor: pointer;
-      transition: color 0.2s;
-    }
-    .toggle-pw-btn:hover { color: var(--primary-light); }
-
-    /* Login button */
-    .btn-login {
-      background: linear-gradient(to right, var(--primary), var(--primary-light));
-      color: #fff;
-      font-weight: 600;
-      font-size: 0.875rem;
-      letter-spacing: 0.025em;
-      border: none;
-      border-radius: 0.75rem;
-      padding: 0.75rem 1rem;
-      box-shadow: 0 10px 15px -3px rgba(30,64,175,0.25);
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-    }
-    .btn-login:hover {
-      background: linear-gradient(to right, var(--primary-dark), var(--primary));
-      box-shadow: 0 20px 25px -5px rgba(30,64,175,0.3);
-      transform: translateY(-1px);
-      color: #fff;
-    }
-    .btn-login:active { transform: translateY(0); }
-    .btn-login:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none !important;
-    }
-    .btn-login.success-state {
-      background: linear-gradient(to right, #22c55e, #16a34a) !important;
-    }
-
-    /* Theme toggle */
-    .theme-toggle {
-      position: fixed;
-      top: 1.25rem;
-      right: 1.25rem;
-      z-index: 50;
-      padding: 0.625rem;
-      border-radius: 0.75rem;
-      background: rgba(255,255,255,0.8);
-      backdrop-filter: blur(4px);
-      border: 1px solid #e5e7eb;
-      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .theme-toggle:hover { transform: scale(1.1); }
-    .theme-toggle:active { transform: scale(0.95); }
-    html.dark .theme-toggle {
-      background: rgba(31,41,55,0.8);
-      border-color: #374151;
-    }
-    .theme-toggle .bi-sun-fill { color: #f59e0b; }
-    .theme-toggle .bi-moon-stars-fill { color: #93c5fd; }
-    html.dark .theme-toggle .bi-sun-fill { display: inline-block; }
-    html.dark .theme-toggle .bi-moon-stars-fill { display: none; }
-    html:not(.dark) .theme-toggle .bi-sun-fill { display: none; }
-    html:not(.dark) .theme-toggle .bi-moon-stars-fill { display: inline-block; }
-
-    /* Background decorative */
-    .bg-decor { position: fixed; inset: 0; overflow: hidden; pointer-events: none; }
-    .bg-blob {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(64px);
-    }
-    .bg-blob-1 {
-      top: -10rem; right: -10rem; width: 24rem; height: 24rem;
-      background: rgba(59,130,246,0.1);
-    }
-    .bg-blob-2 {
-      bottom: -10rem; left: -10rem; width: 24rem; height: 24rem;
-      background: rgba(30,64,175,0.1);
-    }
-    .bg-blob-3 {
-      top: 50%; left: 50%; transform: translate(-50%,-50%);
-      width: 37.5rem; height: 37.5rem;
-      background: rgba(191,219,254,0.2);
-    }
-    html.dark .bg-blob-1 { background: rgba(59,130,246,0.05); }
-    html.dark .bg-blob-2 { background: rgba(30,64,175,0.05); }
-    html.dark .bg-blob-3 { background: rgba(30,58,138,0.1); }
-
-    /* Text helpers */
-    .text-primary-light { color: var(--primary-light); }
-    html.dark .text-primary-light { color: #60a5fa; }
-    .text-title { color: #1f2937; font-weight: 700; }
-    html.dark .text-title { color: #fff; }
-    .text-muted-custom { color: #9ca3af; }
-    html.dark .text-muted-custom { color: #6b7280; }
-
-    /* Error alert */
-    .login-alert {
-      border-radius: 0.75rem;
-      font-size: 0.875rem;
-      font-weight: 500;
-    }
-
-    /* Forgot password section */
-    .forgot-section {
-      padding: 1rem;
-      border-radius: 0.75rem;
-      background: rgba(239,246,255,0.5);
-      border: 1px solid rgba(191,219,254,0.5);
-    }
-    html.dark .forgot-section {
-      background: rgba(30,58,138,0.1);
-      border-color: rgba(30,64,175,0.3);
-    }
-    .forgot-section input {
-      font-size: 0.875rem;
-      border-radius: 0.5rem;
-    }
-    html.dark .forgot-section input {
-      background: #1f2937;
-      border-color: #4b5563;
-      color: #f3f4f6;
-    }
-
-    /* Footer */
-    .login-footer {
-      border-top: 1px solid #e5e7eb;
-    }
-    html.dark .login-footer {
-      border-top-color: rgba(55,65,81,0.5);
-    }
-
-    /* 2FA info */
-    .info-2fa-box {
-      border-radius: 0.75rem;
-      background: rgba(239,246,255,0.8);
-      border: 1px solid rgba(191,219,254,0.5);
-      color: #1d4ed8;
-      font-size: 0.875rem;
-      font-weight: 500;
-    }
-    html.dark .info-2fa-box {
-      background: rgba(30,58,138,0.2);
-      border-color: rgba(30,64,175,0.5);
-      color: #60a5fa;
+      flex-shrink: 0;
     }
 
     /* TOTP input */
@@ -280,161 +61,172 @@
       font-family: monospace;
       font-size: 1.125rem;
     }
+
+    /* Input focus ring using brand eucalyptus */
+    .ld-login-input:focus {
+      outline: none;
+      border-color: #697F71;
+      box-shadow: 0 0 0 3px rgba(105,127,113,0.15);
+    }
+
+    /* Password toggle hover */
+    .toggle-pw-btn:hover { color: #697F71; }
+
+    /* Login button success state */
+    .btn-login-success {
+      background-color: #1F8F5F !important;
+    }
+
+    /* Forgot section subtle bg */
+    .forgot-section {
+      background: rgba(247,244,238,0.8);
+      border: 1px solid #E8E4DE;
+      border-radius: 12px;
+      padding: 1rem;
+    }
   </style>
 </head>
-<body class="d-flex align-items-center justify-content-center">
-
-  <!-- Theme Toggle Button -->
-  <button id="themeToggle" type="button" class="theme-toggle" aria-label="Alternar tema">
-    <i class="bi bi-sun-fill fs-5"></i>
-    <i class="bi bi-moon-stars-fill fs-5"></i>
-  </button>
-
-  <!-- Background decorative elements -->
-  <div class="bg-decor" aria-hidden="true">
-    <div class="bg-blob bg-blob-1"></div>
-    <div class="bg-blob bg-blob-2"></div>
-    <div class="bg-blob bg-blob-3"></div>
-  </div>
+<body class="bg-porcelain min-h-screen flex flex-col items-center justify-center px-4 py-10 font-sans">
 
   <!-- Login Card -->
-  <div class="position-relative login-card-wrapper mx-3">
-    <div class="login-card-glass p-4 p-sm-5">
+  <div class="w-full max-w-[400px]">
+    <div class="bg-white rounded-lg shadow-lg p-8">
 
-      <!-- Logo / Icon -->
-      <div class="text-center mb-4">
-        <div class="float-animation mb-3 d-inline-block">
-          <div class="icon-box animated-gradient">
-            <i class="bi bi-clock-history text-white" style="font-size:2.25rem"></i>
-          </div>
+      <!-- Logo + Brand -->
+      <div class="text-center mb-7">
+        <div class="flex items-center justify-center gap-2.5 mb-3">
+          <img src="/img/logo.svg" alt="Lar Digital" width="28" height="28" class="flex-shrink-0">
+          <span class="text-xl font-bold text-ink tracking-tight">Lar Digital</span>
         </div>
-        <h1 class="text-title fs-3 mb-1">Lar Digital</h1>
-        <p class="text-primary-light small fw-medium text-uppercase ls-wide mb-0" style="letter-spacing:0.05em">
-          Gestão da Casa
-        </p>
+        <p class="text-xs font-medium text-muted uppercase tracking-widest">Gestão da Casa</p>
       </div>
 
       <!-- Error Message -->
-      <div id="errorDiv" class="alert alert-danger login-alert hidden mb-3" role="alert">
-        <div class="d-flex align-items-center gap-2">
-          <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
-          <span id="errorMessage">Erro ao fazer login.</span>
-        </div>
+      <div id="errorDiv" class="hidden mb-4 flex items-start gap-2.5 bg-red-50 border border-red-200 text-danger rounded-md px-3.5 py-2.5 text-sm font-medium" role="alert">
+        <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-0.5"></i>
+        <span id="errorMessage">Erro ao fazer login.</span>
       </div>
 
       <!-- Login Form -->
-      <form id="loginForm" novalidate>
+      <form id="loginForm" novalidate class="space-y-4">
+
         <!-- Email -->
-        <div class="mb-3">
-          <label for="email" class="form-label small fw-semibold">E-mail</label>
-          <div class="position-relative">
-            <span class="input-icon"><i class="bi bi-envelope-fill"></i></span>
+        <div>
+          <label for="email" class="block text-xs font-semibold text-ink mb-1.5">E-mail</label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none">
+              <i class="bi bi-envelope-fill text-sm"></i>
+            </span>
             <input type="email" id="email" name="email" required autocomplete="email"
-              placeholder="seu.email@exemplo.com" class="form-control login-input">
+              placeholder="seu.email@exemplo.com"
+              class="ld-login-input w-full bg-porcelain border border-border rounded-sm pl-9 pr-3.5 py-2.5 text-sm text-ink placeholder-muted transition-colors duration-150">
           </div>
         </div>
 
         <!-- Password -->
-        <div class="mb-3">
-          <label for="password" class="form-label small fw-semibold">Senha</label>
-          <div class="position-relative">
-            <span class="input-icon"><i class="bi bi-lock-fill"></i></span>
+        <div>
+          <label for="password" class="block text-xs font-semibold text-ink mb-1.5">Senha</label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none">
+              <i class="bi bi-lock-fill text-sm"></i>
+            </span>
             <input type="password" id="password" name="password" required autocomplete="current-password"
-              placeholder="Digite sua senha" class="form-control login-input" style="padding-right:3rem">
-            <button type="button" id="togglePassword" class="toggle-pw-btn" aria-label="Mostrar senha">
-              <i class="bi bi-eye-fill fs-5" id="eyeIcon"></i>
+              placeholder="Digite sua senha"
+              class="ld-login-input w-full bg-porcelain border border-border rounded-sm pl-9 pr-10 py-2.5 text-sm text-ink placeholder-muted transition-colors duration-150">
+            <button type="button" id="togglePassword" aria-label="Mostrar senha"
+              class="toggle-pw-btn absolute right-3 top-1/2 -translate-y-1/2 text-muted bg-transparent border-none cursor-pointer transition-colors duration-150 p-0">
+              <i class="bi bi-eye-fill text-base" id="eyeIcon"></i>
             </button>
           </div>
         </div>
 
         <!-- 2FA Token (hidden by default) -->
-        <div id="totpField" class="hidden mb-3">
-          <label for="totpToken" class="form-label small fw-semibold">Código 2FA</label>
-          <div class="position-relative">
-            <span class="input-icon"><i class="bi bi-shield-lock-fill"></i></span>
+        <div id="totpField" class="hidden">
+          <label for="totpToken" class="block text-xs font-semibold text-ink mb-1.5">Codigo 2FA</label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none">
+              <i class="bi bi-shield-lock-fill text-sm"></i>
+            </span>
             <input type="text" id="totpToken" name="totpToken" maxlength="6" pattern="[0-9]{6}"
               inputmode="numeric" autocomplete="one-time-code" placeholder="000000"
-              class="form-control login-input totp-input">
+              class="ld-login-input totp-input w-full bg-porcelain border border-border rounded-sm pl-9 pr-3.5 py-2.5 text-ink placeholder-muted transition-colors duration-150">
           </div>
-          <p class="mt-1 small text-muted-custom">
+          <p class="mt-1.5 text-xs text-muted">
             <i class="bi bi-info-circle me-1"></i>
             Digite o codigo do seu aplicativo autenticador
           </p>
         </div>
 
         <!-- Login Button -->
-        <button type="submit" id="loginBtn" class="btn btn-login w-100 mb-3">
+        <button type="submit" id="loginBtn"
+          class="w-full flex items-center justify-center gap-2 bg-graphite hover:bg-ink text-white text-sm font-semibold rounded-sm py-2.5 px-4 transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed mt-2">
           <span id="btnText">Entrar</span>
-          <span id="btnSpinner" class="hidden">
-            <div class="login-spinner"></div>
-          </span>
-          <i class="bi bi-arrow-right-short fs-4" id="btnIcon"></i>
+          <span id="btnSpinner" class="hidden"><div class="login-spinner"></div></span>
+          <i class="bi bi-arrow-right-short text-xl leading-none" id="btnIcon"></i>
         </button>
+
       </form>
 
-      <!-- Forgot Password -->
-      <div class="text-center">
-        <button type="button" id="forgotPasswordBtn" class="btn btn-link text-decoration-none small text-primary-light p-0">
+      <!-- Forgot Password toggle -->
+      <div class="text-center mt-4">
+        <button type="button" id="forgotPasswordBtn"
+          class="text-xs text-eucalyptus hover:text-ink font-medium transition-colors duration-150 underline-offset-2 hover:underline bg-transparent border-none cursor-pointer p-0">
           <i class="bi bi-key me-1"></i>Esqueci minha senha
         </button>
       </div>
-      <div id="forgotPasswordDiv" class="hidden mt-3">
+
+      <!-- Forgot Password section -->
+      <div id="forgotPasswordDiv" class="hidden mt-4">
         <div class="forgot-section">
           <!-- Step 1: Send code -->
           <div id="forgotStep1">
-            <p class="small text-muted mb-2">Digite seu e-mail para receber um código de recuperação.</p>
-            <div class="d-flex gap-2">
-              <input type="email" id="forgotEmail" placeholder="seu@email.com" class="form-control form-control-sm flex-grow-1">
-              <button type="button" onclick="sendForgotPassword()" id="sendResetBtn" class="btn btn-primary btn-sm text-nowrap">Enviar</button>
+            <p class="text-xs text-muted mb-2.5">Digite seu e-mail para receber um codigo de recuperacao.</p>
+            <div class="flex gap-2">
+              <input type="email" id="forgotEmail" placeholder="seu@email.com"
+                class="ld-login-input flex-1 bg-porcelain border border-border rounded-sm px-3 py-2 text-sm text-ink placeholder-muted transition-colors duration-150 min-w-0">
+              <button type="button" onclick="sendForgotPassword()" id="sendResetBtn"
+                class="flex-shrink-0 bg-graphite hover:bg-ink text-white text-xs font-semibold rounded-sm px-3 py-2 transition-colors duration-150 disabled:opacity-60 cursor-pointer border-none whitespace-nowrap">
+                Enviar
+              </button>
             </div>
           </div>
           <!-- Step 2: Enter code + new password -->
           <div id="forgotStep2" class="hidden">
-            <p class="small text-muted mb-2">Digite o código recebido por e-mail e sua nova senha.</p>
-            <div class="d-flex flex-column gap-2">
-              <input type="text" id="resetCode" placeholder="Código de 6 dígitos" maxlength="6" class="form-control form-control-sm text-center fw-bold fs-5" style="letter-spacing:0.15em">
-              <input type="password" id="resetNewPassword" placeholder="Nova senha (mínimo 8 caracteres)" class="form-control form-control-sm">
-              <button type="button" onclick="resetPassword()" id="resetPasswordBtn" class="btn btn-success btn-sm w-100">Redefinir Senha</button>
+            <p class="text-xs text-muted mb-2.5">Digite o codigo recebido por e-mail e sua nova senha.</p>
+            <div class="flex flex-col gap-2">
+              <input type="text" id="resetCode" placeholder="Codigo de 6 digitos" maxlength="6"
+                class="ld-login-input totp-input bg-porcelain border border-border rounded-sm px-3 py-2 text-sm font-bold text-ink placeholder-muted transition-colors duration-150 w-full">
+              <input type="password" id="resetNewPassword" placeholder="Nova senha (minimo 8 caracteres)"
+                class="ld-login-input bg-porcelain border border-border rounded-sm px-3 py-2 text-sm text-ink placeholder-muted transition-colors duration-150 w-full">
+              <button type="button" onclick="resetPassword()" id="resetPasswordBtn"
+                class="w-full bg-success hover:opacity-90 text-white text-xs font-semibold rounded-sm py-2 px-3 transition-opacity duration-150 disabled:opacity-60 cursor-pointer border-none">
+                Redefinir Senha
+              </button>
             </div>
           </div>
-          <div id="forgotMessage" class="hidden mt-2 small"></div>
+          <div id="forgotMessage" class="hidden mt-2 text-xs"></div>
         </div>
       </div>
 
-      <!-- Footer -->
-      <div class="login-footer mt-4 pt-3 text-center">
-        <p class="small text-muted-custom mb-0">
+      <!-- Card Footer -->
+      <div class="mt-6 pt-5 border-t border-border text-center">
+        <p class="text-xs text-muted">
           <i class="bi bi-shield-lock-fill me-1"></i>
           Acesso restrito a colaboradores autorizados
         </p>
       </div>
-    </div>
 
-    <!-- Bottom branding -->
-    <p class="text-center mt-3 small text-muted-custom mb-0">
-      &copy; 2026 Lar Digital &mdash; Todos os direitos reservados <span id="login-version"></span>
+    </div><!-- /card -->
+
+    <!-- Version + copyright -->
+    <p class="text-center mt-4 text-xs text-muted">
+      &copy; 2026 Lar Digital &mdash; Todos os direitos reservados
+      <span id="login-version" class="ml-1"></span>
     </p>
-  </div>
+
+  </div><!-- /max-w wrapper -->
 
   <script>
-    // ==============================
-    // Theme Management
-    // ==============================
-    (function initTheme() {
-      const stored = localStorage.getItem('theme') || localStorage.getItem('ponto_theme');
-      if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    })();
-
-    document.getElementById('themeToggle').addEventListener('click', function () {
-      const isDark = document.documentElement.classList.toggle('dark');
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
-      localStorage.setItem('ponto_theme', isDark ? 'dark' : 'light');
-    });
-
     // ==============================
     // Check if already logged in
     // ==============================
@@ -466,7 +258,7 @@
     togglePasswordBtn.addEventListener('click', function () {
       const isPassword = passwordInput.type === 'password';
       passwordInput.type = isPassword ? 'text' : 'password';
-      eyeIcon.className = isPassword ? 'bi bi-eye-slash-fill fs-5' : 'bi bi-eye-fill fs-5';
+      eyeIcon.className = isPassword ? 'bi bi-eye-slash-fill text-base' : 'bi bi-eye-fill text-base';
       this.setAttribute('aria-label', isPassword ? 'Ocultar senha' : 'Mostrar senha');
     });
 
@@ -524,7 +316,7 @@
 
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        showError('Por favor, informe um e-mail válido.');
+        showError('Por favor, informe um e-mail valido.');
         document.getElementById('email').focus();
         return;
       }
@@ -539,7 +331,7 @@
         if (!totpField.classList.contains('hidden')) {
           const totpToken = totpInput.value.trim();
           if (!totpToken || totpToken.length !== 6) {
-            showError('Digite o código de 6 dígitos do seu autenticador.');
+            showError('Digite o codigo de 6 digitos do seu autenticador.');
             totpInput.focus();
             setLoading(false);
             return;
@@ -563,8 +355,8 @@
           errorDiv.classList.add('hidden');
           const infoDiv = document.createElement('div');
           infoDiv.id = 'info-2fa';
-          infoDiv.className = 'info-2fa-box p-3 mb-3';
-          infoDiv.innerHTML = '<div class="d-flex align-items-center gap-2"><i class="bi bi-shield-lock-fill flex-shrink-0"></i><span>Autenticação em dois fatores ativada. Digite o código do seu aplicativo.</span></div>';
+          infoDiv.className = 'flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 rounded-md px-3.5 py-2.5 text-sm font-medium mb-3';
+          infoDiv.innerHTML = '<i class="bi bi-shield-lock-fill flex-shrink-0"></i><span>Autenticacao em dois fatores ativada. Digite o codigo do seu aplicativo.</span>';
           const existing = document.getElementById('info-2fa');
           if (existing) existing.remove();
           totpField.parentElement.insertBefore(infoDiv, totpField);
@@ -578,9 +370,9 @@
 
           btnText.textContent = 'Sucesso!';
           btnSpinner.classList.add('hidden');
-          btnIcon.className = 'bi bi-check-lg fs-4';
+          btnIcon.className = 'bi bi-check-lg text-xl leading-none';
           btnIcon.classList.remove('hidden');
-          loginBtn.classList.add('success-state');
+          loginBtn.classList.add('btn-login-success');
 
           setTimeout(function () {
             window.location.href = '/dashboard.html';
@@ -596,7 +388,7 @@
           }
         }
       } catch (err) {
-        showError('Erro de conexão. Verifique sua internet e tente novamente.');
+        showError('Erro de conexao. Verifique sua internet e tente novamente.');
         setLoading(false);
       }
     });
@@ -621,18 +413,18 @@
       const email = document.getElementById('forgotEmail').value.trim();
       const msgDiv = document.getElementById('forgotMessage');
       const btn = document.getElementById('sendResetBtn');
-      if (!email) { msgDiv.className = 'mt-2 small text-danger'; msgDiv.textContent = 'Informe seu e-mail.'; msgDiv.classList.remove('hidden'); return; }
+      if (!email) { msgDiv.className = 'mt-2 text-xs text-danger'; msgDiv.textContent = 'Informe seu e-mail.'; msgDiv.classList.remove('hidden'); return; }
       btn.disabled = true; btn.textContent = 'Enviando...';
       try {
         const res = await fetch('/api/auth/forgot-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
         const data = await res.json();
-        msgDiv.className = 'mt-2 small text-success';
+        msgDiv.className = 'mt-2 text-xs text-success';
         msgDiv.innerHTML = '<i class="bi bi-check-circle me-1"></i>' + (data.message || 'Verifique seu e-mail.');
         msgDiv.classList.remove('hidden');
         document.getElementById('forgotStep1').classList.add('hidden');
         document.getElementById('forgotStep2').classList.remove('hidden');
         document.getElementById('resetCode').focus();
-      } catch (err) { msgDiv.className = 'mt-2 small text-danger'; msgDiv.textContent = 'Erro ao enviar.'; msgDiv.classList.remove('hidden'); }
+      } catch (err) { msgDiv.className = 'mt-2 text-xs text-danger'; msgDiv.textContent = 'Erro ao enviar.'; msgDiv.classList.remove('hidden'); }
       finally { btn.disabled = false; btn.textContent = 'Enviar'; }
     }
 
@@ -642,22 +434,22 @@
       const newPassword = document.getElementById('resetNewPassword').value;
       const msgDiv = document.getElementById('forgotMessage');
       const btn = document.getElementById('resetPasswordBtn');
-      if (!code || code.length !== 6) { msgDiv.className = 'mt-2 small text-danger'; msgDiv.textContent = 'Digite o código de 6 dígitos.'; msgDiv.classList.remove('hidden'); return; }
-      if (!newPassword || newPassword.length < 8) { msgDiv.className = 'mt-2 small text-danger'; msgDiv.textContent = 'A nova senha deve ter pelo menos 8 caracteres.'; msgDiv.classList.remove('hidden'); return; }
+      if (!code || code.length !== 6) { msgDiv.className = 'mt-2 text-xs text-danger'; msgDiv.textContent = 'Digite o codigo de 6 digitos.'; msgDiv.classList.remove('hidden'); return; }
+      if (!newPassword || newPassword.length < 8) { msgDiv.className = 'mt-2 text-xs text-danger'; msgDiv.textContent = 'A nova senha deve ter pelo menos 8 caracteres.'; msgDiv.classList.remove('hidden'); return; }
       btn.disabled = true; btn.textContent = 'Redefinindo...';
       try {
         const res = await fetch('/api/auth/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, code, newPassword }) });
         const data = await res.json();
         if (res.ok) {
-          msgDiv.className = 'mt-2 small text-success';
+          msgDiv.className = 'mt-2 text-xs text-success';
           msgDiv.innerHTML = '<i class="bi bi-check-circle me-1"></i>' + data.message;
           setTimeout(() => { document.getElementById('forgotPasswordDiv').classList.add('hidden'); document.getElementById('forgotStep1').classList.remove('hidden'); document.getElementById('forgotStep2').classList.add('hidden'); }, 3000);
         } else {
-          msgDiv.className = 'mt-2 small text-danger';
+          msgDiv.className = 'mt-2 text-xs text-danger';
           msgDiv.textContent = data.error || 'Erro ao redefinir senha.';
         }
         msgDiv.classList.remove('hidden');
-      } catch (err) { msgDiv.className = 'mt-2 small text-danger'; msgDiv.textContent = 'Erro ao redefinir.'; msgDiv.classList.remove('hidden'); }
+      } catch (err) { msgDiv.className = 'mt-2 text-xs text-danger'; msgDiv.textContent = 'Erro ao redefinir.'; msgDiv.classList.remove('hidden'); }
       finally { btn.disabled = false; btn.textContent = 'Redefinir Senha'; }
     }
 

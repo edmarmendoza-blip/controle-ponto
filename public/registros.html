@@ -1,142 +1,77 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
+  <meta name="theme-color" content="#0E1625">
   <title>Registros de Ponto - Lar Digital</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
-      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+      theme: {
+        extend: {
+          colors: {
+            graphite: '#0E1625', eucalyptus: '#697F71', porcelain: '#F7F4EE',
+            mist: '#E7ECE8', sand: '#D8CCB8', indigo: '#7279F8',
+            ink: '#1B2430', muted: '#667085', success: '#1F8F5F',
+            warning: '#C98A2E', danger: '#B5473C', border: '#E8E4DE',
+          },
+          borderRadius: { sm: '8px', md: '12px', lg: '16px' },
+          boxShadow: {
+            sm: '0 1px 3px rgba(14,22,37,0.04)',
+            md: '0 4px 16px rgba(14,22,37,0.06)',
+            lg: '0 8px 40px rgba(14,22,37,0.08)',
+          },
+          fontFamily: { sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'] },
+        }
+      }
     }
   </script>
+  <link rel="stylesheet" href="/css/brand.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+<body class="bg-porcelain text-ink">
 
-  <!-- Sidebar -->
-  <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen bg-blue-800 text-white transition-transform -translate-x-full md:translate-x-0">
-    <div class="p-4 border-b border-blue-700">
-      <a href="/dashboard.html" class="flex items-center gap-2">
-        <i class="bi bi-clock-history text-2xl"></i>
-        <span class="text-xl font-bold">Lar Digital</span>
-      </a>
-      <p class="text-blue-200 text-xs mt-1">Gestão da Casa</p>
-    </div>
-    <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-180px)]">
-      <a href="/dashboard.html" data-page="dashboard" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-speedometer2"></i><span>Dashboard</span>
-      </a>
-      <a href="/funcionarios.html" data-page="funcionarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-people"></i><span>Funcionários</span>
-      </a>
-      <a href="/cargos.html" data-page="cargos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-briefcase"></i><span>Cargos</span>
-      </a>
-      <a href="/registros.html" data-page="registros" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-clock"></i><span>Registros</span>
-      </a>
-      <a href="/relatorios.html" data-page="relatorios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-file-earmark-text"></i><span>Relatórios</span>
-      </a>
-      <a href="/relatorios-graficos.html" data-page="relatorios-graficos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-bar-chart-line"></i><span>Gráficos</span>
-      </a>
-      <a href="/presenca.html" data-page="presenca" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-calendar-check"></i><span>Presença</span>
-      </a>
-      <a href="/entregas.html" data-page="entregas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-box-seam"></i><span>Entregas</span>
-      </a>
-      <a href="/compras.html" data-page="compras" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-cart4"></i><span>Compras</span>
-      </a>
-      <a href="/despesas.html" data-page="despesas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-receipt-cutoff"></i><span>Despesas</span>
-      </a>
-      <a href="/prestadores.html" data-page="prestadores" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-person-badge"></i><span>Prestadores</span>
-      </a>
-      <a href="/holerites.html" data-page="holerites" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-receipt"></i><span>Holerites</span>
-      </a>
-      <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-calendar-heart"></i><span>Férias</span>
-      </a>
-      <a href="/sugestoes.html" data-page="sugestoes" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-lightbulb"></i><span>Sugestões</span>
-      </a>
-      <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-shield-lock"></i><span>Usuários</span>
-      </a>
-      <a href="/feriados.html" data-page="feriados" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-calendar-event"></i><span>Feriados</span>
-      </a>
-      <a href="/insights.html" data-page="insights" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-stars"></i><span>Insights IA</span>
-      </a>
-      <a href="/whatsapp.html" data-page="whatsapp" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
-      </a>
-      <a href="/audit-log.html" data-page="audit-log" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-journal-text"></i><span>Audit Log</span>
-      </a>
-      <hr class="border-blue-700 my-2">
-      <a href="/ajuda.html" data-page="ajuda" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-chat-left-dots"></i><span>Ajuda</span>
-      </a>
-      <a href="/perfil.html" data-page="perfil" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-person-gear"></i><span>Perfil</span>
-      </a>
-    </nav>
-    <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-blue-700 bg-blue-800">
-      <div class="flex items-center justify-between mb-2">
-        <div class="flex items-center gap-2 text-sm">
-          <i class="bi bi-person-circle"></i>
-          <div>
-            <div id="user-name" class="font-medium">-</div>
-            <div id="user-role" class="text-blue-300 text-xs">-</div>
-          </div>
-        </div>
-        <button id="theme-toggle" class="p-1.5 rounded-lg hover:bg-blue-700 transition-colors">
-          <i id="theme-icon" class="bi bi-moon-fill"></i>
-        </button>
-      </div>
-      <button id="logout-btn" class="w-full py-1.5 text-sm bg-blue-700 hover:bg-blue-600 rounded-lg transition-colors">Sair</button>
-    </div>
-  </aside>
-  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+  <aside id="sidebar" class="ld-sidebar"></aside>
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-30 hidden md:hidden"></div>
 
   <!-- Main Content -->
-  <main class="md:ml-64 min-h-screen">
-    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+  <main class="ld-content min-h-screen">
+    <header class="ld-header">
       <div class="flex items-center gap-3">
-        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300">
+        <button id="sidebar-toggle" class="md:hidden text-muted hover:text-ink transition-colors">
           <i class="bi bi-list text-xl"></i>
         </button>
-        <h1 class="text-xl font-semibold">Registros de Ponto</h1>
+        <h1>Registros de Ponto</h1>
       </div>
-      <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
+      <span class="text-sm text-muted" id="current-date"></span>
     </header>
 
     <div class="p-4 md:p-6" id="page-content">
       <!-- Filter Bar -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-6">
+      <div class="bg-white rounded-xl shadow-sm border border-border p-4 mb-6">
         <div class="flex flex-col md:flex-row items-start md:items-end gap-4">
           <div class="flex-1 min-w-0">
             <label class="block text-sm font-medium mb-1">Data</label>
-            <input type="date" id="filter-data" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            <input type="date" id="filter-data" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
           </div>
           <div class="flex-1 min-w-0">
             <label class="block text-sm font-medium mb-1">Data Fim (opcional)</label>
-            <input type="date" id="filter-data-fim" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            <input type="date" id="filter-data-fim" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
           </div>
           <div class="flex-1 min-w-0">
             <label class="block text-sm font-medium mb-1">Funcionário</label>
-            <select id="filter-funcionario" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            <select id="filter-funcionario" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
               <option value="">Todos</option>
+            </select>
+          </div>
+          <div class="flex-1 min-w-0">
+            <label class="block text-sm font-medium mb-1">Tipo</label>
+            <select id="filter-tipo" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" onchange="filterByTipo()">
+              <option value="">Todos</option>
+              <option value="entrada_saida">Entrada/Saída</option>
+              <option value="almoco">Almoço</option>
             </select>
           </div>
           <div class="flex gap-2">
@@ -153,28 +88,28 @@
       </div>
 
       <!-- Results info -->
-      <div class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+      <div class="mb-4 text-sm text-muted">
         <span id="registros-count">0</span> registros encontrados
       </div>
 
       <!-- Table -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div class="bg-white rounded-xl shadow-sm border border-border overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full">
             <thead>
-              <tr class="bg-gray-50 dark:bg-gray-700/50">
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Funcionário</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Entrada</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Saída</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tipo</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Observação</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
+              <tr class="bg-porcelain">
+                <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Funcionário</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Data</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Entrada</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Saída</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Tipo</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Observação</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Ações</th>
               </tr>
             </thead>
-            <tbody id="registros-table" class="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody id="registros-table" class="divide-y divide-gray-100">
               <tr>
-                <td colspan="7" class="px-5 py-8 text-center text-gray-400">
+                <td colspan="7" class="px-5 py-8 text-center text-muted">
                   <i class="bi bi-arrow-repeat animate-spin text-2xl"></i>
                   <p class="mt-2">Carregando...</p>
                 </td>
@@ -188,10 +123,10 @@
 
   <!-- Modal Create/Edit Registro -->
   <div id="modal-registro" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between p-5 border-b border-border">
         <h3 class="text-lg font-semibold" id="modal-registro-title">Novo Registro</h3>
-        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+        <button onclick="closeModal()" class="text-muted hover:text-muted">
           <i class="bi bi-x-lg text-xl"></i>
         </button>
       </div>
@@ -199,30 +134,30 @@
         <input type="hidden" id="reg-id">
         <div>
           <label class="block text-sm font-medium mb-1" for="reg-funcionario">Funcionário *</label>
-          <select id="reg-funcionario" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+          <select id="reg-funcionario" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
             <option value="">Selecione...</option>
           </select>
         </div>
         <div>
           <label class="block text-sm font-medium mb-1" for="reg-data">Data *</label>
-          <input type="date" id="reg-data" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+          <input type="date" id="reg-data" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium mb-1" for="reg-entrada">Entrada *</label>
-            <input type="time" id="reg-entrada" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            <input type="time" id="reg-entrada" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
           </div>
           <div>
             <label class="block text-sm font-medium mb-1" for="reg-saida">Saída</label>
-            <input type="time" id="reg-saida" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            <input type="time" id="reg-saida" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
           </div>
         </div>
         <div>
           <label class="block text-sm font-medium mb-1" for="reg-observacao">Observação</label>
-          <textarea id="reg-observacao" rows="3" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"></textarea>
+          <textarea id="reg-observacao" rows="3" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"></textarea>
         </div>
         <div class="flex justify-end gap-3 pt-3">
-          <button type="button" onclick="closeModal()" class="px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          <button type="button" onclick="closeModal()" class="px-4 py-2.5 rounded-lg border border-gray-300 hover:bg-porcelain transition-colors">
             Cancelar
           </button>
           <button type="submit" class="px-4 py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-white font-medium transition-colors">
@@ -256,9 +191,9 @@
 
     function getTipoBadge(tipo) {
       if (tipo === 'whatsapp') {
-        return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"><i class="bi bi-whatsapp mr-1"></i>WhatsApp</span>';
+        return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success/10 text-success"><i class="bi bi-whatsapp mr-1"></i>WhatsApp</span>';
       }
-      return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"><i class="bi bi-pencil mr-1"></i>Manual</span>';
+      return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700"><i class="bi bi-pencil mr-1"></i>Manual</span>';
     }
 
     function setDefaultDate() {
@@ -314,33 +249,53 @@
       }
     }
 
+    function filterByTipo() {
+      renderTable();
+    }
+
+    function getFilteredRegistros() {
+      const tipo = document.getElementById('filter-tipo').value;
+      if (!tipo) return allRegistros;
+      return allRegistros.filter(r => {
+        const obs = (r.observacao || '').toLowerCase();
+        if (tipo === 'almoco') {
+          return obs.includes('almoço') || obs.includes('almoco');
+        }
+        if (tipo === 'entrada_saida') {
+          return !obs.includes('almoço') && !obs.includes('almoco');
+        }
+        return true;
+      });
+    }
+
     function renderTable() {
       const tbody = document.getElementById('registros-table');
-      document.getElementById('registros-count').textContent = allRegistros.length;
+      const filtered = getFilteredRegistros();
+      document.getElementById('registros-count').textContent = filtered.length;
 
-      if (allRegistros.length === 0) {
+      if (filtered.length === 0) {
         tbody.innerHTML = `
-          <tr><td colspan="7" class="px-5 py-8 text-center text-gray-400">
+          <tr><td colspan="7" class="px-5 py-8 text-center text-muted">
             <i class="bi bi-inbox text-3xl"></i>
             <p class="mt-2">Nenhum registro encontrado</p>
           </td></tr>`;
         return;
       }
 
-      tbody.innerHTML = allRegistros.map(r => `
-        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+      tbody.innerHTML = filtered.map(r => `
+        <tr class="hover:bg-porcelain transition-colors">
           <td class="px-5 py-3 font-medium">${r.funcionario_nome || r.nome || '-'}</td>
           <td class="px-5 py-3">${formatDate(r.data)}</td>
           <td class="px-5 py-3">${formatTime(r.entrada)}</td>
           <td class="px-5 py-3">${formatTime(r.saida)}</td>
           <td class="px-5 py-3">${getTipoBadge(r.tipo || r.origem)}</td>
-          <td class="px-5 py-3 text-gray-600 dark:text-gray-400 max-w-xs truncate" title="${(r.observacao || '').replace(/"/g, '&quot;')}">${r.observacao || '-'}</td>
+          <td class="px-5 py-3 text-muted max-w-xs truncate" title="${(r.observacao || '').replace(/"/g, '&quot;')}">${r.observacao || '-'}</td>
           <td class="px-5 py-3">
             <div class="flex items-center gap-2">
-              <button onclick="editRegistro(${r.id})" class="gestor-only hidden p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400 transition-colors" title="Editar">
+              <button onclick="editRegistro(${r.id})" class="gestor-only hidden p-1.5 rounded-lg hover:bg-blue-50 text-eucalyptus transition-colors" title="Editar">
                 <i class="bi bi-pencil-square"></i>
               </button>
-              <button onclick="deleteRegistro(${r.id})" class="admin-only hidden p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors" title="Excluir">
+              <button onclick="deleteRegistro(${r.id})" class="admin-only hidden p-1.5 rounded-lg hover:bg-red-50 text-red-600 transition-colors" title="Excluir">
                 <i class="bi bi-trash"></i>
               </button>
             </div>

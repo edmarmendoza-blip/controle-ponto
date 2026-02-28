@@ -3,15 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#0E1625">
+  <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
   <title>Holerites - Lar Digital</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
-      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+      theme: {
+        extend: {
+          colors: {
+            graphite: '#0E1625', eucalyptus: '#697F71', porcelain: '#F7F4EE',
+            mist: '#E7ECE8', sand: '#D8CCB8', indigo: '#7279F8', ink: '#1B2430',
+            muted: '#667085', success: '#1F8F5F', warning: '#C98A2E',
+            danger: '#B5473C', border: '#E8E4DE'
+          },
+          borderRadius: { sm: '8px', md: '12px', lg: '16px' },
+          boxShadow: {
+            sm: '0 1px 3px rgba(14,22,37,0.04)',
+            md: '0 4px 16px rgba(14,22,37,0.06)',
+            lg: '0 8px 40px rgba(14,22,37,0.08)'
+          },
+          fontFamily: { sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'] }
+        }
+      }
     }
   </script>
+  <link rel="stylesheet" href="/css/brand.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <style>
     @media print {
@@ -22,118 +39,29 @@
     }
   </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+<body class="bg-porcelain text-ink">
   <!-- Sidebar -->
-  <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen bg-blue-800 text-white transition-transform -translate-x-full md:translate-x-0">
-    <div class="p-4 border-b border-blue-700">
-      <a href="/dashboard.html" class="flex items-center gap-2">
-        <i class="bi bi-clock-history text-2xl"></i>
-        <span class="text-xl font-bold">Lar Digital</span>
-      </a>
-      <p class="text-blue-200 text-xs mt-1">Gestão da Casa</p>
-    </div>
-    <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-180px)]">
-      <a href="/dashboard.html" data-page="dashboard" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-speedometer2"></i><span>Dashboard</span>
-      </a>
-      <a href="/funcionarios.html" data-page="funcionarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-people"></i><span>Funcionários</span>
-      </a>
-      <a href="/cargos.html" data-page="cargos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-briefcase"></i><span>Cargos</span>
-      </a>
-      <a href="/registros.html" data-page="registros" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-clock"></i><span>Registros</span>
-      </a>
-      <a href="/relatorios.html" data-page="relatorios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-file-earmark-text"></i><span>Relatórios</span>
-      </a>
-      <a href="/relatorios-graficos.html" data-page="relatorios-graficos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-bar-chart-line"></i><span>Gráficos</span>
-      </a>
-      <a href="/presenca.html" data-page="presenca" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-calendar-check"></i><span>Presença</span>
-      </a>
-      <a href="/entregas.html" data-page="entregas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-box-seam"></i><span>Entregas</span>
-      </a>
-      <a href="/compras.html" data-page="compras" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-cart4"></i><span>Compras</span>
-      </a>
-      <a href="/despesas.html" data-page="despesas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-receipt-cutoff"></i><span>Despesas</span>
-      </a>
-      <a href="/prestadores.html" data-page="prestadores" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-person-badge"></i><span>Prestadores</span>
-      </a>
-      <a href="/holerites.html" data-page="holerites" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-receipt"></i><span>Holerites</span>
-      </a>
-      <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-calendar-heart"></i><span>Férias</span>
-      </a>
-      <a href="/sugestoes.html" data-page="sugestoes" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-lightbulb"></i><span>Sugestões</span>
-      </a>
-      <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-shield-lock"></i><span>Usuários</span>
-      </a>
-      <a href="/feriados.html" data-page="feriados" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-calendar-event"></i><span>Feriados</span>
-      </a>
-      <a href="/insights.html" data-page="insights" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-stars"></i><span>Insights IA</span>
-      </a>
-      <a href="/whatsapp.html" data-page="whatsapp" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
-      </a>
-      <a href="/audit-log.html" data-page="audit-log" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-journal-text"></i><span>Audit Log</span>
-      </a>
-      <hr class="border-blue-700 my-2">
-      <a href="/ajuda.html" data-page="ajuda" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-chat-left-dots"></i><span>Ajuda</span>
-      </a>
-      <a href="/perfil.html" data-page="perfil" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-person-gear"></i><span>Perfil</span>
-      </a>
-    </nav>
-    <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-blue-700 bg-blue-800">
-      <div class="flex items-center justify-between mb-2">
-        <div class="flex items-center gap-2 text-sm">
-          <i class="bi bi-person-circle"></i>
-          <div>
-            <div id="user-name" class="font-medium">-</div>
-            <div id="user-role" class="text-blue-300 text-xs">-</div>
-          </div>
-        </div>
-        <button id="theme-toggle" class="p-1.5 rounded-lg hover:bg-blue-700 transition-colors">
-          <i id="theme-icon" class="bi bi-moon-fill"></i>
-        </button>
-      </div>
-      <button id="logout-btn" class="w-full py-1.5 text-sm bg-blue-700 hover:bg-blue-600 rounded-lg transition-colors">Sair</button>
-    </div>
-  </aside>
-  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+  <aside id="sidebar" class="ld-sidebar"></aside>
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-30 hidden md:hidden"></div>
 
   <!-- Main Content -->
-  <main class="md:ml-64 min-h-screen">
-    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+  <main class="ld-content min-h-screen">
+    <header class="ld-header bg-white shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
       <div class="flex items-center gap-3">
-        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300"><i class="bi bi-list text-xl"></i></button>
+        <button id="sidebar-toggle" class="md:hidden text-muted hover:text-ink transition-colors"><i class="bi bi-list text-xl"></i></button>
         <h1 class="text-xl font-semibold">Holerites</h1>
       </div>
-      <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
+      <span class="text-sm text-muted" id="current-date"></span>
     </header>
     <div class="p-4 md:p-6" id="page-content">
 
       <!-- Filters -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-6 no-print">
+      <div class="bg-white rounded-xl shadow-sm border border-border p-4 mb-6 no-print">
         <div class="flex flex-wrap items-end gap-4">
           <div>
             <label class="block text-sm font-medium mb-1" for="filter-month">Mês</label>
             <select id="filter-month"
-              class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors text-sm">
+              class="px-3 py-2 border border-border rounded-lg bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition-colors text-sm">
               <option value="01">Janeiro</option>
               <option value="02">Fevereiro</option>
               <option value="03">Março</option>
@@ -151,21 +79,21 @@
           <div>
             <label class="block text-sm font-medium mb-1" for="filter-year">Ano</label>
             <select id="filter-year"
-              class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors text-sm">
+              class="px-3 py-2 border border-border rounded-lg bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition-colors text-sm">
             </select>
           </div>
           <div>
             <label class="block text-sm font-medium mb-1" for="filter-employee">Funcionário</label>
             <select id="filter-employee"
-              class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors text-sm min-w-[200px]">
+              class="px-3 py-2 border border-border rounded-lg bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition-colors text-sm min-w-[200px]">
               <option value="">Todos</option>
             </select>
           </div>
-          <button onclick="loadHolerites()" class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm">
+          <button onclick="loadHolerites()" class="flex items-center gap-2 px-4 py-2 bg-graphite hover:bg-graphite/90 text-white rounded-lg transition-colors text-sm">
             <i class="bi bi-calculator"></i>
             <span>Gerar Holerites</span>
           </button>
-          <button onclick="window.print()" class="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors text-sm ml-auto">
+          <button onclick="window.print()" class="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/90 text-white rounded-lg transition-colors text-sm ml-auto">
             <i class="bi bi-printer"></i>
             <span>Imprimir</span>
           </button>
@@ -174,36 +102,36 @@
 
       <!-- Stats -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 no-print" id="stats-row" style="display:none">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
+        <div class="bg-white rounded-xl shadow-sm p-5 border border-border">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Total Funcionários</p>
+              <p class="text-sm text-muted">Total Funcionários</p>
               <p class="text-3xl font-bold mt-1" id="stat-count">0</p>
             </div>
-            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-              <i class="bi bi-people-fill text-xl text-blue-600 dark:text-blue-400"></i>
+            <div class="w-12 h-12 bg-mist rounded-xl flex items-center justify-center">
+              <i class="bi bi-people-fill text-xl text-eucalyptus"></i>
             </div>
           </div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
+        <div class="bg-white rounded-xl shadow-sm p-5 border border-border">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Total a Pagar</p>
-              <p class="text-3xl font-bold mt-1 text-green-600 dark:text-green-400" id="stat-total">R$ 0</p>
+              <p class="text-sm text-muted">Total a Pagar</p>
+              <p class="text-3xl font-bold mt-1 text-success" id="stat-total">R$ 0</p>
             </div>
-            <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
-              <i class="bi bi-currency-dollar text-xl text-green-600 dark:text-green-400"></i>
+            <div class="w-12 h-12 bg-mist rounded-xl flex items-center justify-center">
+              <i class="bi bi-currency-dollar text-xl text-success"></i>
             </div>
           </div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
+        <div class="bg-white rounded-xl shadow-sm p-5 border border-border">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Total Horas Extras</p>
-              <p class="text-3xl font-bold mt-1 text-purple-600 dark:text-purple-400" id="stat-extras">0h</p>
+              <p class="text-sm text-muted">Total Horas Extras</p>
+              <p class="text-3xl font-bold mt-1 text-indigo" id="stat-extras">0h</p>
             </div>
-            <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
-              <i class="bi bi-clock-history text-xl text-purple-600 dark:text-purple-400"></i>
+            <div class="w-12 h-12 bg-indigo/10 rounded-xl flex items-center justify-center">
+              <i class="bi bi-clock-history text-xl text-indigo"></i>
             </div>
           </div>
         </div>
@@ -211,11 +139,11 @@
 
       <!-- Holerites Container -->
       <div id="holerites-container">
-        <div class="text-center py-12 text-gray-400">
-          <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="bi bi-receipt text-3xl text-gray-400 dark:text-gray-500"></i>
+        <div class="text-center py-12 text-muted">
+          <div class="w-16 h-16 bg-mist rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="bi bi-receipt text-3xl text-muted"></i>
           </div>
-          <p class="text-lg font-medium text-gray-500 dark:text-gray-400">Selecione mês/ano e clique em "Gerar Holerites"</p>
+          <p class="text-lg font-medium text-muted">Selecione mês/ano e clique em "Gerar Holerites"</p>
           <p class="text-sm mt-1">Os holerites são calculados a partir dos registros de ponto.</p>
         </div>
       </div>
@@ -274,7 +202,7 @@
       const container = document.getElementById('holerites-container');
 
       container.innerHTML = `
-        <div class="text-center py-12 text-gray-400">
+        <div class="text-center py-12 text-muted">
           <i class="bi bi-arrow-repeat animate-spin text-3xl"></i>
           <p class="mt-2">Calculando holerites...</p>
         </div>`;
@@ -287,11 +215,11 @@
 
         if (folhas.length === 0) {
           container.innerHTML = `
-            <div class="text-center py-12 text-gray-400">
-              <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="bi bi-receipt text-3xl text-gray-400 dark:text-gray-500"></i>
+            <div class="text-center py-12 text-muted">
+              <div class="w-16 h-16 bg-mist rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="bi bi-receipt text-3xl text-muted"></i>
               </div>
-              <p class="text-lg font-medium text-gray-500 dark:text-gray-400">Nenhum dado encontrado</p>
+              <p class="text-lg font-medium text-muted">Nenhum dado encontrado</p>
               <p class="text-sm mt-1">Não há registros de ponto para ${MONTHS[mes]}/${ano}.</p>
             </div>`;
           document.getElementById('stats-row').style.display = 'none';
@@ -324,16 +252,16 @@
           const totalGeral = f.totalGeral || f.totalValor || 0;
 
           return `
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 mb-6 overflow-hidden ${i < folhas.length - 1 ? 'print-break' : ''}">
+            <div class="bg-white rounded-xl shadow-sm border border-border mb-6 overflow-hidden ${i < folhas.length - 1 ? 'print-break' : ''}">
               <!-- Header -->
-              <div class="bg-blue-800 text-white p-5">
+              <div class="bg-graphite text-white p-5">
                 <div class="flex items-center justify-between">
                   <div>
                     <h3 class="text-lg font-bold">${f.nome || 'Funcionário'}</h3>
-                    <p class="text-blue-200 text-sm">${f.cargo || '-'}</p>
+                    <p class="text-white/60 text-sm">${f.cargo || '-'}</p>
                   </div>
                   <div class="text-right">
-                    <p class="text-sm text-blue-200">Referência</p>
+                    <p class="text-sm text-white/60">Referência</p>
                     <p class="text-lg font-bold">${MONTHS[mes]} ${ano}</p>
                   </div>
                 </div>
@@ -343,34 +271,34 @@
               <div class="p-5">
                 <!-- Summary Row -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
-                  <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3 text-center">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Dias Trabalhados</p>
+                  <div class="bg-porcelain rounded-lg p-3 text-center">
+                    <p class="text-xs text-muted uppercase">Dias Trabalhados</p>
                     <p class="text-xl font-bold mt-1">${diasTrab}</p>
                   </div>
-                  <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3 text-center">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Horas Normais</p>
+                  <div class="bg-porcelain rounded-lg p-3 text-center">
+                    <p class="text-xs text-muted uppercase">Horas Normais</p>
                     <p class="text-xl font-bold mt-1">${fmtH(horasNormais)}</p>
                   </div>
-                  <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3 text-center">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Horas Extras</p>
-                    <p class="text-xl font-bold mt-1 text-purple-600 dark:text-purple-400">${fmtH(horasExtras)}</p>
+                  <div class="bg-porcelain rounded-lg p-3 text-center">
+                    <p class="text-xs text-muted uppercase">Horas Extras</p>
+                    <p class="text-xl font-bold mt-1 text-indigo">${fmtH(horasExtras)}</p>
                   </div>
-                  <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 text-center">
-                    <p class="text-xs text-green-600 dark:text-green-400 uppercase font-semibold">Total</p>
-                    <p class="text-xl font-bold mt-1 text-green-700 dark:text-green-400">${fmt(totalGeral)}</p>
+                  <div class="bg-mist rounded-lg p-3 text-center">
+                    <p class="text-xs text-success uppercase font-semibold">Total</p>
+                    <p class="text-xl font-bold mt-1 text-success">${fmt(totalGeral)}</p>
                   </div>
                 </div>
 
                 <!-- Detailed Breakdown -->
                 <table class="w-full text-sm">
                   <thead>
-                    <tr class="border-b border-gray-200 dark:border-gray-700">
-                      <th class="py-2 text-left text-gray-500 dark:text-gray-400 font-medium">Descrição</th>
-                      <th class="py-2 text-right text-gray-500 dark:text-gray-400 font-medium">Qtd</th>
-                      <th class="py-2 text-right text-gray-500 dark:text-gray-400 font-medium">Valor</th>
+                    <tr class="border-b border-border">
+                      <th class="py-2 text-left text-muted font-medium">Descrição</th>
+                      <th class="py-2 text-right text-muted font-medium">Qtd</th>
+                      <th class="py-2 text-right text-muted font-medium">Valor</th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                  <tbody class="divide-y divide-border">
                     <tr>
                       <td class="py-2">Horas Normais</td>
                       <td class="py-2 text-right">${fmtH(horasNormais)}</td>
@@ -380,13 +308,13 @@
                     <tr>
                       <td class="py-2">Horas Extras</td>
                       <td class="py-2 text-right">${fmtH(horasExtras)}</td>
-                      <td class="py-2 text-right text-purple-600 dark:text-purple-400">${fmt(valorExtras)}</td>
+                      <td class="py-2 text-right text-indigo">${fmt(valorExtras)}</td>
                     </tr>` : ''}
                     ${valorFeriados > 0 ? `
                     <tr>
                       <td class="py-2">Feriados / Domingos Trabalhados</td>
                       <td class="py-2 text-right">-</td>
-                      <td class="py-2 text-right text-orange-600 dark:text-orange-400">${fmt(valorFeriados)}</td>
+                      <td class="py-2 text-right text-warning">${fmt(valorFeriados)}</td>
                     </tr>` : ''}
                     ${valorVT > 0 ? `
                     <tr>
@@ -402,18 +330,18 @@
                     </tr>` : ''}
                   </tbody>
                   <tfoot>
-                    <tr class="border-t-2 border-gray-300 dark:border-gray-600">
+                    <tr class="border-t-2 border-border">
                       <td class="py-3 font-bold text-base" colspan="2">TOTAL A PAGAR</td>
-                      <td class="py-3 text-right font-bold text-base text-green-700 dark:text-green-400">${fmt(totalGeral)}</td>
+                      <td class="py-3 text-right font-bold text-base text-success">${fmt(totalGeral)}</td>
                     </tr>
                   </tfoot>
                 </table>
 
                 ${f.pix_tipo && f.pix_chave ? `
-                <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg text-sm">
-                  <span class="text-gray-500 dark:text-gray-400"><i class="bi bi-credit-card mr-1"></i>PIX:</span>
+                <div class="mt-4 p-3 bg-porcelain rounded-lg text-sm">
+                  <span class="text-muted"><i class="bi bi-credit-card mr-1"></i>PIX:</span>
                   <span class="font-medium ml-1">${f.pix_chave}</span>
-                  <span class="text-gray-400 ml-1">(${f.pix_tipo}${f.pix_banco ? ' - ' + f.pix_banco : ''})</span>
+                  <span class="text-muted ml-1">(${f.pix_tipo}${f.pix_banco ? ' - ' + f.pix_banco : ''})</span>
                 </div>` : ''}
               </div>
             </div>`;
@@ -422,7 +350,7 @@
         showToast(`${folhas.length} holerite${folhas.length > 1 ? 's' : ''} gerado${folhas.length > 1 ? 's' : ''}.`);
       } catch (err) {
         container.innerHTML = `
-          <div class="text-center py-12 text-red-400">
+          <div class="text-center py-12 text-danger">
             <i class="bi bi-exclamation-circle text-3xl"></i>
             <p class="mt-2">Erro ao gerar holerites: ${err.message}</p>
           </div>`;

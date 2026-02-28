@@ -1,126 +1,49 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
+  <meta name="theme-color" content="#0E1625">
   <title>Prestadores de Servico - Lar Digital</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
-      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+      theme: {
+        extend: {
+          colors: {
+            graphite: '#0E1625', eucalyptus: '#697F71', porcelain: '#F7F4EE',
+            mist: '#E7ECE8', sand: '#D8CCB8', indigo: '#7279F8', ink: '#1B2430',
+            muted: '#667085', success: '#1F8F5F', warning: '#C98A2E',
+            danger: '#B5473C', border: '#E8E4DE'
+          },
+          borderRadius: { sm: '8px', md: '12px', lg: '16px' },
+          boxShadow: { card: '0 1px 4px rgba(27,36,48,0.08)' },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
+        }
+      }
     }
   </script>
+  <link rel="stylesheet" href="/css/brand.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+<body class="bg-porcelain text-ink">
 
-  <!-- Sidebar -->
-  <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen bg-blue-800 text-white transition-transform -translate-x-full md:translate-x-0">
-    <div class="p-4 border-b border-blue-700">
-      <a href="/dashboard.html" class="flex items-center gap-2">
-        <i class="bi bi-clock-history text-2xl"></i>
-        <span class="text-xl font-bold">Lar Digital</span>
-      </a>
-      <p class="text-blue-200 text-xs mt-1">Gestao da Casa</p>
-    </div>
-    <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-180px)]">
-      <a href="/dashboard.html" data-page="dashboard" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-speedometer2"></i><span>Dashboard</span>
-      </a>
-      <a href="/funcionarios.html" data-page="funcionarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-people"></i><span>Funcionarios</span>
-      </a>
-      <a href="/cargos.html" data-page="cargos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-briefcase"></i><span>Cargos</span>
-      </a>
-      <a href="/registros.html" data-page="registros" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-clock"></i><span>Registros</span>
-      </a>
-      <a href="/relatorios.html" data-page="relatorios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-file-earmark-text"></i><span>Relatorios</span>
-      </a>
-      <a href="/relatorios-graficos.html" data-page="relatorios-graficos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-bar-chart-line"></i><span>Graficos</span>
-      </a>
-      <a href="/presenca.html" data-page="presenca" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-calendar-check"></i><span>Presenca</span>
-      </a>
-      <a href="/entregas.html" data-page="entregas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-box-seam"></i><span>Entregas</span>
-      </a>
-      <a href="/compras.html" data-page="compras" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-cart3"></i><span>Compras</span>
-      </a>
-      <a href="/despesas.html" data-page="despesas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-receipt-cutoff"></i><span>Despesas</span>
-      </a>
-      <a href="/prestadores.html" data-page="prestadores" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-person-badge"></i><span>Prestadores</span>
-      </a>
-      <a href="/holerites.html" data-page="holerites" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-receipt"></i><span>Holerites</span>
-      </a>
-      <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-calendar-heart"></i><span>Ferias</span>
-      </a>
-      <a href="/sugestoes.html" data-page="sugestoes" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-lightbulb"></i><span>Sugestoes</span>
-      </a>
-      <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-shield-lock"></i><span>Usuarios</span>
-      </a>
-      <a href="/feriados.html" data-page="feriados" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-calendar-event"></i><span>Feriados</span>
-      </a>
-      <a href="/insights.html" data-page="insights" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-stars"></i><span>Insights IA</span>
-      </a>
-      <a href="/whatsapp.html" data-page="whatsapp" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
-      </a>
-      <a href="/audit-log.html" data-page="audit-log" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-journal-text"></i><span>Audit Log</span>
-      </a>
-      <hr class="border-blue-700 my-2">
-      <a href="/ajuda.html" data-page="ajuda" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-chat-left-dots"></i><span>Ajuda</span>
-      </a>
-      <a href="/perfil.html" data-page="perfil" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-person-gear"></i><span>Perfil</span>
-      </a>
-    </nav>
-    <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-blue-700 bg-blue-800">
-      <div class="flex items-center justify-between mb-2">
-        <div class="flex items-center gap-2 text-sm">
-          <i class="bi bi-person-circle"></i>
-          <div>
-            <div id="user-name" class="font-medium">-</div>
-            <div id="user-role" class="text-blue-300 text-xs">-</div>
-          </div>
-        </div>
-        <button id="theme-toggle" class="p-1.5 rounded-lg hover:bg-blue-700 transition-colors">
-          <i id="theme-icon" class="bi bi-moon-fill"></i>
-        </button>
-      </div>
-      <button id="logout-btn" class="w-full py-1.5 text-sm bg-blue-700 hover:bg-blue-600 rounded-lg transition-colors">Sair</button>
-    </div>
-  </aside>
-  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+  <aside id="sidebar" class="ld-sidebar"></aside>
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-30 hidden md:hidden"></div>
 
   <!-- Main Content -->
-  <main class="md:ml-64 min-h-screen">
-    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+  <main class="ld-content min-h-screen">
+    <header class="ld-header">
       <div class="flex items-center gap-3">
-        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300">
+        <button id="sidebar-toggle" class="md:hidden text-muted hover:text-ink transition-colors">
           <i class="bi bi-list text-xl"></i>
         </button>
-        <h1 class="text-xl font-semibold">Prestadores de Servico</h1>
+        <h1>Prestadores de Servico</h1>
       </div>
       <div class="flex items-center gap-3">
-        <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
-        <button onclick="openPrestadorModal()" class="gestor-only hidden px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+        <span class="text-sm text-muted" id="current-date"></span>
+        <button onclick="openPrestadorModal()" class="gestor-only hidden px-4 py-2 bg-graphite hover:bg-graphite/90 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
           <i class="bi bi-plus-lg"></i><span class="hidden sm:inline">Novo Prestador</span>
         </button>
       </div>
@@ -130,45 +53,45 @@
 
       <!-- Stats Row -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
           <div class="flex items-center gap-2 mb-1">
             <div class="w-2 h-2 rounded-full bg-green-500"></div>
-            <span class="text-xs text-gray-500 dark:text-gray-400">Prestadores Ativos</span>
+            <span class="text-xs text-gray-500">Prestadores Ativos</span>
           </div>
           <div class="text-2xl font-bold text-green-600" id="stat-ativos">0</div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
           <div class="flex items-center gap-2 mb-1">
             <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-            <span class="text-xs text-gray-500 dark:text-gray-400">Visitas esta Semana</span>
+            <span class="text-xs text-gray-500">Visitas esta Semana</span>
           </div>
           <div class="text-2xl font-bold text-blue-600" id="stat-visitas-semana">0</div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
           <div class="flex items-center gap-2 mb-1">
             <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
-            <span class="text-xs text-gray-500 dark:text-gray-400">Pagamentos do Mes</span>
+            <span class="text-xs text-gray-500">Pagamentos do Mes</span>
           </div>
           <div class="text-xl font-bold text-yellow-600" id="stat-pagamentos-mes">R$ 0,00</div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
           <div class="flex items-center gap-2 mb-1">
             <div class="w-2 h-2 rounded-full bg-purple-500"></div>
-            <span class="text-xs text-gray-500 dark:text-gray-400">Prestadores Fixos</span>
+            <span class="text-xs text-gray-500">Prestadores Fixos</span>
           </div>
           <div class="text-2xl font-bold text-purple-600" id="stat-fixos">0</div>
         </div>
       </div>
 
       <!-- Tabs -->
-      <div class="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 w-fit">
-        <button onclick="switchTab('cadastro')" id="tab-cadastro" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 shadow-sm">
+      <div class="flex gap-1 mb-6 bg-gray-100 rounded-xl p-1 w-fit">
+        <button onclick="switchTab('cadastro')" id="tab-cadastro" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-white text-gray-800 shadow-sm">
           <i class="bi bi-person-badge"></i> Cadastro
         </button>
-        <button onclick="switchTab('visitas')" id="tab-visitas" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+        <button onclick="switchTab('visitas')" id="tab-visitas" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-600 hover:text-gray-800">
           <i class="bi bi-calendar-check"></i> Visitas
         </button>
-        <button onclick="switchTab('pagamentos')" id="tab-pagamentos" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+        <button onclick="switchTab('pagamentos')" id="tab-pagamentos" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-600 hover:text-gray-800">
           <i class="bi bi-cash-stack"></i> Pagamentos
         </button>
       </div>
@@ -176,24 +99,24 @@
       <!-- Tab: Cadastro -->
       <div id="tab-content-cadastro">
         <div class="flex items-center justify-between mb-3">
-          <span class="text-sm text-gray-500 dark:text-gray-400"><span id="prestadores-count">0</span> prestadores</span>
-          <label class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 cursor-pointer">
+          <span class="text-sm text-gray-500"><span id="prestadores-count">0</span> prestadores</span>
+          <label class="flex items-center gap-2 text-sm text-gray-500 cursor-pointer">
             <input type="checkbox" id="toggle-inativos" onchange="renderTabelaCadastro()" class="w-4 h-4 rounded border-gray-300 text-primary cursor-pointer focus:ring-primary">
             <span>Mostrar inativos (<span id="inativos-count">0</span>)</span>
           </label>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-4">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
-              <thead class="bg-gray-50 dark:bg-gray-700/50">
+              <thead class="bg-gray-50">
                 <tr>
-                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Nome</th>
-                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Especialidade</th>
-                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Tipo</th>
-                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Telefone</th>
-                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Ultima Visita</th>
-                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Acoes</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">Nome</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">Especialidade</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">Tipo</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">Telefone</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">Ultima Visita</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">Acoes</th>
                 </tr>
               </thead>
               <tbody id="cadastro-tbody">
@@ -212,24 +135,24 @@
       <!-- Tab: Visitas -->
       <div id="tab-content-visitas" class="hidden">
         <!-- Filters -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-4">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div>
-              <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Prestador</label>
-              <select id="filter-visita-prestador" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+              <label class="block text-xs font-medium mb-1 text-gray-600">Prestador</label>
+              <select id="filter-visita-prestador" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
                 <option value="">Todos</option>
               </select>
             </div>
             <div>
-              <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Data Inicio</label>
-              <input type="date" id="filter-visita-inicio" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+              <label class="block text-xs font-medium mb-1 text-gray-600">Data Inicio</label>
+              <input type="date" id="filter-visita-inicio" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
             </div>
             <div>
-              <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Data Fim</label>
-              <input type="date" id="filter-visita-fim" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+              <label class="block text-xs font-medium mb-1 text-gray-600">Data Fim</label>
+              <input type="date" id="filter-visita-fim" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
             </div>
             <div class="flex items-end">
-              <button onclick="loadAllVisitas()" class="w-full px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+              <button onclick="loadAllVisitas()" class="w-full px-4 py-2 bg-graphite hover:bg-graphite/90 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
                 <i class="bi bi-funnel"></i><span>Buscar</span>
               </button>
             </div>
@@ -237,21 +160,21 @@
         </div>
 
         <div class="flex items-center justify-between mb-3">
-          <span class="text-sm text-gray-500 dark:text-gray-400"><span id="visitas-count">0</span> visitas encontradas</span>
+          <span class="text-sm text-gray-500"><span id="visitas-count">0</span> visitas encontradas</span>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-4">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
-              <thead class="bg-gray-50 dark:bg-gray-700/50">
+              <thead class="bg-gray-50">
                 <tr>
-                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Data</th>
-                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Prestador</th>
-                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Entrada</th>
-                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Saida</th>
-                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Duracao</th>
-                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Servico</th>
-                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Observacao</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">Data</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">Prestador</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">Entrada</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">Saida</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">Duracao</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">Servico</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">Observacao</th>
                 </tr>
               </thead>
               <tbody id="visitas-tbody">
@@ -270,17 +193,17 @@
       <!-- Tab: Pagamentos -->
       <div id="tab-content-pagamentos" class="hidden">
         <!-- Filters -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-4">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div>
-              <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Prestador</label>
-              <select id="filter-pag-prestador" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+              <label class="block text-xs font-medium mb-1 text-gray-600">Prestador</label>
+              <select id="filter-pag-prestador" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
                 <option value="">Todos</option>
               </select>
             </div>
             <div>
-              <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Mes</label>
-              <select id="filter-pag-mes" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+              <label class="block text-xs font-medium mb-1 text-gray-600">Mes</label>
+              <select id="filter-pag-mes" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
                 <option value="">Todos</option>
                 <option value="1">Janeiro</option>
                 <option value="2">Fevereiro</option>
@@ -297,15 +220,15 @@
               </select>
             </div>
             <div>
-              <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Ano</label>
-              <select id="filter-pag-ano" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+              <label class="block text-xs font-medium mb-1 text-gray-600">Ano</label>
+              <select id="filter-pag-ano" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
                 <option value="2024">2024</option>
                 <option value="2025">2025</option>
                 <option value="2026" selected>2026</option>
               </select>
             </div>
             <div class="flex items-end">
-              <button onclick="loadAllPagamentos()" class="w-full px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+              <button onclick="loadAllPagamentos()" class="w-full px-4 py-2 bg-graphite hover:bg-graphite/90 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
                 <i class="bi bi-funnel"></i><span>Buscar</span>
               </button>
             </div>
@@ -313,20 +236,20 @@
         </div>
 
         <div class="flex items-center justify-between mb-3">
-          <span class="text-sm text-gray-500 dark:text-gray-400"><span id="pagamentos-count">0</span> pagamentos encontrados</span>
+          <span class="text-sm text-gray-500"><span id="pagamentos-count">0</span> pagamentos encontrados</span>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-4">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
-              <thead class="bg-gray-50 dark:bg-gray-700/50">
+              <thead class="bg-gray-50">
                 <tr>
-                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Data</th>
-                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Prestador</th>
-                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Tipo</th>
-                  <th class="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Valor</th>
-                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Descricao</th>
-                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Comprovante</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">Data</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">Prestador</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">Tipo</th>
+                  <th class="text-right px-4 py-3 font-medium text-gray-600">Valor</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">Descricao</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">Comprovante</th>
                 </tr>
               </thead>
               <tbody id="pagamentos-tbody">
@@ -338,8 +261,8 @@
                 </tr>
               </tbody>
               <tfoot id="pagamentos-tfoot" class="hidden">
-                <tr class="bg-gray-50 dark:bg-gray-700/50 border-t-2 border-gray-200 dark:border-gray-600">
-                  <td colspan="3" class="px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Total:</td>
+                <tr class="bg-gray-50 border-t-2 border-gray-200">
+                  <td colspan="3" class="px-4 py-3 text-right font-semibold text-gray-700">Total:</td>
                   <td class="px-4 py-3 text-right font-bold text-green-600 text-base" id="pagamentos-total">R$ 0,00</td>
                   <td colspan="2"></td>
                 </tr>
@@ -357,10 +280,10 @@
 
   <!-- Modal: Novo/Editar Prestador -->
   <div id="modal-prestador" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100">
         <h3 class="text-lg font-semibold" id="modal-prestador-title">Novo Prestador</h3>
-        <button onclick="closeModal('modal-prestador')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+        <button onclick="closeModal('modal-prestador')" class="text-gray-400 hover:text-gray-600">
           <i class="bi bi-x-lg text-xl"></i>
         </button>
       </div>
@@ -368,20 +291,20 @@
         <input type="hidden" id="prestador-id">
         <div>
           <label class="block text-sm font-medium mb-1">Nome <span class="text-red-500">*</span></label>
-          <input type="text" id="prestador-nome" required placeholder="Nome do prestador..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          <input type="text" id="prestador-nome" required placeholder="Nome do prestador..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Telefone</label>
-          <input type="text" id="prestador-telefone" placeholder="(11) 99999-9999" maxlength="15" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          <input type="text" id="prestador-telefone" placeholder="(11) 99999-9999" maxlength="15" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Especialidade</label>
-          <input type="text" id="prestador-especialidade" placeholder="Ex: Eletricista, Jardineiro, Diarista..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          <input type="text" id="prestador-especialidade" placeholder="Ex: Eletricista, Jardineiro, Diarista..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium mb-1">Tipo</label>
-            <select id="prestador-tipo" onchange="toggleFrequencia()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            <select id="prestador-tipo" onchange="toggleFrequencia()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
               <option value="avulso">Avulso</option>
               <option value="fixo">Fixo</option>
             </select>
@@ -417,20 +340,20 @@
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium mb-1">Valor Hora (R$)</label>
-            <input type="number" id="prestador-valor-hora" min="0" step="0.01" placeholder="0,00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            <input type="number" id="prestador-valor-hora" min="0" step="0.01" placeholder="0,00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Valor Diaria (R$)</label>
-            <input type="number" id="prestador-valor-diaria" min="0" step="0.01" placeholder="0,00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            <input type="number" id="prestador-valor-diaria" min="0" step="0.01" placeholder="0,00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
           </div>
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Observacoes</label>
-          <textarea id="prestador-observacoes" rows="3" placeholder="Informacoes adicionais..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition resize-none"></textarea>
+          <textarea id="prestador-observacoes" rows="3" placeholder="Informacoes adicionais..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition resize-none"></textarea>
         </div>
         <div class="flex justify-end gap-3 pt-2">
-          <button type="button" onclick="closeModal('modal-prestador')" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm transition-colors">Cancelar</button>
-          <button type="submit" id="btn-submit-prestador" class="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+          <button type="button" onclick="closeModal('modal-prestador')" class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 text-sm transition-colors">Cancelar</button>
+          <button type="submit" id="btn-submit-prestador" class="px-4 py-2 bg-graphite hover:bg-graphite/90 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
             <i class="bi bi-check-lg"></i> Salvar
           </button>
         </div>
@@ -440,41 +363,41 @@
 
   <!-- Modal: Registrar Visita -->
   <div id="modal-visita" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md">
-      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100">
         <h3 class="text-lg font-semibold">Registrar Visita</h3>
-        <button onclick="closeModal('modal-visita')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+        <button onclick="closeModal('modal-visita')" class="text-gray-400 hover:text-gray-600">
           <i class="bi bi-x-lg text-xl"></i>
         </button>
       </div>
       <form id="form-visita" class="p-5 space-y-4" onsubmit="saveVisita(event)">
         <input type="hidden" id="visita-prestador-id">
-        <p class="text-sm text-gray-500 dark:text-gray-400" id="visita-prestador-nome"></p>
+        <p class="text-sm text-gray-500" id="visita-prestador-nome"></p>
         <div>
           <label class="block text-sm font-medium mb-1">Data <span class="text-red-500">*</span></label>
-          <input type="date" id="visita-data" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          <input type="date" id="visita-data" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium mb-1">Entrada</label>
-            <input type="time" id="visita-entrada" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            <input type="time" id="visita-entrada" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Saida</label>
-            <input type="time" id="visita-saida" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            <input type="time" id="visita-saida" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
           </div>
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Servico Realizado</label>
-          <input type="text" id="visita-servico" placeholder="Descreva o servico realizado..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          <input type="text" id="visita-servico" placeholder="Descreva o servico realizado..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Observacao</label>
-          <textarea id="visita-observacao" rows="2" placeholder="Observacoes adicionais..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition resize-none"></textarea>
+          <textarea id="visita-observacao" rows="2" placeholder="Observacoes adicionais..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition resize-none"></textarea>
         </div>
         <div class="flex justify-end gap-3 pt-2">
-          <button type="button" onclick="closeModal('modal-visita')" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm transition-colors">Cancelar</button>
-          <button type="submit" class="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+          <button type="button" onclick="closeModal('modal-visita')" class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 text-sm transition-colors">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-graphite hover:bg-graphite/90 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
             <i class="bi bi-calendar-plus"></i> Registrar
           </button>
         </div>
@@ -484,29 +407,29 @@
 
   <!-- Modal: Registrar Pagamento -->
   <div id="modal-pagamento" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md">
-      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100">
         <h3 class="text-lg font-semibold">Registrar Pagamento</h3>
-        <button onclick="closeModal('modal-pagamento')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+        <button onclick="closeModal('modal-pagamento')" class="text-gray-400 hover:text-gray-600">
           <i class="bi bi-x-lg text-xl"></i>
         </button>
       </div>
       <form id="form-pagamento" class="p-5 space-y-4" onsubmit="savePagamento(event)">
         <input type="hidden" id="pagamento-prestador-id">
-        <p class="text-sm text-gray-500 dark:text-gray-400" id="pagamento-prestador-nome"></p>
+        <p class="text-sm text-gray-500" id="pagamento-prestador-nome"></p>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium mb-1">Valor (R$) <span class="text-red-500">*</span></label>
-            <input type="number" id="pagamento-valor" required min="0.01" step="0.01" placeholder="0,00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            <input type="number" id="pagamento-valor" required min="0.01" step="0.01" placeholder="0,00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Data <span class="text-red-500">*</span></label>
-            <input type="date" id="pagamento-data" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            <input type="date" id="pagamento-data" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
           </div>
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Tipo</label>
-          <select id="pagamento-tipo" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          <select id="pagamento-tipo" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
             <option value="diaria">Diaria</option>
             <option value="hora">Hora</option>
             <option value="fixo">Fixo</option>
@@ -514,19 +437,19 @@
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Descricao</label>
-          <input type="text" id="pagamento-descricao" placeholder="Descricao do pagamento..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          <input type="text" id="pagamento-descricao" placeholder="Descricao do pagamento..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Comprovante (foto/PDF)</label>
           <div class="flex items-center gap-3">
-            <label for="pagamento-comprovante" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 hover:border-primary cursor-pointer text-sm text-gray-500 dark:text-gray-400 transition-colors">
+            <label for="pagamento-comprovante" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-gray-300 hover:border-primary cursor-pointer text-sm text-gray-500 transition-colors">
               <i class="bi bi-upload"></i><span id="comprovante-pag-label">Selecionar arquivo</span>
             </label>
             <input type="file" id="pagamento-comprovante" accept="image/*,.pdf" class="hidden" onchange="updatePagComprovanteLabel(this)">
           </div>
         </div>
         <div class="flex justify-end gap-3 pt-2">
-          <button type="button" onclick="closeModal('modal-pagamento')" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm transition-colors">Cancelar</button>
+          <button type="button" onclick="closeModal('modal-pagamento')" class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 text-sm transition-colors">Cancelar</button>
           <button type="submit" id="btn-submit-pagamento" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
             <i class="bi bi-cash-stack"></i> Registrar Pagamento
           </button>
@@ -590,18 +513,18 @@
 
     function getTipoBadge(tipo) {
       if (tipo === 'fixo') {
-        return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">Fixo</span>';
+        return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">Fixo</span>';
       }
-      return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">Avulso</span>';
+      return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">Avulso</span>';
     }
 
     function getPagTipoBadge(tipo) {
       const map = {
-        diaria: { cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', label: 'Diaria' },
-        hora:   { cls: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', label: 'Hora' },
-        fixo:   { cls: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400', label: 'Fixo' }
+        diaria: { cls: 'bg-blue-100 text-blue-700', label: 'Diaria' },
+        hora:   { cls: 'bg-green-100 text-green-700', label: 'Hora' },
+        fixo:   { cls: 'bg-purple-100 text-purple-700', label: 'Fixo' }
       };
-      const s = map[tipo] || { cls: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400', label: tipo || '-' };
+      const s = map[tipo] || { cls: 'bg-gray-100 text-gray-600', label: tipo || '-' };
       return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${s.cls}">${escapeHtml(s.label)}</span>`;
     }
 
@@ -735,27 +658,27 @@
         const isInativo = p.status === 'inativo';
         const rowClass = isInativo ? 'opacity-50' : '';
         return `
-          <tr class="border-t border-gray-50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 ${rowClass}">
+          <tr class="border-t border-gray-50 hover:bg-gray-50 ${rowClass}">
             <td class="px-4 py-3 font-medium">
               ${escapeHtml(p.nome)}
               ${isInativo ? '<span class="ml-1 text-xs text-red-400">(inativo)</span>' : ''}
             </td>
-            <td class="px-4 py-3 text-gray-600 dark:text-gray-400">${escapeHtml(p.especialidade || '-')}</td>
+            <td class="px-4 py-3 text-gray-600">${escapeHtml(p.especialidade || '-')}</td>
             <td class="px-4 py-3">${getTipoBadge(p.tipo)}</td>
-            <td class="px-4 py-3 text-gray-600 dark:text-gray-400">${formatPhone(p.telefone)}</td>
-            <td class="px-4 py-3 text-gray-500 dark:text-gray-400 text-sm">${p.ultima_visita ? formatDate(p.ultima_visita) : '-'}</td>
+            <td class="px-4 py-3 text-gray-600">${formatPhone(p.telefone)}</td>
+            <td class="px-4 py-3 text-gray-500 text-sm">${p.ultima_visita ? formatDate(p.ultima_visita) : '-'}</td>
             <td class="px-4 py-3">
               <div class="flex items-center gap-1">
-                <button onclick="openVisitaModal(${p.id})" title="Registrar Visita" class="p-1.5 rounded bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-400 transition-colors">
+                <button onclick="openVisitaModal(${p.id})" title="Registrar Visita" class="p-1.5 rounded bg-blue-100 hover:bg-blue-200 text-blue-700 transition-colors">
                   <i class="bi bi-calendar-plus"></i>
                 </button>
-                <button onclick="openPagamentoModal(${p.id})" title="Registrar Pagamento" class="p-1.5 rounded bg-green-100 hover:bg-green-200 dark:bg-green-900/30 dark:hover:bg-green-900/50 text-green-700 dark:text-green-400 transition-colors">
+                <button onclick="openPagamentoModal(${p.id})" title="Registrar Pagamento" class="p-1.5 rounded bg-green-100 hover:bg-green-200 text-green-700 transition-colors">
                   <i class="bi bi-cash-stack"></i>
                 </button>
-                <button onclick="openPrestadorModal(${p.id})" title="Editar" class="p-1.5 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 transition-colors">
+                <button onclick="openPrestadorModal(${p.id})" title="Editar" class="p-1.5 rounded bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
                   <i class="bi bi-pencil"></i>
                 </button>
-                <button onclick="deletePrestador(${p.id})" title="Excluir" class="p-1.5 rounded bg-gray-100 hover:bg-red-100 dark:bg-gray-700 dark:hover:bg-red-900/30 text-gray-500 hover:text-red-600 transition-colors">
+                <button onclick="deletePrestador(${p.id})" title="Excluir" class="p-1.5 rounded bg-gray-100 hover:bg-red-100 text-gray-500 hover:text-red-600 transition-colors">
                   <i class="bi bi-trash"></i>
                 </button>
               </div>
@@ -981,14 +904,14 @@
       }
 
       tbody.innerHTML = allVisitas.map(v => `
-        <tr class="border-t border-gray-50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30">
-          <td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">${formatDate(v.data)}</td>
+        <tr class="border-t border-gray-50 hover:bg-gray-50">
+          <td class="px-4 py-3 text-gray-600 whitespace-nowrap">${formatDate(v.data)}</td>
           <td class="px-4 py-3 font-medium">${escapeHtml(v.prestador_nome || '-')}</td>
-          <td class="px-4 py-3 text-gray-600 dark:text-gray-400">${escapeHtml(v.entrada || '-')}</td>
-          <td class="px-4 py-3 text-gray-600 dark:text-gray-400">${escapeHtml(v.saida || '-')}</td>
-          <td class="px-4 py-3 text-gray-500 dark:text-gray-400">${calcDuration(v.entrada, v.saida)}</td>
-          <td class="px-4 py-3 text-gray-600 dark:text-gray-400 max-w-xs truncate">${escapeHtml(v.servico_realizado || '-')}</td>
-          <td class="px-4 py-3 text-gray-500 dark:text-gray-400 max-w-xs truncate text-sm">${escapeHtml(v.observacao || '-')}</td>
+          <td class="px-4 py-3 text-gray-600">${escapeHtml(v.entrada || '-')}</td>
+          <td class="px-4 py-3 text-gray-600">${escapeHtml(v.saida || '-')}</td>
+          <td class="px-4 py-3 text-gray-500">${calcDuration(v.entrada, v.saida)}</td>
+          <td class="px-4 py-3 text-gray-600 max-w-xs truncate">${escapeHtml(v.servico_realizado || '-')}</td>
+          <td class="px-4 py-3 text-gray-500 max-w-xs truncate text-sm">${escapeHtml(v.observacao || '-')}</td>
         </tr>
       `).join('');
     }
@@ -1138,15 +1061,15 @@
 
       tbody.innerHTML = allPagamentosData.map(pg => {
         const comprovanteHtml = pg.comprovante_path
-          ? `<a href="/${escapeHtml(pg.comprovante_path)}" target="_blank" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm flex items-center gap-1"><i class="bi bi-file-earmark"></i> Ver</a>`
+          ? `<a href="/${escapeHtml(pg.comprovante_path)}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"><i class="bi bi-file-earmark"></i> Ver</a>`
           : '<span class="text-gray-400 text-sm">-</span>';
         return `
-          <tr class="border-t border-gray-50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30">
-            <td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">${formatDate(pg.data)}</td>
+          <tr class="border-t border-gray-50 hover:bg-gray-50">
+            <td class="px-4 py-3 text-gray-600 whitespace-nowrap">${formatDate(pg.data)}</td>
             <td class="px-4 py-3 font-medium">${escapeHtml(pg.prestador_nome || '-')}</td>
             <td class="px-4 py-3">${getPagTipoBadge(pg.tipo)}</td>
-            <td class="px-4 py-3 text-right font-semibold text-gray-800 dark:text-gray-200 whitespace-nowrap">${formatCurrency(pg.valor)}</td>
-            <td class="px-4 py-3 text-gray-600 dark:text-gray-400 max-w-xs truncate">${escapeHtml(pg.descricao || '-')}</td>
+            <td class="px-4 py-3 text-right font-semibold text-gray-800 whitespace-nowrap">${formatCurrency(pg.valor)}</td>
+            <td class="px-4 py-3 text-gray-600 max-w-xs truncate">${escapeHtml(pg.descricao || '-')}</td>
             <td class="px-4 py-3">${comprovanteHtml}</td>
           </tr>`;
       }).join('');

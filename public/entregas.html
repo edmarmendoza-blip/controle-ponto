@@ -3,198 +3,122 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
+  <meta name="theme-color" content="#0E1625">
   <title>Registro de Entregas - Lar Digital</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
-      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+      theme: {
+        extend: {
+          colors: {
+            graphite: '#0E1625', eucalyptus: '#697F71', porcelain: '#F7F4EE',
+            mist: '#E7ECE8', sand: '#D8CCB8', indigo: '#7279F8', ink: '#1B2430',
+            muted: '#667085', success: '#1F8F5F', warning: '#C98A2E',
+            danger: '#B5473C', border: '#E8E4DE'
+          },
+          borderRadius: { sm: '8px', md: '12px', lg: '16px' },
+          boxShadow: { card: '0 1px 4px rgba(27,36,48,0.08)' },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
+        }
+      }
     }
   </script>
+  <link rel="stylesheet" href="/css/brand.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-  <!-- Sidebar -->
-  <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen bg-blue-800 text-white transition-transform -translate-x-full md:translate-x-0">
-    <div class="p-4 border-b border-blue-700">
-      <a href="/dashboard.html" class="flex items-center gap-2">
-        <i class="bi bi-clock-history text-2xl"></i>
-        <span class="text-xl font-bold">Lar Digital</span>
-      </a>
-      <p class="text-blue-200 text-xs mt-1">Gestão da Casa</p>
-    </div>
-    <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-180px)]">
-      <a href="/dashboard.html" data-page="dashboard" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-speedometer2"></i><span>Dashboard</span>
-      </a>
-      <a href="/funcionarios.html" data-page="funcionarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-people"></i><span>Funcionários</span>
-      </a>
-      <a href="/cargos.html" data-page="cargos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-briefcase"></i><span>Cargos</span>
-      </a>
-      <a href="/registros.html" data-page="registros" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-clock"></i><span>Registros</span>
-      </a>
-      <a href="/relatorios.html" data-page="relatorios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-file-earmark-text"></i><span>Relatórios</span>
-      </a>
-      <a href="/relatorios-graficos.html" data-page="relatorios-graficos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-bar-chart-line"></i><span>Gráficos</span>
-      </a>
-      <a href="/presenca.html" data-page="presenca" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-calendar-check"></i><span>Presença</span>
-      </a>
-      <a href="/entregas.html" data-page="entregas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-box-seam"></i><span>Entregas</span>
-      </a>
-      <a href="/compras.html" data-page="compras" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-cart4"></i><span>Compras</span>
-      </a>
-      <a href="/despesas.html" data-page="despesas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-receipt-cutoff"></i><span>Despesas</span>
-      </a>
-      <a href="/prestadores.html" data-page="prestadores" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-person-badge"></i><span>Prestadores</span>
-      </a>
-      <a href="/holerites.html" data-page="holerites" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-receipt"></i><span>Holerites</span>
-      </a>
-      <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-calendar-heart"></i><span>Férias</span>
-      </a>
-      <a href="/sugestoes.html" data-page="sugestoes" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-lightbulb"></i><span>Sugestões</span>
-      </a>
-      <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-shield-lock"></i><span>Usuários</span>
-      </a>
-      <a href="/feriados.html" data-page="feriados" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-calendar-event"></i><span>Feriados</span>
-      </a>
-      <a href="/insights.html" data-page="insights" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-stars"></i><span>Insights IA</span>
-      </a>
-      <a href="/whatsapp.html" data-page="whatsapp" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
-      </a>
-      <a href="/audit-log.html" data-page="audit-log" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-journal-text"></i><span>Audit Log</span>
-      </a>
-      <hr class="border-blue-700 my-2">
-      <a href="/ajuda.html" data-page="ajuda" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-chat-left-dots"></i><span>Ajuda</span>
-      </a>
-      <a href="/perfil.html" data-page="perfil" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-person-gear"></i><span>Perfil</span>
-      </a>
-    </nav>
-    <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-blue-700 bg-blue-800">
-      <div class="flex items-center justify-between mb-2">
-        <div class="flex items-center gap-2 text-sm">
-          <i class="bi bi-person-circle"></i>
-          <div>
-            <div id="user-name" class="font-medium">-</div>
-            <div id="user-role" class="text-blue-300 text-xs">-</div>
-          </div>
-        </div>
-        <button id="theme-toggle" class="p-1.5 rounded-lg hover:bg-blue-700 transition-colors">
-          <i id="theme-icon" class="bi bi-moon-fill"></i>
-        </button>
-      </div>
-      <button id="logout-btn" class="w-full py-1.5 text-sm bg-blue-700 hover:bg-blue-600 rounded-lg transition-colors">Sair</button>
-    </div>
-  </aside>
-  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+<body class="bg-porcelain text-ink">
+
+  <aside id="sidebar" class="ld-sidebar"></aside>
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-30 hidden md:hidden"></div>
 
   <!-- Main Content -->
-  <main class="md:ml-64 min-h-screen">
-    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+  <main class="ld-content min-h-screen">
+    <header class="ld-header">
       <div class="flex items-center gap-3">
-        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300"><i class="bi bi-list text-xl"></i></button>
-        <h1 class="text-xl font-semibold">Registro de Entregas</h1>
+        <button id="sidebar-toggle" class="md:hidden text-muted hover:text-ink transition-colors"><i class="bi bi-list text-xl"></i></button>
+        <h1>Registro de Entregas</h1>
       </div>
-      <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
+      <span class="text-sm text-muted" id="current-date"></span>
     </header>
     <div class="p-4 md:p-6" id="page-content">
 
       <!-- Stats Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
+        <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Fotos Hoje</p>
-              <p class="text-3xl font-bold mt-1 text-blue-600 dark:text-blue-400" id="stat-today">0</p>
+              <p class="text-sm text-gray-500">Fotos Hoje</p>
+              <p class="text-3xl font-bold mt-1 text-blue-600" id="stat-today">0</p>
             </div>
-            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-              <i class="bi bi-camera-fill text-xl text-blue-600 dark:text-blue-400"></i>
+            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+              <i class="bi bi-camera-fill text-xl text-blue-600"></i>
             </div>
           </div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
+        <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Total no Período</p>
-              <p class="text-3xl font-bold mt-1 text-green-600 dark:text-green-400" id="stat-total">0</p>
+              <p class="text-sm text-gray-500">Total no Período</p>
+              <p class="text-3xl font-bold mt-1 text-green-600" id="stat-total">0</p>
             </div>
-            <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
-              <i class="bi bi-images text-xl text-green-600 dark:text-green-400"></i>
+            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+              <i class="bi bi-images text-xl text-green-600"></i>
             </div>
           </div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
+        <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Mensagens com Texto</p>
-              <p class="text-3xl font-bold mt-1 text-purple-600 dark:text-purple-400" id="stat-with-text">0</p>
+              <p class="text-sm text-gray-500">Mensagens com Texto</p>
+              <p class="text-3xl font-bold mt-1 text-purple-600" id="stat-with-text">0</p>
             </div>
-            <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
-              <i class="bi bi-chat-text-fill text-xl text-purple-600 dark:text-purple-400"></i>
+            <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+              <i class="bi bi-chat-text-fill text-xl text-purple-600"></i>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Info Card -->
-      <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6">
+      <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
         <div class="flex items-start gap-3">
-          <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center flex-shrink-0">
-            <i class="bi bi-camera-fill text-blue-600 dark:text-blue-400 text-lg"></i>
+          <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <i class="bi bi-camera-fill text-blue-600 text-lg"></i>
           </div>
           <div>
-            <h3 class="font-medium text-blue-800 dark:text-blue-300">Registros de fotos e mídias</h3>
-            <p class="text-sm text-blue-600 dark:text-blue-400 mt-1">Fotos e mídias enviadas no grupo WhatsApp são salvas automaticamente. Use os filtros para buscar por data e funcionário.</p>
+            <h3 class="font-medium text-blue-800">Registros de fotos e mídias</h3>
+            <p class="text-sm text-blue-600 mt-1">Fotos e mídias enviadas no grupo WhatsApp são salvas automaticamente. Use os filtros para buscar por data e funcionário.</p>
           </div>
         </div>
       </div>
 
       <!-- Filters -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-6">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
         <div class="flex flex-wrap items-end gap-4">
           <div>
             <label class="block text-sm font-medium mb-1" for="filter-date">Data</label>
             <input type="date" id="filter-date"
-              class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors text-sm">
+              class="px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors text-sm">
           </div>
           <div>
             <label class="block text-sm font-medium mb-1" for="filter-employee">Funcionário</label>
             <select id="filter-employee"
-              class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors text-sm min-w-[200px]">
+              class="px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors text-sm min-w-[200px]">
               <option value="">Todos</option>
             </select>
           </div>
           <div>
             <label class="block text-sm font-medium mb-1" for="filter-type">Tipo</label>
             <select id="filter-type"
-              class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors text-sm">
+              class="px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors text-sm">
               <option value="">Todos</option>
               <option value="image">Fotos</option>
               <option value="video">Vídeos</option>
               <option value="audio">Áudios</option>
             </select>
           </div>
-          <button onclick="loadEntregas()" class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm">
+          <button onclick="loadEntregas()" class="flex items-center gap-2 px-4 py-2 bg-graphite hover:bg-graphite/90 text-white rounded-lg transition-colors text-sm">
             <i class="bi bi-search"></i>
             <span>Filtrar</span>
           </button>
@@ -204,10 +128,10 @@
       <!-- Gallery View -->
       <div id="entregas-gallery" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div class="col-span-full text-center py-12 text-gray-400">
-          <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="bi bi-box-seam text-3xl text-gray-400 dark:text-gray-500"></i>
+          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="bi bi-box-seam text-3xl text-gray-400"></i>
           </div>
-          <p class="text-lg font-medium text-gray-500 dark:text-gray-400">Carregando...</p>
+          <p class="text-lg font-medium text-gray-500">Carregando...</p>
         </div>
       </div>
     </div>
@@ -278,10 +202,10 @@
         if (messages.length === 0) {
           gallery.innerHTML = `
             <div class="col-span-full text-center py-12 text-gray-400">
-              <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="bi bi-camera text-3xl text-gray-400 dark:text-gray-500"></i>
+              <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="bi bi-camera text-3xl text-gray-400"></i>
               </div>
-              <p class="text-lg font-medium text-gray-500 dark:text-gray-400">Nenhuma mídia encontrada</p>
+              <p class="text-lg font-medium text-gray-500">Nenhuma mídia encontrada</p>
               <p class="text-sm mt-1">Tente outra data ou remova os filtros.</p>
             </div>`;
           return;
@@ -307,7 +231,7 @@
 
           const escapedSender = sender.replace(/'/g, "\\'");
           return `
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               ${isImage ? `
                 <div class="relative cursor-pointer group" onclick="openLightbox('${m.media_path}', '${escapedSender} - ${dateStr} ${timeStr}')">
                   <img src="${m.media_path}" alt="Foto de ${sender}" class="w-full h-52 object-cover" loading="lazy">
@@ -317,7 +241,7 @@
                   <div class="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full">${timeStr}</div>
                 </div>
               ` : `
-                <div class="w-full h-52 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                <div class="w-full h-52 bg-gray-100 flex items-center justify-center">
                   <div class="text-center">
                     <div class="text-4xl mb-2">${mediaBadge}</div>
                     <span class="text-sm text-gray-500">${m.media_type || 'mídia'}</span>
@@ -327,22 +251,22 @@
               <div class="p-4">
                 <div class="flex items-center justify-between mb-2">
                   <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                      <i class="bi bi-person-fill text-blue-600 dark:text-blue-400 text-xs"></i>
+                    <div class="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                      <i class="bi bi-person-fill text-blue-600 text-xs"></i>
                     </div>
                     <span class="text-sm font-medium">${sender}</span>
                   </div>
                   <span class="text-xs text-gray-400">${dateStr}</span>
                 </div>
-                ${userText ? `<p class="text-xs text-gray-600 dark:text-gray-400 mb-2">${userText}</p>` : ''}
+                ${userText ? `<p class="text-xs text-gray-600 mb-2">${userText}</p>` : ''}
                 ${aiText ? `
-                  <div class="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-100 dark:border-purple-800 mb-2">
-                    <p class="text-xs text-purple-700 dark:text-purple-300"><i class="bi bi-stars mr-1"></i>${aiText}</p>
+                  <div class="p-2 bg-purple-50 rounded-lg border border-purple-100 mb-2">
+                    <p class="text-xs text-purple-700"><i class="bi bi-stars mr-1"></i>${aiText}</p>
                   </div>
                 ` : ''}
                 <div id="entrega-info-${m.id}" class="entrega-info"></div>
                 ${isImage ? `
-                  <button onclick="analyzeEntrega(${m.id})" id="btn-analyze-${m.id}" class="w-full mt-2 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 rounded-lg transition-colors border border-emerald-200 dark:border-emerald-800">
+                  <button onclick="analyzeEntrega(${m.id})" id="btn-analyze-${m.id}" class="w-full mt-2 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors border border-emerald-200">
                     <i class="bi bi-search"></i>
                     <span>Extrair Detalhes (OCR)</span>
                   </button>
@@ -385,11 +309,11 @@
         const info = data.entrega;
         const infoEl = document.getElementById('entrega-info-' + msgId);
         if (infoEl && info) {
-          let html = '<div class="space-y-1 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">';
+          let html = '<div class="space-y-1 p-2 bg-gray-50 rounded-lg border border-gray-200">';
           if (info.destinatario) html += `<div class="flex items-center gap-2 text-xs"><i class="bi bi-person text-blue-500"></i><span class="text-gray-500">Para:</span><span class="font-medium">${info.destinatario}</span></div>`;
           if (info.remetente) html += `<div class="flex items-center gap-2 text-xs"><i class="bi bi-send text-green-500"></i><span class="text-gray-500">De:</span><span class="font-medium">${info.remetente}</span></div>`;
           if (info.transportadora) html += `<div class="flex items-center gap-2 text-xs"><i class="bi bi-truck text-orange-500"></i><span class="text-gray-500">Transp.:</span><span class="font-medium">${info.transportadora}</span></div>`;
-          if (info.descricao) html += `<div class="text-xs text-gray-600 dark:text-gray-400 mt-1">${info.descricao}</div>`;
+          if (info.descricao) html += `<div class="text-xs text-gray-600 mt-1">${info.descricao}</div>`;
           html += '</div>';
           infoEl.innerHTML = html;
         }

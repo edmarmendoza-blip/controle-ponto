@@ -1,153 +1,78 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#0E1625">
+  <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
   <title>Sugestões de Melhoria - Lar Digital</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
-      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+      theme: { extend: {
+        colors: {
+          graphite: '#0E1625', eucalyptus: '#697F71', porcelain: '#F7F4EE',
+          mist: '#E7ECE8', sand: '#D8CCB8', indigo: '#7279F8',
+          ink: '#1B2430', muted: '#667085', success: '#1F8F5F',
+          warning: '#C98A2E', danger: '#B5473C', border: '#E8E4DE',
+        },
+        borderRadius: { sm: '8px', md: '12px', lg: '16px' },
+        boxShadow: {
+          sm: '0 1px 3px rgba(14,22,37,0.04)',
+          md: '0 4px 16px rgba(14,22,37,0.06)',
+          lg: '0 8px 40px rgba(14,22,37,0.08)'
+        },
+        fontFamily: { sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'] }
+      }}
     }
   </script>
+  <link rel="stylesheet" href="/css/brand.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+<body class="bg-porcelain text-ink">
 
-  <!-- Sidebar -->
-  <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen bg-blue-800 text-white transition-transform -translate-x-full md:translate-x-0">
-    <div class="p-4 border-b border-blue-700">
-      <a href="/dashboard.html" class="flex items-center gap-2">
-        <i class="bi bi-clock-history text-2xl"></i>
-        <span class="text-xl font-bold">Lar Digital</span>
-      </a>
-      <p class="text-blue-200 text-xs mt-1">Gestão da Casa</p>
-    </div>
-    <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-180px)]">
-      <a href="/dashboard.html" data-page="dashboard" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-speedometer2"></i><span>Dashboard</span>
-      </a>
-      <a href="/funcionarios.html" data-page="funcionarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-people"></i><span>Funcionários</span>
-      </a>
-      <a href="/cargos.html" data-page="cargos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-briefcase"></i><span>Cargos</span>
-      </a>
-      <a href="/registros.html" data-page="registros" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-clock"></i><span>Registros</span>
-      </a>
-      <a href="/relatorios.html" data-page="relatorios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-file-earmark-text"></i><span>Relatórios</span>
-      </a>
-      <a href="/relatorios-graficos.html" data-page="relatorios-graficos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-bar-chart-line"></i><span>Gráficos</span>
-      </a>
-      <a href="/presenca.html" data-page="presenca" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-calendar-check"></i><span>Presença</span>
-      </a>
-      <a href="/entregas.html" data-page="entregas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-box-seam"></i><span>Entregas</span>
-      </a>
-      <a href="/compras.html" data-page="compras" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-cart4"></i><span>Compras</span>
-      </a>
-      <a href="/despesas.html" data-page="despesas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-receipt-cutoff"></i><span>Despesas</span>
-      </a>
-      <a href="/prestadores.html" data-page="prestadores" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-person-badge"></i><span>Prestadores</span>
-      </a>
-      <a href="/holerites.html" data-page="holerites" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-receipt"></i><span>Holerites</span>
-      </a>
-      <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-calendar-heart"></i><span>Férias</span>
-      </a>
-      <a href="/sugestoes.html" data-page="sugestoes" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-lightbulb"></i><span>Sugestões</span>
-      </a>
-      <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-shield-lock"></i><span>Usuários</span>
-      </a>
-      <a href="/feriados.html" data-page="feriados" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-calendar-event"></i><span>Feriados</span>
-      </a>
-      <a href="/insights.html" data-page="insights" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-stars"></i><span>Insights IA</span>
-      </a>
-      <a href="/whatsapp.html" data-page="whatsapp" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
-      </a>
-      <a href="/audit-log.html" data-page="audit-log" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-journal-text"></i><span>Audit Log</span>
-      </a>
-      <hr class="border-blue-700 my-2">
-      <a href="/ajuda.html" data-page="ajuda" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-chat-left-dots"></i><span>Ajuda</span>
-      </a>
-      <a href="/perfil.html" data-page="perfil" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-person-gear"></i><span>Perfil</span>
-      </a>
-    </nav>
-    <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-blue-700 bg-blue-800">
-      <div class="flex items-center justify-between mb-2">
-        <div class="flex items-center gap-2 text-sm">
-          <i class="bi bi-person-circle"></i>
-          <div>
-            <div id="user-name" class="font-medium">-</div>
-            <div id="user-role" class="text-blue-300 text-xs">-</div>
-          </div>
-        </div>
-        <button id="theme-toggle" class="p-1.5 rounded-lg hover:bg-blue-700 transition-colors">
-          <i id="theme-icon" class="bi bi-moon-fill"></i>
-        </button>
-      </div>
-      <button id="logout-btn" class="w-full py-1.5 text-sm bg-blue-700 hover:bg-blue-600 rounded-lg transition-colors">Sair</button>
-    </div>
-  </aside>
-  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+  <aside id="sidebar" class="ld-sidebar"></aside>
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-30 hidden md:hidden"></div>
 
   <!-- Main Content -->
-  <main class="md:ml-64 min-h-screen">
-    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+  <main class="ld-content min-h-screen">
+    <header class="ld-header">
       <div class="flex items-center gap-3">
-        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300">
+        <button id="sidebar-toggle" class="md:hidden text-muted hover:text-ink transition-colors">
           <i class="bi bi-list text-xl"></i>
         </button>
         <h1 class="text-xl font-semibold">Sugestões de Melhoria</h1>
       </div>
-      <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
+      <span class="text-sm text-muted" id="current-date"></span>
     </header>
 
     <div class="p-4 md:p-6" id="page-content">
       <!-- Stats -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
-          <div class="text-2xl font-bold text-yellow-600" id="stat-pendentes">0</div>
-          <div class="text-xs text-gray-500 dark:text-gray-400">Pendentes</div>
+        <div class="bg-white rounded-xl shadow-sm border border-border p-4">
+          <div class="text-2xl font-bold text-warning" id="stat-pendentes">0</div>
+          <div class="text-xs text-muted">Pendentes</div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
-          <div class="text-2xl font-bold text-blue-600" id="stat-analise">0</div>
-          <div class="text-xs text-gray-500 dark:text-gray-400">Em Análise</div>
+        <div class="bg-white rounded-xl shadow-sm border border-border p-4">
+          <div class="text-2xl font-bold text-eucalyptus" id="stat-analise">0</div>
+          <div class="text-xs text-muted">Em Análise</div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
-          <div class="text-2xl font-bold text-green-600" id="stat-convertidas">0</div>
-          <div class="text-xs text-gray-500 dark:text-gray-400">Convertidas</div>
+        <div class="bg-white rounded-xl shadow-sm border border-border p-4">
+          <div class="text-2xl font-bold text-success" id="stat-convertidas">0</div>
+          <div class="text-xs text-muted">Convertidas</div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
-          <div class="text-2xl font-bold text-gray-600" id="stat-total">0</div>
-          <div class="text-xs text-gray-500 dark:text-gray-400">Total</div>
+        <div class="bg-white rounded-xl shadow-sm border border-border p-4">
+          <div class="text-2xl font-bold text-muted" id="stat-total">0</div>
+          <div class="text-xs text-muted">Total</div>
         </div>
       </div>
 
       <!-- Filter Bar -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-6">
+      <div class="bg-white rounded-xl shadow-sm border border-border p-4 mb-6">
         <div class="flex flex-col md:flex-row items-start md:items-end gap-4">
           <div class="flex-1 min-w-0">
             <label class="block text-sm font-medium mb-1">Status</label>
-            <select id="filter-status" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            <select id="filter-status" class="w-full px-3 py-2.5 rounded-lg border border-border bg-white focus:ring-2 focus:ring-graphite focus:border-transparent outline-none transition">
               <option value="">Todos</option>
               <option value="pendente" selected>Pendente</option>
               <option value="em_analise">Em Análise</option>
@@ -157,12 +82,12 @@
           </div>
           <div class="flex-1 min-w-0">
             <label class="block text-sm font-medium mb-1">Categoria</label>
-            <select id="filter-categoria" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            <select id="filter-categoria" class="w-full px-3 py-2.5 rounded-lg border border-border bg-white focus:ring-2 focus:ring-graphite focus:border-transparent outline-none transition">
               <option value="">Todas</option>
             </select>
           </div>
           <div class="flex gap-2">
-            <button onclick="loadSugestoes()" class="px-4 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+            <button onclick="loadSugestoes()" class="px-4 py-2.5 bg-graphite hover:bg-graphite/90 text-white rounded-lg font-medium transition-colors flex items-center gap-2">
               <i class="bi bi-funnel"></i><span>Filtrar</span>
             </button>
           </div>
@@ -170,13 +95,13 @@
       </div>
 
       <!-- Results -->
-      <div class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+      <div class="mb-4 text-sm text-muted">
         <span id="sugestoes-count">0</span> sugestões encontradas
       </div>
 
       <!-- Cards Grid -->
       <div id="sugestoes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div class="col-span-full text-center py-8 text-gray-400">
+        <div class="col-span-full text-center py-8 text-muted">
           <i class="bi bi-arrow-repeat animate-spin text-2xl"></i>
           <p class="mt-2">Carregando...</p>
         </div>
@@ -186,15 +111,15 @@
 
   <!-- Modal Detail/Edit -->
   <div id="modal-sugestao" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between p-5 border-b border-border">
         <h3 class="text-lg font-semibold" id="modal-title">Sugestão</h3>
-        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+        <button onclick="closeModal()" class="text-muted hover:text-ink">
           <i class="bi bi-x-lg text-xl"></i>
         </button>
       </div>
       <div class="p-5 space-y-4" id="modal-body"></div>
-      <div class="flex justify-end gap-3 p-5 border-t border-gray-100 dark:border-gray-700" id="modal-actions"></div>
+      <div class="flex justify-end gap-3 p-5 border-t border-border" id="modal-actions"></div>
     </div>
   </div>
 
@@ -221,10 +146,10 @@
 
     function getStatusBadge(status) {
       const map = {
-        pendente: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-400', label: 'Pendente', icon: 'bi-hourglass-split' },
-        em_analise: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-400', label: 'Em Análise', icon: 'bi-search' },
-        convertida: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', label: 'Convertida', icon: 'bi-check-circle' },
-        ignorada: { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-600 dark:text-gray-400', label: 'Ignorada', icon: 'bi-x-circle' }
+        pendente: { bg: 'bg-warning/10', text: 'text-warning', label: 'Pendente', icon: 'bi-hourglass-split' },
+        em_analise: { bg: 'bg-eucalyptus/10', text: 'text-eucalyptus', label: 'Em Análise', icon: 'bi-search' },
+        convertida: { bg: 'bg-success/10', text: 'text-success', label: 'Convertida', icon: 'bi-check-circle' },
+        ignorada: { bg: 'bg-muted/10', text: 'text-muted', label: 'Ignorada', icon: 'bi-x-circle' }
       };
       const s = map[status] || map.pendente;
       return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${s.bg} ${s.text}"><i class="bi ${s.icon}"></i>${s.label}</span>`;
@@ -232,9 +157,9 @@
 
     function getPrioridadeBadge(prioridade) {
       const map = {
-        alta: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400', icon: 'bi-arrow-up-circle-fill' },
-        media: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-400', icon: 'bi-dash-circle-fill' },
-        baixa: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', icon: 'bi-arrow-down-circle-fill' }
+        alta: { bg: 'bg-danger/10', text: 'text-danger', icon: 'bi-arrow-up-circle-fill' },
+        media: { bg: 'bg-warning/10', text: 'text-warning', icon: 'bi-dash-circle-fill' },
+        baixa: { bg: 'bg-success/10', text: 'text-success', icon: 'bi-arrow-down-circle-fill' }
       };
       const p = map[prioridade] || map.media;
       return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${p.bg} ${p.text}"><i class="bi ${p.icon}"></i>${prioridade || 'media'}</span>`;
@@ -247,7 +172,7 @@
         imagem: { icon: 'bi-image', label: 'Foto' }
       };
       const f = map[fonteTipo] || map.texto;
-      return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"><i class="bi ${f.icon}"></i>${f.label}</span>`;
+      return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-muted/10 text-muted"><i class="bi ${f.icon}"></i>${f.label}</span>`;
     }
 
     async function loadSugestoes() {
@@ -265,7 +190,7 @@
       } catch (err) {
         console.error(err);
         document.getElementById('sugestoes-grid').innerHTML = `
-          <div class="col-span-full text-center py-8 text-red-400">
+          <div class="col-span-full text-center py-8 text-danger">
             <i class="bi bi-exclamation-circle text-3xl"></i>
             <p class="mt-2">Erro: ${err.message}</p>
           </div>`;
@@ -302,7 +227,7 @@
 
       if (allSugestoes.length === 0) {
         grid.innerHTML = `
-          <div class="col-span-full text-center py-8 text-gray-400">
+          <div class="col-span-full text-center py-8 text-muted">
             <i class="bi bi-lightbulb text-3xl"></i>
             <p class="mt-2">Nenhuma sugestão encontrada</p>
           </div>`;
@@ -310,25 +235,25 @@
       }
 
       grid.innerHTML = allSugestoes.map(s => `
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="openDetail(${s.id})">
+        <div class="bg-white rounded-xl shadow-sm border border-border p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="openDetail(${s.id})">
           <div class="flex items-start justify-between mb-3">
             <div class="flex items-center gap-2 flex-wrap">
               ${getStatusBadge(s.status)}
               ${getPrioridadeBadge(s.prioridade)}
             </div>
-            <span class="text-xs text-gray-400">#${s.id}</span>
+            <span class="text-xs text-muted">#${s.id}</span>
           </div>
           <h3 class="font-semibold text-sm mb-1 line-clamp-2">${escapeHtml(s.titulo || 'Sem título')}</h3>
-          <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">${escapeHtml(s.descricao || '')}</p>
-          <div class="flex items-center justify-between text-xs text-gray-400">
+          <p class="text-xs text-muted line-clamp-2 mb-3">${escapeHtml(s.descricao || '')}</p>
+          <div class="flex items-center justify-between text-xs text-muted">
             <div class="flex items-center gap-2">
               ${getFonteBadge(s.fonte_tipo)}
-              ${s.categoria ? `<span class="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">${escapeHtml(s.categoria)}</span>` : ''}
+              ${s.categoria ? `<span class="px-2 py-0.5 rounded bg-indigo/10 text-indigo">${escapeHtml(s.categoria)}</span>` : ''}
             </div>
             <span>${formatDate(s.created_at)}</span>
           </div>
-          ${s.remetente_nome ? `<div class="mt-2 text-xs text-gray-400"><i class="bi bi-person"></i> ${escapeHtml(s.remetente_nome)}</div>` : ''}
-          ${s.convertida_tarefa_id ? `<div class="mt-2 text-xs text-green-600"><i class="bi bi-check2-circle"></i> Tarefa #${s.convertida_tarefa_id}</div>` : ''}
+          ${s.remetente_nome ? `<div class="mt-2 text-xs text-muted"><i class="bi bi-person"></i> ${escapeHtml(s.remetente_nome)}</div>` : ''}
+          ${s.convertida_tarefa_id ? `<div class="mt-2 text-xs text-success"><i class="bi bi-check2-circle"></i> Tarefa #${s.convertida_tarefa_id}</div>` : ''}
         </div>
       `).join('');
     }
@@ -347,7 +272,7 @@
 
       let mediaHtml = '';
       if (s.imagem_path) {
-        mediaHtml = `<div class="mb-3"><img src="/${s.imagem_path}" class="max-h-48 rounded-lg border" alt="Imagem da sugestão"></div>`;
+        mediaHtml = `<div class="mb-3"><img src="/${s.imagem_path}" class="max-h-48 rounded-lg border border-border" alt="Imagem da sugestão"></div>`;
       }
 
       document.getElementById('modal-body').innerHTML = `
@@ -355,25 +280,25 @@
           ${getStatusBadge(s.status)}
           ${getPrioridadeBadge(s.prioridade)}
           ${getFonteBadge(s.fonte_tipo)}
-          ${s.categoria ? `<span class="px-2 py-0.5 rounded text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">${escapeHtml(s.categoria)}</span>` : ''}
+          ${s.categoria ? `<span class="px-2 py-0.5 rounded text-xs bg-indigo/10 text-indigo">${escapeHtml(s.categoria)}</span>` : ''}
         </div>
         ${mediaHtml}
         <div>
           <label class="block text-sm font-medium mb-1">Título</label>
-          <input type="text" id="edit-titulo" value="${escapeHtml(s.titulo || '')}" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm">
+          <input type="text" id="edit-titulo" value="${escapeHtml(s.titulo || '')}" class="w-full px-3 py-2 rounded-lg border border-border bg-white focus:ring-2 focus:ring-graphite outline-none transition text-sm">
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Descrição</label>
-          <textarea id="edit-descricao" rows="3" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm resize-none">${escapeHtml(s.descricao || '')}</textarea>
+          <textarea id="edit-descricao" rows="3" class="w-full px-3 py-2 rounded-lg border border-border bg-white focus:ring-2 focus:ring-graphite outline-none transition text-sm resize-none">${escapeHtml(s.descricao || '')}</textarea>
         </div>
         ${s.transcricao ? `<div>
           <label class="block text-sm font-medium mb-1">Transcrição do Áudio</label>
-          <p class="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 rounded-lg p-3">${escapeHtml(s.transcricao)}</p>
+          <p class="text-sm text-muted bg-porcelain rounded-lg p-3">${escapeHtml(s.transcricao)}</p>
         </div>` : ''}
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium mb-1">Prioridade</label>
-            <select id="edit-prioridade" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm">
+            <select id="edit-prioridade" class="w-full px-3 py-2 rounded-lg border border-border bg-white text-sm">
               <option value="baixa" ${s.prioridade === 'baixa' ? 'selected' : ''}>Baixa</option>
               <option value="media" ${s.prioridade === 'media' ? 'selected' : ''}>Média</option>
               <option value="alta" ${s.prioridade === 'alta' ? 'selected' : ''}>Alta</option>
@@ -381,7 +306,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Status</label>
-            <select id="edit-status" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm">
+            <select id="edit-status" class="w-full px-3 py-2 rounded-lg border border-border bg-white text-sm">
               <option value="pendente" ${s.status === 'pendente' ? 'selected' : ''}>Pendente</option>
               <option value="em_analise" ${s.status === 'em_analise' ? 'selected' : ''}>Em Análise</option>
               <option value="ignorada" ${s.status === 'ignorada' ? 'selected' : ''}>Ignorada</option>
@@ -389,24 +314,24 @@
             </select>
           </div>
         </div>
-        <div class="text-xs text-gray-400 space-y-1">
+        <div class="text-xs text-muted space-y-1">
           <p><i class="bi bi-person"></i> Remetente: ${escapeHtml(s.remetente_nome || 'Desconhecido')}</p>
           <p><i class="bi bi-calendar3"></i> Criada em: ${formatDateTime(s.created_at)}</p>
-          ${s.convertida_tarefa_id ? `<p><i class="bi bi-check2-circle text-green-600"></i> Convertida em Tarefa #${s.convertida_tarefa_id}</p>` : ''}
+          ${s.convertida_tarefa_id ? `<p><i class="bi bi-check2-circle text-success"></i> Convertida em Tarefa #${s.convertida_tarefa_id}</p>` : ''}
         </div>
       `;
 
-      let actions = `<button onclick="closeModal()" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm">Fechar</button>`;
+      let actions = `<button onclick="closeModal()" class="px-4 py-2 rounded-lg border border-border hover:bg-porcelain transition-colors text-sm">Fechar</button>`;
 
       if (s.status !== 'convertida') {
         actions = `
-          <button onclick="deleteSugestao(${s.id})" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm transition-colors">
+          <button onclick="deleteSugestao(${s.id})" class="px-4 py-2 rounded-lg bg-danger hover:bg-danger/90 text-white text-sm transition-colors">
             <i class="bi bi-trash"></i> Excluir
           </button>
-          <button onclick="converterTarefa(${s.id})" class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm transition-colors">
+          <button onclick="converterTarefa(${s.id})" class="px-4 py-2 rounded-lg bg-success hover:bg-success/90 text-white text-sm transition-colors">
             <i class="bi bi-arrow-right-circle"></i> Converter em Tarefa
           </button>
-          <button onclick="saveSugestao(${s.id})" class="px-4 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-medium transition-colors">
+          <button onclick="saveSugestao(${s.id})" class="px-4 py-2 rounded-lg bg-graphite hover:bg-graphite/90 text-white text-sm font-medium transition-colors">
             Salvar
           </button>` + actions;
       }

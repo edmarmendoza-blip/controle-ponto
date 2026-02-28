@@ -96,6 +96,8 @@
       if (user.role === 'admin' || user.role === 'gestor') {
         document.querySelectorAll('.gestor-only').forEach(el => el.classList.remove('hidden'));
       }
+      // Update sidebar avatar
+      initSidebarUserAvatar();
       // Callback after auth
       if (window.onAuthReady) window.onAuthReady(user);
     }).catch(() => {
@@ -158,7 +160,106 @@
   };
 
   // --- Sidebar ---
+  async function loadSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar || sidebar.dataset.loaded) return;
+    try {
+      const res = await fetch('/components/sidebar.html');
+      if (res.ok) {
+        sidebar.innerHTML = await res.text();
+        sidebar.dataset.loaded = '1';
+        // Re-apply role visibility after sidebar loads
+        if (currentUser) {
+          if (currentUser.role === 'admin') {
+            sidebar.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+          }
+          if (currentUser.role === 'admin' || currentUser.role === 'gestor') {
+            sidebar.querySelectorAll('.gestor-only').forEach(el => el.classList.remove('hidden'));
+          }
+        }
+        initSidebarGroups();
+        initSidebarActive();
+        initSidebarMobile();
+        initSidebarUserAvatar();
+        // Reattach logout
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) logoutBtn.addEventListener('click', logout);
+      }
+    } catch (e) {
+      console.error('[Shared] Failed to load sidebar:', e);
+    }
+  }
+
+  function initSidebarActive() {
+    const currentPage = window.location.pathname.split('/').pop().replace('.html', '') || 'dashboard';
+    document.querySelectorAll('#sidebar a[data-page]').forEach(link => {
+      if (link.dataset.page === currentPage) {
+        link.classList.add('active');
+        // Auto-expand parent group
+        const group = link.closest('.ld-sidebar-group');
+        if (group) group.classList.remove('collapsed');
+      }
+    });
+  }
+
+  function initSidebarGroups() {
+    const saved = JSON.parse(localStorage.getItem('ld_sidebar_groups') || '{}');
+    document.querySelectorAll('.ld-sidebar-group').forEach(group => {
+      const key = group.dataset.group;
+      if (key && saved[key] === false) {
+        group.classList.add('collapsed');
+      }
+      const label = group.querySelector('.ld-sidebar-group-label');
+      if (label) {
+        label.addEventListener('click', () => {
+          group.classList.toggle('collapsed');
+          // Save state
+          const states = {};
+          document.querySelectorAll('.ld-sidebar-group').forEach(g => {
+            if (g.dataset.group) states[g.dataset.group] = !g.classList.contains('collapsed');
+          });
+          localStorage.setItem('ld_sidebar_groups', JSON.stringify(states));
+        });
+      }
+    });
+  }
+
+  function initSidebarMobile() {
+    const toggle = document.getElementById('sidebar-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    if (toggle && sidebar) {
+      toggle.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+        if (overlay) overlay.classList.toggle('hidden');
+      });
+      if (overlay) {
+        overlay.addEventListener('click', () => {
+          sidebar.classList.remove('open');
+          overlay.classList.add('hidden');
+        });
+      }
+    }
+  }
+
+  function initSidebarUserAvatar() {
+    if (!currentUser) return;
+    const avatarEl = document.getElementById('user-avatar');
+    if (avatarEl && currentUser.name) {
+      avatarEl.textContent = currentUser.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    }
+  }
+
   function initSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+    // If sidebar uses new brand system (loaded via loadSidebar or has ld-sidebar class)
+    if (sidebar.classList.contains('ld-sidebar') || sidebar.dataset.loaded) {
+      initSidebarActive();
+      initSidebarMobile();
+      return;
+    }
+    // Legacy sidebar support (inline blue sidebar in old pages)
     const currentPage = window.location.pathname.split('/').pop().replace('.html', '') || 'dashboard';
     document.querySelectorAll('#sidebar a[data-page]').forEach(link => {
       const page = link.dataset.page;
@@ -170,12 +271,11 @@
 
     // Mobile toggle
     const toggle = document.getElementById('sidebar-toggle');
-    const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebar-overlay');
     if (toggle && sidebar) {
       toggle.addEventListener('click', () => {
         sidebar.classList.toggle('-translate-x-full');
-        overlay.classList.toggle('hidden');
+        if (overlay) overlay.classList.toggle('hidden');
       });
       if (overlay) {
         overlay.addEventListener('click', () => {
@@ -187,8 +287,13 @@
   }
 
   // --- Init ---
-  function init() {
+  async function init() {
     initTheme();
+    // Load dynamic sidebar if placeholder exists
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && sidebar.classList.contains('ld-sidebar') && !sidebar.dataset.loaded) {
+      await loadSidebar();
+    }
     checkAuth();
     initSidebar();
 
@@ -247,6 +352,7 @@
     today,
     toggleTheme,
     init,
+    loadSidebar,
     showConfirmModal,
     get currentUser() { return currentUser; },
     get token() { return token; }

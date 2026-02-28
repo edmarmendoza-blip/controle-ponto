@@ -1,124 +1,51 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
+  <meta name="theme-color" content="#0E1625">
   <title>Funcionários - Lar Digital</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
-      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+      theme: {
+        extend: {
+          colors: {
+            graphite: '#0E1625', eucalyptus: '#697F71', porcelain: '#F7F4EE',
+            mist: '#E7ECE8', sand: '#D8CCB8', indigo: '#7279F8',
+            ink: '#1B2430', muted: '#667085', success: '#1F8F5F',
+            warning: '#C98A2E', danger: '#B5473C', border: '#E8E4DE',
+          },
+          borderRadius: { sm: '8px', md: '12px', lg: '16px' },
+          boxShadow: {
+            sm: '0 1px 3px rgba(14,22,37,0.04)',
+            md: '0 4px 16px rgba(14,22,37,0.06)',
+            lg: '0 8px 40px rgba(14,22,37,0.08)',
+          },
+          fontFamily: { sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'] },
+        }
+      }
     }
   </script>
+  <link rel="stylesheet" href="/css/brand.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+<body class="bg-porcelain text-ink">
 
-  <!-- Sidebar -->
-  <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen bg-blue-800 text-white transition-transform -translate-x-full md:translate-x-0">
-    <div class="p-4 border-b border-blue-700">
-      <a href="/dashboard.html" class="flex items-center gap-2">
-        <i class="bi bi-clock-history text-2xl"></i>
-        <span class="text-xl font-bold">Lar Digital</span>
-      </a>
-      <p class="text-blue-200 text-xs mt-1">Gestão da Casa</p>
-    </div>
-    <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-180px)]">
-      <a href="/dashboard.html" data-page="dashboard" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-speedometer2"></i><span>Dashboard</span>
-      </a>
-      <a href="/funcionarios.html" data-page="funcionarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-people"></i><span>Funcionários</span>
-      </a>
-      <a href="/cargos.html" data-page="cargos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-briefcase"></i><span>Cargos</span>
-      </a>
-      <a href="/registros.html" data-page="registros" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-clock"></i><span>Registros</span>
-      </a>
-      <a href="/relatorios.html" data-page="relatorios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-file-earmark-text"></i><span>Relatórios</span>
-      </a>
-      <a href="/relatorios-graficos.html" data-page="relatorios-graficos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-bar-chart-line"></i><span>Gráficos</span>
-      </a>
-      <a href="/presenca.html" data-page="presenca" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-calendar-check"></i><span>Presença</span>
-      </a>
-      <a href="/entregas.html" data-page="entregas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-box-seam"></i><span>Entregas</span>
-      </a>
-      <a href="/compras.html" data-page="compras" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-cart4"></i><span>Compras</span>
-      </a>
-      <a href="/despesas.html" data-page="despesas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-receipt-cutoff"></i><span>Despesas</span>
-      </a>
-      <a href="/prestadores.html" data-page="prestadores" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-person-badge"></i><span>Prestadores</span>
-      </a>
-      <a href="/holerites.html" data-page="holerites" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-receipt"></i><span>Holerites</span>
-      </a>
-      <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-calendar-heart"></i><span>Férias</span>
-      </a>
-      <a href="/sugestoes.html" data-page="sugestoes" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-lightbulb"></i><span>Sugestões</span>
-      </a>
-      <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-shield-lock"></i><span>Usuários</span>
-      </a>
-      <a href="/feriados.html" data-page="feriados" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-calendar-event"></i><span>Feriados</span>
-      </a>
-      <a href="/insights.html" data-page="insights" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-stars"></i><span>Insights IA</span>
-      </a>
-      <a href="/whatsapp.html" data-page="whatsapp" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
-      </a>
-      <a href="/audit-log.html" data-page="audit-log" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-journal-text"></i><span>Audit Log</span>
-      </a>
-      <hr class="border-blue-700 my-2">
-      <a href="/ajuda.html" data-page="ajuda" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-chat-left-dots"></i><span>Ajuda</span>
-      </a>
-      <a href="/perfil.html" data-page="perfil" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-person-gear"></i><span>Perfil</span>
-      </a>
-    </nav>
-    <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-blue-700 bg-blue-800">
-      <div class="flex items-center justify-between mb-2">
-        <div class="flex items-center gap-2 text-sm">
-          <i class="bi bi-person-circle"></i>
-          <div>
-            <div id="user-name" class="font-medium">-</div>
-            <div id="user-role" class="text-blue-300 text-xs">-</div>
-          </div>
-        </div>
-        <button id="theme-toggle" class="p-1.5 rounded-lg hover:bg-blue-700 transition-colors">
-          <i id="theme-icon" class="bi bi-moon-fill"></i>
-        </button>
-      </div>
-      <button id="logout-btn" class="w-full py-1.5 text-sm bg-blue-700 hover:bg-blue-600 rounded-lg transition-colors">Sair</button>
-    </div>
-  </aside>
-  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+  <aside id="sidebar" class="ld-sidebar"></aside>
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-30 hidden md:hidden"></div>
 
   <!-- Main Content -->
-  <main class="md:ml-64 min-h-screen">
-    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+  <main class="ld-content min-h-screen">
+    <header class="ld-header">
       <div class="flex items-center gap-3">
-        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300">
+        <button id="sidebar-toggle" class="md:hidden text-muted hover:text-ink transition-colors">
           <i class="bi bi-list text-xl"></i>
         </button>
-        <h1 class="text-xl font-semibold">Funcionários</h1>
+        <h1>Funcionários</h1>
       </div>
-      <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
+      <span class="text-sm text-muted" id="current-date"></span>
     </header>
 
     <div class="p-4 md:p-6" id="page-content">
@@ -134,30 +61,30 @@
             <span>Mostrar inativos</span>
           </label>
         </div>
-        <div class="text-sm text-gray-500 dark:text-gray-400">
+        <div class="text-sm text-muted">
           Total: <span id="total-count" class="font-semibold">0</span> funcionários
         </div>
       </div>
 
       <!-- Table -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div class="bg-white rounded-xl shadow-sm border border-border overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full">
             <thead>
-              <tr class="bg-gray-50 dark:bg-gray-700/50">
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nome</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cargo</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Classificação</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Salário/Hora</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Telefone</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Admissão</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
+              <tr class="bg-porcelain">
+                <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Nome</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Cargo</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Classificação</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Salário/Hora</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Telefone</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Admissão</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Status</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Ações</th>
               </tr>
             </thead>
-            <tbody id="funcionarios-table" class="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody id="funcionarios-table" class="divide-y divide-gray-100">
               <tr>
-                <td colspan="8" class="px-5 py-8 text-center text-gray-400">
+                <td colspan="8" class="px-5 py-8 text-center text-muted">
                   <i class="bi bi-arrow-repeat animate-spin text-2xl"></i>
                   <p class="mt-2">Carregando...</p>
                 </td>
@@ -171,25 +98,25 @@
 
   <!-- Modal Create/Edit -->
   <div id="modal-funcionario" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700 shrink-0">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between p-5 border-b border-border shrink-0">
         <h3 class="text-lg font-semibold" id="modal-title">Novo Funcionário</h3>
-        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+        <button onclick="closeModal()" class="text-muted hover:text-muted">
           <i class="bi bi-x-lg text-xl"></i>
         </button>
       </div>
 
       <!-- Tab Navigation -->
-      <div class="border-b border-gray-100 dark:border-gray-700 shrink-0 overflow-x-auto">
+      <div class="border-b border-border shrink-0 overflow-x-auto">
         <nav class="flex px-5 gap-1" id="modal-tabs">
           <button type="button" onclick="switchTab('pessoais')" data-tab="pessoais" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-primary text-primary whitespace-nowrap">Dados Pessoais</button>
-          <button type="button" onclick="switchTab('classificacao')" data-tab="classificacao" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">Classificacao</button>
-          <button type="button" onclick="switchTab('jornada')" data-tab="jornada" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">Jornada</button>
-          <button type="button" onclick="switchTab('beneficios')" data-tab="beneficios" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">Benefícios e Extras</button>
-          <button type="button" onclick="switchTab('transporte')" data-tab="transporte" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">Vale-Transporte</button>
-          <button type="button" onclick="switchTab('alimentacao')" data-tab="alimentacao" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">Vale-Alimentacao</button>
-          <button type="button" onclick="switchTab('pix')" data-tab="pix" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">PIX</button>
-          <button type="button" onclick="switchTab('comunicacao')" data-tab="comunicacao" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">Comunicacao</button>
+          <button type="button" onclick="switchTab('classificacao')" data-tab="classificacao" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-muted hover:text-gray-700 whitespace-nowrap">Classificacao</button>
+          <button type="button" onclick="switchTab('jornada')" data-tab="jornada" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-muted hover:text-gray-700 whitespace-nowrap">Jornada</button>
+          <button type="button" onclick="switchTab('beneficios')" data-tab="beneficios" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-muted hover:text-gray-700 whitespace-nowrap">Benefícios e Extras</button>
+          <button type="button" onclick="switchTab('transporte')" data-tab="transporte" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-muted hover:text-gray-700 whitespace-nowrap">Vale-Transporte</button>
+          <button type="button" onclick="switchTab('alimentacao')" data-tab="alimentacao" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-muted hover:text-gray-700 whitespace-nowrap">Vale-Alimentacao</button>
+          <button type="button" onclick="switchTab('pix')" data-tab="pix" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-muted hover:text-gray-700 whitespace-nowrap">PIX</button>
+          <button type="button" onclick="switchTab('comunicacao')" data-tab="comunicacao" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-muted hover:text-gray-700 whitespace-nowrap">Comunicacao</button>
         </nav>
       </div>
 
@@ -201,29 +128,29 @@
           <div id="tab-pessoais" class="tab-content space-y-4">
             <div>
               <label class="block text-sm font-medium mb-1">Nome *</label>
-              <input type="text" id="func-nome" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <input type="text" id="func-nome" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">Cargo (selecione ou digite)</label>
-              <select id="func-cargo-id" onchange="onCargoIdChange()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition mb-2">
+              <select id="func-cargo-id" onchange="onCargoIdChange()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition mb-2">
                 <option value="">-- Selecionar cargo cadastrado --</option>
               </select>
-              <input type="text" id="func-cargo" placeholder="Ou digite o cargo manualmente" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Selecionar um cargo preenche automaticamente os beneficios.</p>
+              <input type="text" id="func-cargo" placeholder="Ou digite o cargo manualmente" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <p class="text-xs text-muted mt-1">Selecionar um cargo preenche automaticamente os beneficios.</p>
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium mb-1">Telefone</label>
-                <input type="text" id="func-telefone" placeholder="(11) 99999-0000" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <input type="text" id="func-telefone" placeholder="(11) 99999-0000" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
               </div>
               <div>
                 <label class="block text-sm font-medium mb-1">E-mail Pessoal</label>
-                <input type="email" id="func-email-pessoal" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <input type="email" id="func-email-pessoal" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
               </div>
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">Salario/Hora (R$)</label>
-              <input type="number" step="0.01" id="func-salario" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <input type="number" step="0.01" id="func-salario" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
             </div>
           </div>
 
@@ -231,7 +158,7 @@
           <div id="tab-classificacao" class="tab-content space-y-4 hidden">
             <div>
               <label class="block text-sm font-medium mb-1">Classificacao</label>
-              <select id="func-classificacao" onchange="onClassificacaoChange()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <select id="func-classificacao" onchange="onClassificacaoChange()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
                 <option value="operacional">Operacional</option>
                 <option value="assistente_pessoal">Assistente Pessoal</option>
                 <option value="dono_casa">Dono de Casa</option>
@@ -240,18 +167,18 @@
             </div>
             <div id="status-field" class="hidden">
               <label class="block text-sm font-medium mb-1">Status</label>
-              <select id="func-status" onchange="onStatusChange()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <select id="func-status" onchange="onStatusChange()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
                 <option value="ativo">Ativo</option>
                 <option value="desligado">Desligado</option>
               </select>
             </div>
             <div id="motivo-desligamento-field" class="hidden">
               <label class="block text-sm font-medium mb-1">Motivo do Desligamento</label>
-              <input type="text" id="func-motivo-desligamento" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <input type="text" id="func-motivo-desligamento" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">Data de Admissao</label>
-              <input type="date" id="func-data-admissao" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <input type="date" id="func-data-admissao" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
             </div>
           </div>
 
@@ -260,26 +187,26 @@
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium mb-1">Horario de Entrada</label>
-                <input type="time" id="func-horario" value="08:00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <input type="time" id="func-horario" value="08:00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
               </div>
               <div>
                 <label class="block text-sm font-medium mb-1">Jornada Diaria (h)</label>
-                <input type="number" step="0.01" id="func-jornada" value="9.8" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <input type="number" step="0.01" id="func-jornada" value="9.8" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
               </div>
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium mb-1">Valor Hora Extra (R$)</label>
-                <input type="number" step="0.01" id="func-hora-extra" value="43.25" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <input type="number" step="0.01" id="func-hora-extra" value="43.25" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
               </div>
               <div>
                 <label class="block text-sm font-medium mb-1">Valor Dia Especial (R$)</label>
-                <input type="number" step="0.01" id="func-dia-especial" value="320" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <input type="number" step="0.01" id="func-dia-especial" value="320" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
               </div>
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">Descricao da Jornada (Texto Natural)</label>
-              <textarea id="func-jornada-texto" rows="3" placeholder="Ex: Segunda a sexta, das 08:00 as 17:48, com 1h de almoco. Sabado e domingo nao trabalha." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"></textarea>
+              <textarea id="func-jornada-texto" rows="3" placeholder="Ex: Segunda a sexta, das 08:00 as 17:48, com 1h de almoco. Sabado e domingo nao trabalha." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"></textarea>
               <button type="button" onclick="parseJornada()" id="btn-parse-jornada" class="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium transition-colors">
                 <i class="bi bi-stars"></i>
                 <span>Interpretar com IA</span>
@@ -287,9 +214,9 @@
             </div>
             <!-- AI Preview -->
             <div id="jornada-preview" class="hidden">
-              <div class="p-4 rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/20">
+              <div class="p-4 rounded-lg border border-purple-200 bg-purple-50">
                 <div class="flex items-center justify-between mb-3">
-                  <h4 class="text-sm font-semibold text-purple-700 dark:text-purple-400 flex items-center gap-2">
+                  <h4 class="text-sm font-semibold text-purple-700 flex items-center gap-2">
                     <i class="bi bi-stars"></i> Jornada Interpretada pela IA
                   </h4>
                   <button type="button" onclick="aplicarJornada()" class="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium transition-colors flex items-center gap-1">
@@ -304,65 +231,65 @@
 
           <!-- Tab: Beneficios e Extras -->
           <div id="tab-beneficios" class="tab-content space-y-4 hidden">
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Configure os beneficios e valores extras do funcionario.</p>
+            <p class="text-sm text-muted mb-3">Configure os beneficios e valores extras do funcionario.</p>
 
             <!-- Recebe Vale Transporte -->
-            <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+            <div class="p-3 rounded-lg border border-border hover:bg-porcelain transition">
               <label class="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" id="func-recebe-vt" checked onchange="toggleBeneficio('vt')" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
                 <div class="flex-1">
                   <span class="text-sm font-medium">Recebe Vale-Transporte</span>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">VT sera incluido nos calculos</p>
+                  <p class="text-xs text-muted">VT sera incluido nos calculos</p>
                 </div>
               </label>
               <div id="beneficio-vt-valor" class="mt-3 ml-7 hidden">
-                <label class="block text-xs font-medium text-gray-500 mb-1">Valor fixo VT mensal (R$) <span class="text-gray-400">(se aplicavel)</span></label>
-                <input type="number" step="0.01" id="func-beneficio-vt-valor" placeholder="0.00" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <label class="block text-xs font-medium text-muted mb-1">Valor fixo VT mensal (R$) <span class="text-muted">(se aplicavel)</span></label>
+                <input type="number" step="0.01" id="func-beneficio-vt-valor" placeholder="0.00" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
               </div>
             </div>
 
             <!-- Recebe Vale Alimentacao -->
-            <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+            <div class="p-3 rounded-lg border border-border hover:bg-porcelain transition">
               <label class="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" id="func-recebe-va" checked onchange="toggleBeneficio('va')" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
                 <div class="flex-1">
                   <span class="text-sm font-medium">Recebe Vale-Alimentacao</span>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">VA sera incluido nos calculos</p>
+                  <p class="text-xs text-muted">VA sera incluido nos calculos</p>
                 </div>
               </label>
               <div id="beneficio-va-valor" class="mt-3 ml-7 hidden">
-                <label class="block text-xs font-medium text-gray-500 mb-1">Valor VA por dia (R$)</label>
-                <input type="number" step="0.01" id="func-beneficio-va-valor" placeholder="0.00" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <label class="block text-xs font-medium text-muted mb-1">Valor VA por dia (R$)</label>
+                <input type="number" step="0.01" id="func-beneficio-va-valor" placeholder="0.00" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
               </div>
             </div>
 
             <!-- Recebe Hora Extra -->
-            <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+            <div class="p-3 rounded-lg border border-border hover:bg-porcelain transition">
               <label class="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" id="func-contabiliza-hora-extra" checked onchange="toggleBeneficio('he')" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
                 <div class="flex-1">
                   <span class="text-sm font-medium">Recebe Hora Extra</span>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">Horas extras serao calculadas automaticamente</p>
+                  <p class="text-xs text-muted">Horas extras serao calculadas automaticamente</p>
                 </div>
               </label>
               <div id="beneficio-he-valor" class="mt-3 ml-7 hidden">
-                <label class="block text-xs font-medium text-gray-500 mb-1">Valor hora extra (R$)</label>
-                <input type="number" step="0.01" id="func-beneficio-he-valor" placeholder="43.25" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <label class="block text-xs font-medium text-muted mb-1">Valor hora extra (R$)</label>
+                <input type="number" step="0.01" id="func-beneficio-he-valor" placeholder="43.25" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
               </div>
             </div>
 
             <!-- Recebe por Dia Extra -->
-            <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+            <div class="p-3 rounded-lg border border-border hover:bg-porcelain transition">
               <label class="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" id="func-contabiliza-feriado" checked onchange="toggleBeneficio('de')" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
                 <div class="flex-1">
                   <span class="text-sm font-medium">Recebe por Dia Extra (Feriado/Especial)</span>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">Feriados e dias especiais serao pagos com valor diferenciado</p>
+                  <p class="text-xs text-muted">Feriados e dias especiais serao pagos com valor diferenciado</p>
                 </div>
               </label>
               <div id="beneficio-de-valor" class="mt-3 ml-7 hidden">
-                <label class="block text-xs font-medium text-gray-500 mb-1">Valor dia extra (R$)</label>
-                <input type="number" step="0.01" id="func-beneficio-de-valor" placeholder="320.00" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <label class="block text-xs font-medium text-muted mb-1">Valor dia extra (R$)</label>
+                <input type="number" step="0.01" id="func-beneficio-de-valor" placeholder="320.00" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
               </div>
             </div>
           </div>
@@ -371,7 +298,7 @@
           <div id="tab-transporte" class="tab-content space-y-4 hidden">
             <div>
               <label class="block text-sm font-medium mb-1">Tipo de Transporte</label>
-              <select id="func-tipo-transporte" onchange="onTipoTransporteChange()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <select id="func-tipo-transporte" onchange="onTipoTransporteChange()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
                 <option value="diario">Diario</option>
                 <option value="pernoite">Pernoite</option>
                 <option value="fixo">Fixo</option>
@@ -379,12 +306,12 @@
             </div>
             <div id="valor-fixo-transporte-field" class="hidden">
               <label class="block text-sm font-medium mb-1">Valor Fixo Transporte (R$)</label>
-              <input type="number" step="0.01" id="func-valor-fixo-transporte" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <input type="number" step="0.01" id="func-valor-fixo-transporte" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
             </div>
             <div>
               <label class="block text-sm font-medium mb-2">Linhas de Transporte</label>
               <div id="transportes-list" class="space-y-2"></div>
-              <button type="button" onclick="addTransporteRow()" class="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 hover:border-primary hover:text-primary text-sm text-gray-500 dark:text-gray-400 transition-colors w-full justify-center">
+              <button type="button" onclick="addTransporteRow()" class="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 hover:border-primary hover:text-primary text-sm text-muted transition-colors w-full justify-center">
                 <i class="bi bi-plus-lg"></i>
                 <span>Adicionar transporte</span>
               </button>
@@ -393,16 +320,16 @@
 
           <!-- Tab: Vale-Alimentacao -->
           <div id="tab-alimentacao" class="tab-content space-y-4 hidden">
-            <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition">
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-porcelain cursor-pointer transition">
               <input type="checkbox" id="func-tem-va" onchange="onTemVaChange()" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
               <div>
                 <span class="text-sm font-medium">Possui Vale-Alimentacao</span>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Ativar para configurar o valor diario do VA</p>
+                <p class="text-xs text-muted">Ativar para configurar o valor diario do VA</p>
               </div>
             </label>
             <div id="valor-va-dia-field" class="hidden">
               <label class="block text-sm font-medium mb-1">Valor VA por Dia (R$)</label>
-              <input type="number" step="0.01" id="func-valor-va-dia" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <input type="number" step="0.01" id="func-valor-va-dia" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
             </div>
           </div>
 
@@ -410,7 +337,7 @@
           <div id="tab-pix" class="tab-content space-y-4 hidden">
             <div>
               <label class="block text-sm font-medium mb-1">Tipo de Chave PIX</label>
-              <select id="func-pix-tipo" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <select id="func-pix-tipo" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
                 <option value="cpf">CPF</option>
                 <option value="telefone">Telefone</option>
                 <option value="email">E-mail</option>
@@ -419,41 +346,41 @@
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">Chave PIX</label>
-              <input type="text" id="func-pix-chave" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <input type="text" id="func-pix-chave" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">Banco (opcional)</label>
-              <input type="text" id="func-pix-banco" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <input type="text" id="func-pix-banco" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
             </div>
           </div>
 
           <!-- Tab: Comunicacao -->
           <div id="tab-comunicacao" class="tab-content space-y-4 hidden">
-            <div id="comunicacao-aviso" class="p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-sm text-yellow-700 dark:text-yellow-400 hidden">
+            <div id="comunicacao-aviso" class="p-3 rounded-lg bg-yellow-50 border border-yellow-200 text-sm text-yellow-700 hidden">
               <i class="bi bi-exclamation-triangle mr-1"></i>
               Preencha o e-mail pessoal na aba "Dados Pessoais" para ativar notificacoes.
             </div>
-            <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition">
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-porcelain cursor-pointer transition">
               <input type="checkbox" id="func-notificacoes-ativas" onchange="onNotificacoesChange()" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
               <div>
                 <span class="text-sm font-medium">Notificacoes Ativas</span>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Enviar notificacoes por e-mail ao funcionario</p>
+                <p class="text-xs text-muted">Enviar notificacoes por e-mail ao funcionario</p>
               </div>
             </label>
             <div id="sub-notificacoes" class="hidden ml-6 space-y-3">
-              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition">
+              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-porcelain cursor-pointer transition">
                 <input type="checkbox" id="func-notif-resumo-semanal" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
                 <span class="text-sm">Resumo Semanal</span>
               </label>
-              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition">
+              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-porcelain cursor-pointer transition">
                 <input type="checkbox" id="func-notif-aviso-holerite" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
                 <span class="text-sm">Aviso de Holerite</span>
               </label>
-              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition">
+              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-porcelain cursor-pointer transition">
                 <input type="checkbox" id="func-notif-comprovante-pagamento" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
                 <span class="text-sm">Comprovante de Pagamento</span>
               </label>
-              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition">
+              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-porcelain cursor-pointer transition">
                 <input type="checkbox" id="func-notif-lembrete-ponto" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
                 <span class="text-sm">Lembrete de Ponto</span>
               </label>
@@ -463,8 +390,8 @@
         </div>
 
         <!-- Footer with buttons (always visible) -->
-        <div class="flex justify-end gap-3 p-5 border-t border-gray-100 dark:border-gray-700 shrink-0 bg-white dark:bg-gray-800 sticky bottom-0">
-          <button type="button" onclick="closeModal()" class="px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        <div class="flex justify-end gap-3 p-5 border-t border-border shrink-0 bg-white sticky bottom-0">
+          <button type="button" onclick="closeModal()" class="px-4 py-2.5 rounded-lg border border-gray-300 hover:bg-porcelain transition-colors">
             Cancelar
           </button>
           <button type="submit" class="px-4 py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-white font-medium transition-colors">
@@ -553,10 +480,10 @@
 
     function getClassificacaoBadge(classificacao) {
       const map = {
-        operacional: { label: 'Operacional', bg: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
-        assistente_pessoal: { label: 'Assistente', bg: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' },
-        dono_casa: { label: 'Dono de Casa', bg: 'bg-gray-100 text-gray-700 dark:bg-gray-600/30 dark:text-gray-400' },
-        outro: { label: 'Outro', bg: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' }
+        operacional: { label: 'Operacional', bg: 'bg-blue-100 text-blue-700' },
+        assistente_pessoal: { label: 'Assistente', bg: 'bg-purple-100 text-purple-700' },
+        dono_casa: { label: 'Dono de Casa', bg: 'bg-gray-100 text-gray-700' },
+        outro: { label: 'Outro', bg: 'bg-warning/10 text-warning' }
       };
       const info = map[classificacao] || map['operacional'];
       return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${info.bg}">${info.label}</span>`;
@@ -575,13 +502,13 @@
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.modal-tab').forEach(el => {
         el.classList.remove('border-primary', 'text-primary');
-        el.classList.add('border-transparent', 'text-gray-500');
+        el.classList.add('border-transparent', 'text-muted');
       });
       const tabEl = document.getElementById('tab-' + tabName);
       if (tabEl) tabEl.classList.remove('hidden');
       const tabBtn = document.querySelector(`.modal-tab[data-tab="${tabName}"]`);
       if (tabBtn) {
-        tabBtn.classList.remove('border-transparent', 'text-gray-500');
+        tabBtn.classList.remove('border-transparent', 'text-muted');
         tabBtn.classList.add('border-primary', 'text-primary');
       }
       // Show comunicacao warning if no email
@@ -655,16 +582,16 @@
       row.className = 'flex items-center gap-2 transporte-row';
       row.id = 'transporte-row-' + idx;
       row.innerHTML = `
-        <select data-field="tipo" class="flex-shrink-0 w-28 px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+        <select data-field="tipo" class="flex-shrink-0 w-28 px-2 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
           <option value="onibus" ${tipo === 'onibus' ? 'selected' : ''}>Onibus</option>
           <option value="metro" ${tipo === 'metro' ? 'selected' : ''}>Metro</option>
           <option value="trem" ${tipo === 'trem' ? 'selected' : ''}>Trem</option>
           <option value="van" ${tipo === 'van' ? 'selected' : ''}>Van</option>
           <option value="outro" ${tipo === 'outro' ? 'selected' : ''}>Outro</option>
         </select>
-        <input type="text" data-field="nome_linha" value="${nome}" placeholder="Nome da linha" class="flex-1 px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
-        <input type="number" step="0.01" data-field="valor_trecho" value="${valor}" placeholder="Valor (R$)" class="w-28 px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
-        <button type="button" onclick="removeTransporteRow(${idx})" class="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 transition-colors flex-shrink-0" title="Remover">
+        <input type="text" data-field="nome_linha" value="${nome}" placeholder="Nome da linha" class="flex-1 px-2 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+        <input type="number" step="0.01" data-field="valor_trecho" value="${valor}" placeholder="Valor (R$)" class="w-28 px-2 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+        <button type="button" onclick="removeTransporteRow(${idx})" class="p-2 rounded-lg hover:bg-red-50 text-red-500 transition-colors flex-shrink-0" title="Remover">
           <i class="bi bi-trash"></i>
         </button>
       `;
@@ -738,7 +665,7 @@
 
       if (allFuncionarios.length === 0) {
         tbody.innerHTML = `
-          <tr><td colspan="8" class="px-5 py-8 text-center text-gray-400">
+          <tr><td colspan="8" class="px-5 py-8 text-center text-muted">
             <i class="bi bi-inbox text-3xl"></i>
             <p class="mt-2">Nenhum funcionario encontrado</p>
           </td></tr>`;
@@ -747,24 +674,24 @@
 
       tbody.innerHTML = allFuncionarios.map(f => {
         const statusBadge = f.status === 'ativo' || f.ativo !== false
-          ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Ativo</span>'
-          : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">Inativo</span>';
+          ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success/10 text-success">Ativo</span>'
+          : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-danger/10 text-danger">Inativo</span>';
         const classificacaoBadge = getClassificacaoBadge(f.classificacao);
         return `
-          <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+          <tr class="hover:bg-porcelain transition-colors">
             <td class="px-5 py-3 font-medium">${f.nome || '-'}</td>
-            <td class="px-5 py-3 text-gray-600 dark:text-gray-400">${f.cargo || '-'}</td>
+            <td class="px-5 py-3 text-muted">${f.cargo || '-'}</td>
             <td class="px-5 py-3">${classificacaoBadge}</td>
             <td class="px-5 py-3">${formatCurrency(f.salario_hora)}</td>
-            <td class="px-5 py-3 text-gray-600 dark:text-gray-400">${f.telefone || '-'}</td>
-            <td class="px-5 py-3 text-gray-600 dark:text-gray-400">${formatDate(f.data_admissao)}</td>
+            <td class="px-5 py-3 text-muted">${f.telefone || '-'}</td>
+            <td class="px-5 py-3 text-muted">${formatDate(f.data_admissao)}</td>
             <td class="px-5 py-3">${statusBadge}</td>
             <td class="px-5 py-3">
               <div class="flex items-center gap-2">
-                <button onclick="editFuncionario(${f.id})" class="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400 transition-colors" title="Editar">
+                <button onclick="editFuncionario(${f.id})" class="p-1.5 rounded-lg hover:bg-blue-50 text-eucalyptus transition-colors" title="Editar">
                   <i class="bi bi-pencil-square"></i>
                 </button>
-                <button onclick="deleteFuncionario(${f.id}, '${(f.nome || '').replace(/'/g, "\\'")}')" class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors" title="Excluir">
+                <button onclick="deleteFuncionario(${f.id}, '${(f.nome || '').replace(/'/g, "\\'")}')" class="p-1.5 rounded-lg hover:bg-red-50 text-red-600 transition-colors" title="Excluir">
                   <i class="bi bi-trash"></i>
                 </button>
               </div>
@@ -1076,15 +1003,15 @@
       const escalaMap = { fixa: 'Fixa', '12x36': '12x36', escala: 'Escala', diarista: 'Diarista', outro: 'Outro' };
       content.innerHTML = `
         <div class="grid grid-cols-2 gap-2">
-          <div><span class="text-gray-500 dark:text-gray-400">Dias:</span> <span class="font-medium">${(j.dias_semana || []).map(d => diasMap[d] || d).join(', ') || '-'}</span></div>
-          <div><span class="text-gray-500 dark:text-gray-400">Escala:</span> <span class="font-medium">${escalaMap[j.tipo_escala] || j.tipo_escala || '-'}</span></div>
-          <div><span class="text-gray-500 dark:text-gray-400">Entrada:</span> <span class="font-medium">${j.horario_entrada || '-'}</span></div>
-          <div><span class="text-gray-500 dark:text-gray-400">Saida:</span> <span class="font-medium">${j.horario_saida || '-'}</span></div>
-          <div><span class="text-gray-500 dark:text-gray-400">Carga Horaria:</span> <span class="font-medium">${j.carga_horaria_diaria ? j.carga_horaria_diaria + 'h' : '-'}</span></div>
-          <div><span class="text-gray-500 dark:text-gray-400">Hora Extra:</span> <span class="font-medium">${j.regra_hora_extra || '-'}</span></div>
+          <div><span class="text-muted">Dias:</span> <span class="font-medium">${(j.dias_semana || []).map(d => diasMap[d] || d).join(', ') || '-'}</span></div>
+          <div><span class="text-muted">Escala:</span> <span class="font-medium">${escalaMap[j.tipo_escala] || j.tipo_escala || '-'}</span></div>
+          <div><span class="text-muted">Entrada:</span> <span class="font-medium">${j.horario_entrada || '-'}</span></div>
+          <div><span class="text-muted">Saida:</span> <span class="font-medium">${j.horario_saida || '-'}</span></div>
+          <div><span class="text-muted">Carga Horaria:</span> <span class="font-medium">${j.carga_horaria_diaria ? j.carga_horaria_diaria + 'h' : '-'}</span></div>
+          <div><span class="text-muted">Hora Extra:</span> <span class="font-medium">${j.regra_hora_extra || '-'}</span></div>
         </div>
-        ${j.folgas && j.folgas.length ? `<div class="mt-1"><span class="text-gray-500 dark:text-gray-400">Folgas:</span> <span class="font-medium">${j.folgas.join(', ')}</span></div>` : ''}
-        ${j.observacoes ? `<div class="mt-1"><span class="text-gray-500 dark:text-gray-400">Obs:</span> <span class="font-medium">${j.observacoes}</span></div>` : ''}
+        ${j.folgas && j.folgas.length ? `<div class="mt-1"><span class="text-muted">Folgas:</span> <span class="font-medium">${j.folgas.join(', ')}</span></div>` : ''}
+        ${j.observacoes ? `<div class="mt-1"><span class="text-muted">Obs:</span> <span class="font-medium">${j.observacoes}</span></div>` : ''}
       `;
       preview.classList.remove('hidden');
     }

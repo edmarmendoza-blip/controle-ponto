@@ -1,137 +1,60 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
+  <meta name="theme-color" content="#0E1625">
   <title>Lista de Compras - Lar Digital</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
-      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+      theme: {
+        extend: {
+          colors: {
+            graphite: '#0E1625', eucalyptus: '#697F71', porcelain: '#F7F4EE',
+            mist: '#E7ECE8', sand: '#D8CCB8', indigo: '#7279F8', ink: '#1B2430',
+            muted: '#667085', success: '#1F8F5F', warning: '#C98A2E',
+            danger: '#B5473C', border: '#E8E4DE'
+          },
+          borderRadius: { sm: '8px', md: '12px', lg: '16px' },
+          boxShadow: { card: '0 1px 4px rgba(27,36,48,0.08)' },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
+        }
+      }
     }
   </script>
+  <link rel="stylesheet" href="/css/brand.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+<body class="bg-porcelain text-ink">
 
-  <!-- Sidebar -->
-  <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen bg-blue-800 text-white transition-transform -translate-x-full md:translate-x-0">
-    <div class="p-4 border-b border-blue-700">
-      <a href="/dashboard.html" class="flex items-center gap-2">
-        <i class="bi bi-clock-history text-2xl"></i>
-        <span class="text-xl font-bold">Lar Digital</span>
-      </a>
-      <p class="text-blue-200 text-xs mt-1">Gestão da Casa</p>
-    </div>
-    <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-180px)]">
-      <a href="/dashboard.html" data-page="dashboard" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-speedometer2"></i><span>Dashboard</span>
-      </a>
-      <a href="/funcionarios.html" data-page="funcionarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-people"></i><span>Funcionários</span>
-      </a>
-      <a href="/cargos.html" data-page="cargos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-briefcase"></i><span>Cargos</span>
-      </a>
-      <a href="/registros.html" data-page="registros" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-clock"></i><span>Registros</span>
-      </a>
-      <a href="/relatorios.html" data-page="relatorios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-file-earmark-text"></i><span>Relatórios</span>
-      </a>
-      <a href="/relatorios-graficos.html" data-page="relatorios-graficos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-bar-chart-line"></i><span>Gráficos</span>
-      </a>
-      <a href="/presenca.html" data-page="presenca" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-calendar-check"></i><span>Presença</span>
-      </a>
-      <a href="/entregas.html" data-page="entregas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-box-seam"></i><span>Entregas</span>
-      </a>
-      <a href="/compras.html" data-page="compras" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-cart3"></i><span>Compras</span>
-      </a>
-      <a href="/despesas.html" data-page="despesas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-cash-coin"></i><span>Despesas</span>
-      </a>
-      <a href="/prestadores.html" data-page="prestadores" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-person-badge"></i><span>Prestadores</span>
-      </a>
-      <a href="/holerites.html" data-page="holerites" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-receipt"></i><span>Holerites</span>
-      </a>
-      <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-calendar-heart"></i><span>Férias</span>
-      </a>
-      <a href="/sugestoes.html" data-page="sugestoes" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-lightbulb"></i><span>Sugestões</span>
-      </a>
-      <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-shield-lock"></i><span>Usuários</span>
-      </a>
-      <a href="/feriados.html" data-page="feriados" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-calendar-event"></i><span>Feriados</span>
-      </a>
-      <a href="/insights.html" data-page="insights" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-stars"></i><span>Insights IA</span>
-      </a>
-      <a href="/whatsapp.html" data-page="whatsapp" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
-      </a>
-      <a href="/audit-log.html" data-page="audit-log" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
-        <i class="bi bi-journal-text"></i><span>Audit Log</span>
-      </a>
-      <hr class="border-blue-700 my-2">
-      <a href="/ajuda.html" data-page="ajuda" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-chat-left-dots"></i><span>Ajuda</span>
-      </a>
-      <a href="/perfil.html" data-page="perfil" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
-        <i class="bi bi-person-gear"></i><span>Perfil</span>
-      </a>
-    </nav>
-    <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-blue-700 bg-blue-800">
-      <div class="flex items-center justify-between mb-2">
-        <div class="flex items-center gap-2 text-sm">
-          <i class="bi bi-person-circle"></i>
-          <div>
-            <div id="user-name" class="font-medium">-</div>
-            <div id="user-role" class="text-blue-300 text-xs">-</div>
-          </div>
-        </div>
-        <button id="theme-toggle" class="p-1.5 rounded-lg hover:bg-blue-700 transition-colors">
-          <i id="theme-icon" class="bi bi-moon-fill"></i>
-        </button>
-      </div>
-      <button id="logout-btn" class="w-full py-1.5 text-sm bg-blue-700 hover:bg-blue-600 rounded-lg transition-colors">Sair</button>
-    </div>
-  </aside>
-  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+  <aside id="sidebar" class="ld-sidebar"></aside>
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-30 hidden md:hidden"></div>
 
   <!-- Main Content -->
-  <main class="md:ml-64 min-h-screen">
-    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+  <main class="ld-content min-h-screen">
+    <header class="ld-header">
       <div class="flex items-center gap-3">
-        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300">
+        <button id="sidebar-toggle" class="md:hidden text-muted hover:text-ink transition-colors">
           <i class="bi bi-list text-xl"></i>
         </button>
-        <h1 class="text-xl font-semibold">Lista de Compras</h1>
+        <h1>Lista de Compras</h1>
       </div>
-      <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
+      <span class="text-sm text-muted" id="current-date"></span>
     </header>
 
     <div class="p-4 md:p-6" id="page-content">
 
       <!-- Tabs -->
-      <div class="flex gap-1 bg-gray-100 dark:bg-gray-700 rounded-xl p-1 mb-6 w-fit">
-        <button onclick="switchTab('listas')" id="tab-listas" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 shadow-sm">
+      <div class="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6 w-fit">
+        <button onclick="switchTab('listas')" id="tab-listas" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-white text-gray-800 shadow-sm">
           <i class="bi bi-list-check"></i> Listas
         </button>
-        <button onclick="switchTab('historico')" id="tab-historico" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+        <button onclick="switchTab('historico')" id="tab-historico" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-500 hover:text-gray-700">
           <i class="bi bi-graph-down"></i> Histórico de Preços
         </button>
-        <button onclick="switchTab('notas')" id="tab-notas" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+        <button onclick="switchTab('notas')" id="tab-notas" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-500 hover:text-gray-700">
           <i class="bi bi-receipt-cutoff"></i> Notas Fiscais
         </button>
       </div>
@@ -140,29 +63,29 @@
       <div id="pane-listas">
         <!-- Stats -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div class="text-2xl font-bold text-green-600" id="stat-ativas">0</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">Listas Ativas</div>
+            <div class="text-xs text-gray-500">Listas Ativas</div>
           </div>
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div class="text-2xl font-bold text-yellow-600" id="stat-andamento">0</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">Em Andamento</div>
+            <div class="text-xs text-gray-500">Em Andamento</div>
           </div>
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div class="text-2xl font-bold text-gray-500" id="stat-concluidas">0</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">Concluídas</div>
+            <div class="text-xs text-gray-500">Concluídas</div>
           </div>
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div class="text-2xl font-bold text-blue-600" id="stat-total-itens">0</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">Total Itens</div>
+            <div class="text-xs text-gray-500">Total Itens</div>
           </div>
         </div>
 
         <!-- List View: cards grid -->
         <div id="view-lista-cards">
           <div class="flex items-center justify-between mb-4">
-            <h2 class="font-semibold text-gray-700 dark:text-gray-300">Listas de Compras</h2>
-            <button onclick="openModalNovaLista()" class="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors">
+            <h2 class="font-semibold text-gray-700">Listas de Compras</h2>
+            <button onclick="openModalNovaLista()" class="flex items-center gap-2 px-4 py-2 bg-graphite hover:bg-graphite/90 text-white rounded-lg text-sm font-medium transition-colors">
               <i class="bi bi-plus-lg"></i> Nova Lista
             </button>
           </div>
@@ -178,7 +101,7 @@
         <!-- Detail View: single list -->
         <div id="view-lista-detail" class="hidden">
           <div class="flex items-center gap-3 mb-5">
-            <button onclick="backToListCards()" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <button onclick="backToListCards()" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-300 text-sm hover:bg-gray-50 transition-colors">
               <i class="bi bi-arrow-left"></i> Voltar
             </button>
             <div>
@@ -196,7 +119,7 @@
           </div>
 
           <!-- Progress bar -->
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-5">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-5">
             <div class="flex items-center justify-between mb-2">
               <span class="text-sm font-medium">Progresso</span>
               <div class="flex items-center gap-3">
@@ -204,19 +127,19 @@
                 <span id="detail-total" class="text-sm font-semibold text-green-600">R$ 0,00</span>
               </div>
             </div>
-            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
               <div id="detail-progress-bar" class="bg-green-500 h-2.5 rounded-full transition-all" style="width: 0%"></div>
             </div>
           </div>
 
           <!-- Add item inline form -->
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-5">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-5">
             <h3 class="text-sm font-semibold mb-3">Adicionar Item</h3>
             <div class="flex flex-col md:flex-row gap-3">
-              <input type="text" id="new-item-nome" placeholder="Nome do item *" class="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm">
+              <input type="text" id="new-item-nome" placeholder="Nome do item *" class="flex-1 px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm">
               <div class="flex gap-2">
-                <input type="number" id="new-item-qtd" placeholder="Qtd" min="0.001" step="any" value="1" class="w-20 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm">
-                <select id="new-item-unidade" class="w-20 px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm">
+                <input type="number" id="new-item-qtd" placeholder="Qtd" min="0.001" step="any" value="1" class="w-20 px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm">
+                <select id="new-item-unidade" class="w-20 px-2 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm">
                   <option value="un">un</option>
                   <option value="kg">kg</option>
                   <option value="g">g</option>
@@ -229,7 +152,7 @@
                   <option value="kit">kit</option>
                   <option value="dz">dz</option>
                 </select>
-                <select id="new-item-categoria" class="w-32 px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm">
+                <select id="new-item-categoria" class="w-32 px-2 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm">
                   <option value="alimento">Alimento</option>
                   <option value="bebida">Bebida</option>
                   <option value="limpeza">Limpeza</option>
@@ -243,17 +166,17 @@
                   <option value="outro">Outro</option>
                 </select>
               </div>
-              <button onclick="addItemToLista()" class="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap">
+              <button onclick="addItemToLista()" class="px-4 py-2 bg-graphite hover:bg-graphite/90 text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap">
                 <i class="bi bi-plus-lg"></i> Adicionar
               </button>
             </div>
           </div>
 
           <!-- Items table -->
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="overflow-x-auto">
               <table class="w-full text-sm">
-                <thead class="bg-gray-50 dark:bg-gray-700/50">
+                <thead class="bg-gray-50">
                   <tr>
                     <th class="px-4 py-3 text-left w-10"></th>
                     <th class="px-4 py-3 text-left">Item</th>
@@ -279,55 +202,55 @@
       <div id="pane-historico" class="hidden">
         <!-- Economy card -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+              <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
                 <i class="bi bi-piggy-bank text-green-600"></i>
               </div>
               <div>
                 <div class="text-2xl font-bold text-green-600" id="stat-economia">R$ 0,00</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">Economia este mes</div>
+                <div class="text-xs text-gray-500">Economia este mes</div>
               </div>
             </div>
           </div>
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+              <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                 <i class="bi bi-bag-check text-blue-600"></i>
               </div>
               <div>
                 <div class="text-2xl font-bold text-blue-600" id="stat-itens-monitorados">0</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">Itens Monitorados</div>
+                <div class="text-xs text-gray-500">Itens Monitorados</div>
               </div>
             </div>
           </div>
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
+              <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
                 <i class="bi bi-shop text-yellow-600"></i>
               </div>
               <div>
                 <div class="text-2xl font-bold text-yellow-600" id="stat-estabelecimentos">0</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">Estabelecimentos</div>
+                <div class="text-xs text-gray-500">Estabelecimentos</div>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Search -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-6">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
           <div class="flex gap-3">
             <div class="flex-1">
-              <input type="text" id="historico-search" placeholder="Buscar item por nome..." oninput="filterHistorico()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm">
+              <input type="text" id="historico-search" placeholder="Buscar item por nome..." oninput="filterHistorico()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm">
             </div>
           </div>
         </div>
 
         <!-- Price history table -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
-              <thead class="bg-gray-50 dark:bg-gray-700/50">
+              <thead class="bg-gray-50">
                 <tr>
                   <th class="px-4 py-3 text-left">Item</th>
                   <th class="px-4 py-3 text-left">Ultimo Preco</th>
@@ -350,16 +273,16 @@
         </div>
 
         <!-- Item price detail (expandable) -->
-        <div id="historico-detalhe" class="hidden mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+        <div id="historico-detalhe" class="hidden mt-6 bg-white rounded-xl shadow-sm border border-gray-100 p-5">
           <div class="flex items-center justify-between mb-4">
             <h3 class="font-semibold" id="historico-detalhe-nome"></h3>
-            <button onclick="document.getElementById('historico-detalhe').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            <button onclick="document.getElementById('historico-detalhe').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
               <i class="bi bi-x-lg"></i>
             </button>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
-              <thead class="bg-gray-50 dark:bg-gray-700/50">
+              <thead class="bg-gray-50">
                 <tr>
                   <th class="px-4 py-2 text-left">Data</th>
                   <th class="px-4 py-2 text-left">Preco Pago</th>
@@ -376,18 +299,18 @@
       <!-- ===== TAB: NOTAS FISCAIS ===== -->
       <div id="pane-notas" class="hidden">
         <div class="flex items-center justify-between mb-6">
-          <h2 class="font-semibold text-gray-700 dark:text-gray-300">Notas Fiscais</h2>
-          <label class="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors cursor-pointer">
+          <h2 class="font-semibold text-gray-700">Notas Fiscais</h2>
+          <label class="flex items-center gap-2 px-4 py-2 bg-graphite hover:bg-graphite/90 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer">
             <i class="bi bi-upload"></i> Enviar Nota Fiscal
             <input type="file" id="nota-upload-input" accept="image/*,application/pdf" class="hidden" onchange="uploadNotaFiscal(this)">
           </label>
         </div>
 
         <!-- Upload progress -->
-        <div id="nota-upload-progress" class="hidden bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-4">
+        <div id="nota-upload-progress" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
           <div class="flex items-center gap-3">
             <i class="bi bi-arrow-repeat animate-spin text-blue-600"></i>
-            <span class="text-sm text-blue-700 dark:text-blue-400">Processando nota fiscal...</span>
+            <span class="text-sm text-blue-700">Processando nota fiscal...</span>
           </div>
         </div>
 
@@ -404,10 +327,10 @@
 
   <!-- Modal: Nova / Editar Lista -->
   <div id="modal-lista" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md">
-      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100">
         <h3 class="text-lg font-semibold" id="modal-lista-title">Nova Lista</h3>
-        <button onclick="closeModalLista()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+        <button onclick="closeModalLista()" class="text-gray-400 hover:text-gray-600">
           <i class="bi bi-x-lg text-xl"></i>
         </button>
       </div>
@@ -415,11 +338,11 @@
         <input type="hidden" id="modal-lista-id">
         <div>
           <label class="block text-sm font-medium mb-1">Nome <span class="text-red-500">*</span></label>
-          <input type="text" id="modal-lista-nome" placeholder="Ex: Mercado semana, Padaria..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm">
+          <input type="text" id="modal-lista-nome" placeholder="Ex: Mercado semana, Padaria..." class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm">
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Categoria</label>
-          <select id="modal-lista-categoria" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm">
+          <select id="modal-lista-categoria" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm">
             <option value="mercado">Supermercado</option>
             <option value="padaria">Padaria</option>
             <option value="hortifruti">Hortifruti</option>
@@ -433,44 +356,44 @@
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Observacoes</label>
-          <textarea id="modal-lista-obs" rows="3" placeholder="Observacoes opcionais..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm resize-none"></textarea>
+          <textarea id="modal-lista-obs" rows="3" placeholder="Observacoes opcionais..." class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm resize-none"></textarea>
         </div>
       </div>
-      <div class="flex justify-end gap-3 p-5 border-t border-gray-100 dark:border-gray-700">
-        <button onclick="closeModalLista()" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm">Cancelar</button>
-        <button onclick="saveLista()" class="px-4 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-medium transition-colors">Salvar</button>
+      <div class="flex justify-end gap-3 p-5 border-t border-gray-100">
+        <button onclick="closeModalLista()" class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors text-sm">Cancelar</button>
+        <button onclick="saveLista()" class="px-4 py-2 rounded-lg bg-graphite hover:bg-graphite/90 text-white text-sm font-medium transition-colors">Salvar</button>
       </div>
     </div>
   </div>
 
   <!-- Modal: Marcar item como comprado -->
   <div id="modal-comprado" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-sm">
-      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100">
         <h3 class="text-lg font-semibold">Marcar como Comprado</h3>
-        <button onclick="closeModalComprado()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+        <button onclick="closeModalComprado()" class="text-gray-400 hover:text-gray-600">
           <i class="bi bi-x-lg text-xl"></i>
         </button>
       </div>
       <div class="p-5 space-y-4">
         <input type="hidden" id="modal-comprado-item-id">
-        <p class="text-sm text-gray-600 dark:text-gray-400" id="modal-comprado-item-nome"></p>
+        <p class="text-sm text-gray-600" id="modal-comprado-item-nome"></p>
         <div>
           <label class="block text-sm font-medium mb-1">Preco Pago (R$) <span class="text-red-500">*</span></label>
-          <input type="number" id="modal-comprado-preco" placeholder="0,00" min="0" step="0.01" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm">
+          <input type="number" id="modal-comprado-preco" placeholder="0,00" min="0" step="0.01" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm">
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Estabelecimento</label>
-          <input type="text" id="modal-comprado-estabelecimento" placeholder="Ex: Carrefour, Pao de Acucar..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm" list="estabelecimentos-datalist">
+          <input type="text" id="modal-comprado-estabelecimento" placeholder="Ex: Carrefour, Pao de Acucar..." class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm" list="estabelecimentos-datalist">
           <datalist id="estabelecimentos-datalist"></datalist>
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Data da Compra</label>
-          <input type="date" id="modal-comprado-data" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm">
+          <input type="date" id="modal-comprado-data" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm">
         </div>
       </div>
-      <div class="flex justify-end gap-3 p-5 border-t border-gray-100 dark:border-gray-700">
-        <button onclick="closeModalComprado()" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm">Cancelar</button>
+      <div class="flex justify-end gap-3 p-5 border-t border-gray-100">
+        <button onclick="closeModalComprado()" class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors text-sm">Cancelar</button>
         <button onclick="confirmarCompra()" class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors">
           <i class="bi bi-check-lg"></i> Confirmar Compra
         </button>
@@ -480,10 +403,10 @@
 
   <!-- Modal: Nota Fiscal Detalhe -->
   <div id="modal-nota" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100">
         <h3 class="text-lg font-semibold" id="modal-nota-title">Nota Fiscal</h3>
-        <button onclick="closeModalNota()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+        <button onclick="closeModalNota()" class="text-gray-400 hover:text-gray-600">
           <i class="bi bi-x-lg text-xl"></i>
         </button>
       </div>
@@ -513,14 +436,14 @@
     };
 
     const COLOR_CLASSES = {
-      blue:   { bg: 'bg-blue-100 dark:bg-blue-900/30',   text: 'text-blue-700 dark:text-blue-400' },
-      yellow: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-400' },
-      green:  { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400' },
-      red:    { bg: 'bg-red-100 dark:bg-red-900/30',     text: 'text-red-700 dark:text-red-400' },
-      purple: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-400' },
-      orange: { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-700 dark:text-orange-400' },
-      pink:   { bg: 'bg-pink-100 dark:bg-pink-900/30',   text: 'text-pink-700 dark:text-pink-400' },
-      gray:   { bg: 'bg-gray-100 dark:bg-gray-700',       text: 'text-gray-600 dark:text-gray-400' }
+      blue:   { bg: 'bg-blue-100',   text: 'text-blue-700' },
+      yellow: { bg: 'bg-yellow-100', text: 'text-yellow-700' },
+      green:  { bg: 'bg-green-100', text: 'text-green-700' },
+      red:    { bg: 'bg-red-100',     text: 'text-red-700' },
+      purple: { bg: 'bg-purple-100', text: 'text-purple-700' },
+      orange: { bg: 'bg-orange-100', text: 'text-orange-700' },
+      pink:   { bg: 'bg-pink-100',   text: 'text-pink-700' },
+      gray:   { bg: 'bg-gray-100',       text: 'text-gray-600' }
     };
 
     // ============================================================
@@ -571,9 +494,9 @@
 
     function getStatusBadge(status) {
       const map = {
-        aberta:       { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', label: 'Aberta', icon: 'bi-check-circle' },
-        em_andamento: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-400', label: 'Em Andamento', icon: 'bi-hourglass-split' },
-        concluida:    { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-600 dark:text-gray-400', label: 'Concluida', icon: 'bi-archive' }
+        aberta:       { bg: 'bg-green-100', text: 'text-green-700', label: 'Aberta', icon: 'bi-check-circle' },
+        em_andamento: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Em Andamento', icon: 'bi-hourglass-split' },
+        concluida:    { bg: 'bg-gray-100', text: 'text-gray-600', label: 'Concluida', icon: 'bi-archive' }
       };
       const s = map[status] || map.aberta;
       return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${s.bg} ${s.text}"><i class="bi ${s.icon}"></i>${s.label}</span>`;
@@ -650,7 +573,7 @@
         const barColor    = lista.status === 'concluida' ? 'bg-gray-400' : pct === 100 ? 'bg-green-500' : 'bg-blue-500';
 
         return `
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="openListaDetail(${lista.id})">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="openListaDetail(${lista.id})">
             <div class="flex items-start justify-between mb-3">
               <div class="flex items-center gap-2 flex-wrap">
                 ${getCategoriaBadge(lista.categoria)}
@@ -659,23 +582,23 @@
               <span class="text-xs text-gray-400">#${lista.id}</span>
             </div>
             <h3 class="font-semibold mb-1">${escapeHtml(lista.nome)}</h3>
-            <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3">
+            <div class="flex items-center justify-between text-sm text-gray-500 mb-3">
               <span>${comprados} / ${totalItens} itens</span>
               <span class="font-semibold text-green-600">${formatCurrency(total)}</span>
             </div>
-            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mb-3">
+            <div class="w-full bg-gray-200 rounded-full h-1.5 mb-3">
               <div class="${barColor} h-1.5 rounded-full transition-all" style="width: ${pct}%"></div>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-xs text-gray-400">${formatDate(lista.created_at)}</span>
               <div class="flex items-center gap-1" onclick="event.stopPropagation()">
-                <button onclick="shareListaWhatsAppById(${lista.id})" class="p-1.5 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 text-green-600 transition-colors" title="Compartilhar no WhatsApp">
+                <button onclick="shareListaWhatsAppById(${lista.id})" class="p-1.5 rounded-lg hover:bg-green-50 text-green-600 transition-colors" title="Compartilhar no WhatsApp">
                   <i class="bi bi-whatsapp text-sm"></i>
                 </button>
-                <button onclick="openModalEditLista(${lista.id})" class="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 transition-colors" title="Editar">
+                <button onclick="openModalEditLista(${lista.id})" class="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors" title="Editar">
                   <i class="bi bi-pencil text-sm"></i>
                 </button>
-                <button onclick="deleteLista(${lista.id})" class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 transition-colors" title="Excluir">
+                <button onclick="deleteLista(${lista.id})" class="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition-colors" title="Excluir">
                   <i class="bi bi-trash text-sm"></i>
                 </button>
               </div>
@@ -735,7 +658,7 @@
         const comprado = item.comprado;
         const rowClass = comprado ? 'opacity-60' : '';
         return `
-          <tr class="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${rowClass}">
+          <tr class="border-t border-gray-100 hover:bg-gray-50 transition-colors ${rowClass}">
             <td class="px-4 py-3">
               <input type="checkbox" ${comprado ? 'checked' : ''} onchange="toggleItemComprado(${item.id}, this.checked)"
                 class="w-4 h-4 rounded border-gray-300 text-green-600 cursor-pointer focus:ring-green-500">
@@ -743,16 +666,16 @@
             <td class="px-4 py-3">
               <span class="${comprado ? 'line-through text-gray-400' : 'font-medium'}">${escapeHtml(item.nome)}</span>
             </td>
-            <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">${item.quantidade} ${escapeHtml(item.unidade || 'un')}</td>
+            <td class="px-4 py-3 text-sm text-gray-500">${item.quantidade} ${escapeHtml(item.unidade || 'un')}</td>
             <td class="px-4 py-3">
-              <span class="inline-flex px-2 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">${escapeHtml(item.categoria || '-')}</span>
+              <span class="inline-flex px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">${escapeHtml(item.categoria || '-')}</span>
             </td>
             <td class="px-4 py-3 text-sm ${item.preco_pago ? 'text-green-600 font-medium' : 'text-gray-400'}">
               ${item.preco_pago ? formatCurrency(item.preco_pago) : '-'}
             </td>
-            <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">${escapeHtml(item.estabelecimento || '-')}</td>
+            <td class="px-4 py-3 text-sm text-gray-500">${escapeHtml(item.estabelecimento || '-')}</td>
             <td class="px-4 py-3">
-              <button onclick="removeItemFromLista(${item.id})" class="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-red-400 hover:text-red-600 transition-colors">
+              <button onclick="removeItemFromLista(${item.id})" class="p-1 rounded hover:bg-red-50 text-red-400 hover:text-red-600 transition-colors">
                 <i class="bi bi-trash text-sm"></i>
               </button>
             </td>
@@ -1035,12 +958,12 @@
       }
 
       tbody.innerHTML = data.map(item => `
-        <tr class="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors" onclick="showHistoricoDetalhe(${JSON.stringify(item.nome).replace(/'/g, "&#39;")})">
+        <tr class="border-t border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors" onclick="showHistoricoDetalhe(${JSON.stringify(item.nome).replace(/'/g, "&#39;")})">
           <td class="px-4 py-3 font-medium">${escapeHtml(item.nome)}</td>
-          <td class="px-4 py-3 text-gray-700 dark:text-gray-300">${formatCurrency(item.ultimo_preco)}</td>
+          <td class="px-4 py-3 text-gray-700">${formatCurrency(item.ultimo_preco)}</td>
           <td class="px-4 py-3 text-green-600 font-semibold">${formatCurrency(item.melhor_preco)}</td>
           <td class="px-4 py-3 text-red-500">${formatCurrency(item.pior_preco)}</td>
-          <td class="px-4 py-3 text-gray-500 dark:text-gray-400">${escapeHtml(item.melhor_estabelecimento || '-')}</td>
+          <td class="px-4 py-3 text-gray-500">${escapeHtml(item.melhor_estabelecimento || '-')}</td>
           <td class="px-4 py-3 text-gray-400 text-sm">${formatDate(item.ultima_compra)}</td>
           <td class="px-4 py-3">
             <i class="bi bi-chevron-down text-gray-400 text-sm"></i>
@@ -1066,7 +989,7 @@
           tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-4 text-center text-gray-400">Sem historico detalhado</td></tr>`;
         } else {
           tbody.innerHTML = registros.map(r => `
-            <tr class="border-t border-gray-100 dark:border-gray-700">
+            <tr class="border-t border-gray-100">
               <td class="px-4 py-2 text-sm text-gray-500">${formatDate(r.data_compra || r.created_at)}</td>
               <td class="px-4 py-2 font-medium ${r.preco_pago == result.melhor_preco ? 'text-green-600' : ''}">${formatCurrency(r.preco_pago)}</td>
               <td class="px-4 py-2 text-sm text-gray-500">${escapeHtml(r.estabelecimento || '-')}</td>
@@ -1115,10 +1038,10 @@
         const isImg = nota.arquivo_path && /\.(jpg|jpeg|png|webp|gif)$/i.test(nota.arquivo_path);
         const thumbHtml = isImg
           ? `<img src="/${nota.arquivo_path}" class="w-full h-32 object-cover" alt="Nota fiscal">`
-          : `<div class="w-full h-32 bg-gray-100 dark:bg-gray-700 flex items-center justify-center"><i class="bi bi-file-earmark-text text-3xl text-gray-400"></i></div>`;
+          : `<div class="w-full h-32 bg-gray-100 flex items-center justify-center"><i class="bi bi-file-earmark-text text-3xl text-gray-400"></i></div>`;
 
         return `
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onclick="openModalNota(${nota.id})">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onclick="openModalNota(${nota.id})">
             ${thumbHtml}
             <div class="p-3">
               <div class="text-sm font-medium mb-1">${escapeHtml(nota.estabelecimento || 'Estabelecimento desconhecido')}</div>
@@ -1172,7 +1095,7 @@
       const isImg = nota.arquivo_path && /\.(jpg|jpeg|png|webp|gif)$/i.test(nota.arquivo_path);
       const mediaHtml = isImg
         ? `<img src="/${nota.arquivo_path}" class="w-full rounded-lg mb-4 border" alt="Nota fiscal">`
-        : `<div class="flex items-center gap-3 mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+        : `<div class="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
              <i class="bi bi-file-earmark-text text-2xl text-gray-500"></i>
              <span class="text-sm">${escapeHtml(nota.arquivo_original || 'nota_fiscal.pdf')}</span>
            </div>`;
@@ -1184,13 +1107,13 @@
           <div class="flex justify-between"><span class="text-gray-500">Estabelecimento:</span><span class="font-medium">${escapeHtml(nota.estabelecimento || '-')}</span></div>
           <div class="flex justify-between"><span class="text-gray-500">Data:</span><span>${formatDate(nota.data_nota || nota.created_at)}</span></div>
           ${nota.total ? `<div class="flex justify-between"><span class="text-gray-500">Total:</span><span class="font-semibold text-green-600">${formatCurrency(nota.total)}</span></div>` : ''}
-          ${nota.dados_extraidos ? `<div class="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-xs text-gray-500"><strong>Dados Extraidos:</strong><br><pre class="mt-1 whitespace-pre-wrap">${escapeHtml(typeof nota.dados_extraidos === 'string' ? nota.dados_extraidos : JSON.stringify(nota.dados_extraidos, null, 2))}</pre></div>` : ''}
+          ${nota.dados_extraidos ? `<div class="mt-3 p-3 bg-gray-50 rounded-lg text-xs text-gray-500"><strong>Dados Extraidos:</strong><br><pre class="mt-1 whitespace-pre-wrap">${escapeHtml(typeof nota.dados_extraidos === 'string' ? nota.dados_extraidos : JSON.stringify(nota.dados_extraidos, null, 2))}</pre></div>` : ''}
         </div>
         <div class="flex justify-end gap-2 mt-4">
           <button onclick="deleteNota(${nota.id})" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors">
             <i class="bi bi-trash"></i> Excluir
           </button>
-          <button onclick="closeModalNota()" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Fechar</button>
+          <button onclick="closeModalNota()" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors">Fechar</button>
         </div>`;
 
       const modal = document.getElementById('modal-nota');
