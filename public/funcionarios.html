@@ -52,12 +52,12 @@
       <!-- Actions Bar -->
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
         <div class="flex items-center gap-3">
-          <button id="btn-novo-funcionario" onclick="openModal()" class="gestor-only hidden bg-primary hover:bg-primary-dark text-white px-4 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2">
+          <button id="btn-novo-funcionario" onclick="openModal()" class="gestor-only hidden bg-graphite hover:bg-graphite/90 text-white px-4 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2">
             <i class="bi bi-plus-lg"></i>
             <span>Novo Funcionário</span>
           </button>
           <label class="flex items-center gap-2 text-sm cursor-pointer">
-            <input type="checkbox" id="toggle-inativos" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary" onchange="loadFuncionarios()">
+            <input type="checkbox" id="toggle-inativos" class="w-4 h-4 rounded border-gray-300 text-eucalyptus focus:ring-eucalyptus" onchange="loadFuncionarios()">
             <span>Mostrar inativos</span>
           </label>
         </div>
@@ -109,7 +109,7 @@
       <!-- Tab Navigation -->
       <div class="border-b border-border shrink-0 overflow-x-auto">
         <nav class="flex px-5 gap-1" id="modal-tabs">
-          <button type="button" onclick="switchTab('pessoais')" data-tab="pessoais" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-primary text-primary whitespace-nowrap">Dados Pessoais</button>
+          <button type="button" onclick="switchTab('pessoais')" data-tab="pessoais" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-graphite text-graphite whitespace-nowrap">Dados Pessoais</button>
           <button type="button" onclick="switchTab('classificacao')" data-tab="classificacao" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-muted hover:text-gray-700 whitespace-nowrap">Classificacao</button>
           <button type="button" onclick="switchTab('jornada')" data-tab="jornada" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-muted hover:text-gray-700 whitespace-nowrap">Jornada</button>
           <button type="button" onclick="switchTab('beneficios')" data-tab="beneficios" class="modal-tab px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-muted hover:text-gray-700 whitespace-nowrap">Benefícios e Extras</button>
@@ -128,29 +128,29 @@
           <div id="tab-pessoais" class="tab-content space-y-4">
             <div>
               <label class="block text-sm font-medium mb-1">Nome *</label>
-              <input type="text" id="func-nome" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <input type="text" id="func-nome" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">Cargo (selecione ou digite)</label>
-              <select id="func-cargo-id" onchange="onCargoIdChange()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition mb-2">
+              <select id="func-cargo-id" onchange="onCargoIdChange()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition mb-2">
                 <option value="">-- Selecionar cargo cadastrado --</option>
               </select>
-              <input type="text" id="func-cargo" placeholder="Ou digite o cargo manualmente" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <input type="text" id="func-cargo" placeholder="Ou digite o cargo manualmente" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
               <p class="text-xs text-muted mt-1">Selecionar um cargo preenche automaticamente os beneficios.</p>
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium mb-1">Telefone</label>
-                <input type="text" id="func-telefone" placeholder="(11) 99999-0000" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <input type="text" id="func-telefone" placeholder="(11) 99999-0000" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
               </div>
               <div>
                 <label class="block text-sm font-medium mb-1">E-mail Pessoal</label>
-                <input type="email" id="func-email-pessoal" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <input type="email" id="func-email-pessoal" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
               </div>
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">Salario/Hora (R$)</label>
-              <input type="number" step="0.01" id="func-salario" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <input type="number" step="0.01" id="func-salario" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
             </div>
           </div>
 
@@ -158,7 +158,7 @@
           <div id="tab-classificacao" class="tab-content space-y-4 hidden">
             <div>
               <label class="block text-sm font-medium mb-1">Classificacao</label>
-              <select id="func-classificacao" onchange="onClassificacaoChange()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <select id="func-classificacao" onchange="onClassificacaoChange()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
                 <option value="operacional">Operacional</option>
                 <option value="assistente_pessoal">Assistente Pessoal</option>
                 <option value="dono_casa">Dono de Casa</option>
@@ -167,18 +167,18 @@
             </div>
             <div id="status-field" class="hidden">
               <label class="block text-sm font-medium mb-1">Status</label>
-              <select id="func-status" onchange="onStatusChange()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <select id="func-status" onchange="onStatusChange()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
                 <option value="ativo">Ativo</option>
                 <option value="desligado">Desligado</option>
               </select>
             </div>
             <div id="motivo-desligamento-field" class="hidden">
               <label class="block text-sm font-medium mb-1">Motivo do Desligamento</label>
-              <input type="text" id="func-motivo-desligamento" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <input type="text" id="func-motivo-desligamento" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">Data de Admissao</label>
-              <input type="date" id="func-data-admissao" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <input type="date" id="func-data-admissao" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
             </div>
           </div>
 
@@ -187,26 +187,26 @@
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium mb-1">Horario de Entrada</label>
-                <input type="time" id="func-horario" value="08:00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <input type="time" id="func-horario" value="08:00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
               </div>
               <div>
                 <label class="block text-sm font-medium mb-1">Jornada Diaria (h)</label>
-                <input type="number" step="0.01" id="func-jornada" value="9.8" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <input type="number" step="0.01" id="func-jornada" value="9.8" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
               </div>
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium mb-1">Valor Hora Extra (R$)</label>
-                <input type="number" step="0.01" id="func-hora-extra" value="43.25" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <input type="number" step="0.01" id="func-hora-extra" value="43.25" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
               </div>
               <div>
                 <label class="block text-sm font-medium mb-1">Valor Dia Especial (R$)</label>
-                <input type="number" step="0.01" id="func-dia-especial" value="320" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <input type="number" step="0.01" id="func-dia-especial" value="320" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
               </div>
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">Descricao da Jornada (Texto Natural)</label>
-              <textarea id="func-jornada-texto" rows="3" placeholder="Ex: Segunda a sexta, das 08:00 as 17:48, com 1h de almoco. Sabado e domingo nao trabalha." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"></textarea>
+              <textarea id="func-jornada-texto" rows="3" placeholder="Ex: Segunda a sexta, das 08:00 as 17:48, com 1h de almoco. Sabado e domingo nao trabalha." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition resize-none"></textarea>
               <button type="button" onclick="parseJornada()" id="btn-parse-jornada" class="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium transition-colors">
                 <i class="bi bi-stars"></i>
                 <span>Interpretar com IA</span>
@@ -236,7 +236,7 @@
             <!-- Recebe Vale Transporte -->
             <div class="p-3 rounded-lg border border-border hover:bg-porcelain transition">
               <label class="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" id="func-recebe-vt" checked onchange="toggleBeneficio('vt')" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                <input type="checkbox" id="func-recebe-vt" checked onchange="toggleBeneficio('vt')" class="w-4 h-4 rounded border-gray-300 text-eucalyptus focus:ring-eucalyptus">
                 <div class="flex-1">
                   <span class="text-sm font-medium">Recebe Vale-Transporte</span>
                   <p class="text-xs text-muted">VT sera incluido nos calculos</p>
@@ -244,14 +244,14 @@
               </label>
               <div id="beneficio-vt-valor" class="mt-3 ml-7 hidden">
                 <label class="block text-xs font-medium text-muted mb-1">Valor fixo VT mensal (R$) <span class="text-muted">(se aplicavel)</span></label>
-                <input type="number" step="0.01" id="func-beneficio-vt-valor" placeholder="0.00" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <input type="number" step="0.01" id="func-beneficio-vt-valor" placeholder="0.00" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
               </div>
             </div>
 
             <!-- Recebe Vale Alimentacao -->
             <div class="p-3 rounded-lg border border-border hover:bg-porcelain transition">
               <label class="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" id="func-recebe-va" checked onchange="toggleBeneficio('va')" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                <input type="checkbox" id="func-recebe-va" checked onchange="toggleBeneficio('va')" class="w-4 h-4 rounded border-gray-300 text-eucalyptus focus:ring-eucalyptus">
                 <div class="flex-1">
                   <span class="text-sm font-medium">Recebe Vale-Alimentacao</span>
                   <p class="text-xs text-muted">VA sera incluido nos calculos</p>
@@ -259,14 +259,14 @@
               </label>
               <div id="beneficio-va-valor" class="mt-3 ml-7 hidden">
                 <label class="block text-xs font-medium text-muted mb-1">Valor VA por dia (R$)</label>
-                <input type="number" step="0.01" id="func-beneficio-va-valor" placeholder="0.00" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <input type="number" step="0.01" id="func-beneficio-va-valor" placeholder="0.00" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
               </div>
             </div>
 
             <!-- Recebe Hora Extra -->
             <div class="p-3 rounded-lg border border-border hover:bg-porcelain transition">
               <label class="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" id="func-contabiliza-hora-extra" checked onchange="toggleBeneficio('he')" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                <input type="checkbox" id="func-contabiliza-hora-extra" checked onchange="toggleBeneficio('he')" class="w-4 h-4 rounded border-gray-300 text-eucalyptus focus:ring-eucalyptus">
                 <div class="flex-1">
                   <span class="text-sm font-medium">Recebe Hora Extra</span>
                   <p class="text-xs text-muted">Horas extras serao calculadas automaticamente</p>
@@ -274,14 +274,14 @@
               </label>
               <div id="beneficio-he-valor" class="mt-3 ml-7 hidden">
                 <label class="block text-xs font-medium text-muted mb-1">Valor hora extra (R$)</label>
-                <input type="number" step="0.01" id="func-beneficio-he-valor" placeholder="43.25" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <input type="number" step="0.01" id="func-beneficio-he-valor" placeholder="43.25" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
               </div>
             </div>
 
             <!-- Recebe por Dia Extra -->
             <div class="p-3 rounded-lg border border-border hover:bg-porcelain transition">
               <label class="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" id="func-contabiliza-feriado" checked onchange="toggleBeneficio('de')" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                <input type="checkbox" id="func-contabiliza-feriado" checked onchange="toggleBeneficio('de')" class="w-4 h-4 rounded border-gray-300 text-eucalyptus focus:ring-eucalyptus">
                 <div class="flex-1">
                   <span class="text-sm font-medium">Recebe por Dia Extra (Feriado/Especial)</span>
                   <p class="text-xs text-muted">Feriados e dias especiais serao pagos com valor diferenciado</p>
@@ -289,7 +289,7 @@
               </label>
               <div id="beneficio-de-valor" class="mt-3 ml-7 hidden">
                 <label class="block text-xs font-medium text-muted mb-1">Valor dia extra (R$)</label>
-                <input type="number" step="0.01" id="func-beneficio-de-valor" placeholder="320.00" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                <input type="number" step="0.01" id="func-beneficio-de-valor" placeholder="320.00" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
               </div>
             </div>
           </div>
@@ -298,7 +298,7 @@
           <div id="tab-transporte" class="tab-content space-y-4 hidden">
             <div>
               <label class="block text-sm font-medium mb-1">Tipo de Transporte</label>
-              <select id="func-tipo-transporte" onchange="onTipoTransporteChange()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <select id="func-tipo-transporte" onchange="onTipoTransporteChange()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
                 <option value="diario">Diario</option>
                 <option value="pernoite">Pernoite</option>
                 <option value="fixo">Fixo</option>
@@ -306,12 +306,12 @@
             </div>
             <div id="valor-fixo-transporte-field" class="hidden">
               <label class="block text-sm font-medium mb-1">Valor Fixo Transporte (R$)</label>
-              <input type="number" step="0.01" id="func-valor-fixo-transporte" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <input type="number" step="0.01" id="func-valor-fixo-transporte" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
             </div>
             <div>
               <label class="block text-sm font-medium mb-2">Linhas de Transporte</label>
               <div id="transportes-list" class="space-y-2"></div>
-              <button type="button" onclick="addTransporteRow()" class="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 hover:border-primary hover:text-primary text-sm text-muted transition-colors w-full justify-center">
+              <button type="button" onclick="addTransporteRow()" class="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 hover:border-graphite hover:text-graphite text-sm text-muted transition-colors w-full justify-center">
                 <i class="bi bi-plus-lg"></i>
                 <span>Adicionar transporte</span>
               </button>
@@ -321,7 +321,7 @@
           <!-- Tab: Vale-Alimentacao -->
           <div id="tab-alimentacao" class="tab-content space-y-4 hidden">
             <label class="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-porcelain cursor-pointer transition">
-              <input type="checkbox" id="func-tem-va" onchange="onTemVaChange()" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+              <input type="checkbox" id="func-tem-va" onchange="onTemVaChange()" class="w-4 h-4 rounded border-gray-300 text-eucalyptus focus:ring-eucalyptus">
               <div>
                 <span class="text-sm font-medium">Possui Vale-Alimentacao</span>
                 <p class="text-xs text-muted">Ativar para configurar o valor diario do VA</p>
@@ -329,7 +329,7 @@
             </label>
             <div id="valor-va-dia-field" class="hidden">
               <label class="block text-sm font-medium mb-1">Valor VA por Dia (R$)</label>
-              <input type="number" step="0.01" id="func-valor-va-dia" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <input type="number" step="0.01" id="func-valor-va-dia" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
             </div>
           </div>
 
@@ -337,7 +337,7 @@
           <div id="tab-pix" class="tab-content space-y-4 hidden">
             <div>
               <label class="block text-sm font-medium mb-1">Tipo de Chave PIX</label>
-              <select id="func-pix-tipo" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <select id="func-pix-tipo" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
                 <option value="cpf">CPF</option>
                 <option value="telefone">Telefone</option>
                 <option value="email">E-mail</option>
@@ -346,11 +346,11 @@
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">Chave PIX</label>
-              <input type="text" id="func-pix-chave" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <input type="text" id="func-pix-chave" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">Banco (opcional)</label>
-              <input type="text" id="func-pix-banco" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <input type="text" id="func-pix-banco" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
             </div>
           </div>
 
@@ -361,7 +361,7 @@
               Preencha o e-mail pessoal na aba "Dados Pessoais" para ativar notificacoes.
             </div>
             <label class="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-porcelain cursor-pointer transition">
-              <input type="checkbox" id="func-notificacoes-ativas" onchange="onNotificacoesChange()" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+              <input type="checkbox" id="func-notificacoes-ativas" onchange="onNotificacoesChange()" class="w-4 h-4 rounded border-gray-300 text-eucalyptus focus:ring-eucalyptus">
               <div>
                 <span class="text-sm font-medium">Notificacoes Ativas</span>
                 <p class="text-xs text-muted">Enviar notificacoes por e-mail ao funcionario</p>
@@ -369,19 +369,19 @@
             </label>
             <div id="sub-notificacoes" class="hidden ml-6 space-y-3">
               <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-porcelain cursor-pointer transition">
-                <input type="checkbox" id="func-notif-resumo-semanal" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                <input type="checkbox" id="func-notif-resumo-semanal" class="w-4 h-4 rounded border-gray-300 text-eucalyptus focus:ring-eucalyptus">
                 <span class="text-sm">Resumo Semanal</span>
               </label>
               <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-porcelain cursor-pointer transition">
-                <input type="checkbox" id="func-notif-aviso-holerite" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                <input type="checkbox" id="func-notif-aviso-holerite" class="w-4 h-4 rounded border-gray-300 text-eucalyptus focus:ring-eucalyptus">
                 <span class="text-sm">Aviso de Holerite</span>
               </label>
               <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-porcelain cursor-pointer transition">
-                <input type="checkbox" id="func-notif-comprovante-pagamento" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                <input type="checkbox" id="func-notif-comprovante-pagamento" class="w-4 h-4 rounded border-gray-300 text-eucalyptus focus:ring-eucalyptus">
                 <span class="text-sm">Comprovante de Pagamento</span>
               </label>
               <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-porcelain cursor-pointer transition">
-                <input type="checkbox" id="func-notif-lembrete-ponto" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                <input type="checkbox" id="func-notif-lembrete-ponto" class="w-4 h-4 rounded border-gray-300 text-eucalyptus focus:ring-eucalyptus">
                 <span class="text-sm">Lembrete de Ponto</span>
               </label>
             </div>
@@ -394,7 +394,7 @@
           <button type="button" onclick="closeModal()" class="px-4 py-2.5 rounded-lg border border-gray-300 hover:bg-porcelain transition-colors">
             Cancelar
           </button>
-          <button type="submit" class="px-4 py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-white font-medium transition-colors">
+          <button type="submit" class="px-4 py-2.5 rounded-lg bg-graphite hover:bg-graphite/90 text-white font-medium transition-colors">
             Salvar
           </button>
         </div>
@@ -501,7 +501,7 @@
     function switchTab(tabName) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.modal-tab').forEach(el => {
-        el.classList.remove('border-primary', 'text-primary');
+        el.classList.remove('border-graphite', 'text-graphite');
         el.classList.add('border-transparent', 'text-muted');
       });
       const tabEl = document.getElementById('tab-' + tabName);
@@ -509,7 +509,7 @@
       const tabBtn = document.querySelector(`.modal-tab[data-tab="${tabName}"]`);
       if (tabBtn) {
         tabBtn.classList.remove('border-transparent', 'text-muted');
-        tabBtn.classList.add('border-primary', 'text-primary');
+        tabBtn.classList.add('border-graphite', 'text-graphite');
       }
       // Show comunicacao warning if no email
       if (tabName === 'comunicacao') {
@@ -582,15 +582,15 @@
       row.className = 'flex items-center gap-2 transporte-row';
       row.id = 'transporte-row-' + idx;
       row.innerHTML = `
-        <select data-field="tipo" class="flex-shrink-0 w-28 px-2 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+        <select data-field="tipo" class="flex-shrink-0 w-28 px-2 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
           <option value="onibus" ${tipo === 'onibus' ? 'selected' : ''}>Onibus</option>
           <option value="metro" ${tipo === 'metro' ? 'selected' : ''}>Metro</option>
           <option value="trem" ${tipo === 'trem' ? 'selected' : ''}>Trem</option>
           <option value="van" ${tipo === 'van' ? 'selected' : ''}>Van</option>
           <option value="outro" ${tipo === 'outro' ? 'selected' : ''}>Outro</option>
         </select>
-        <input type="text" data-field="nome_linha" value="${nome}" placeholder="Nome da linha" class="flex-1 px-2 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
-        <input type="number" step="0.01" data-field="valor_trecho" value="${valor}" placeholder="Valor (R$)" class="w-28 px-2 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+        <input type="text" data-field="nome_linha" value="${nome}" placeholder="Nome da linha" class="flex-1 px-2 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
+        <input type="number" step="0.01" data-field="valor_trecho" value="${valor}" placeholder="Valor (R$)" class="w-28 px-2 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
         <button type="button" onclick="removeTransporteRow(${idx})" class="p-2 rounded-lg hover:bg-red-50 text-red-500 transition-colors flex-shrink-0" title="Remover">
           <i class="bi bi-trash"></i>
         </button>

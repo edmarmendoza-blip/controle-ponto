@@ -51,7 +51,7 @@
     <div class="p-4 md:p-6" id="page-content">
       <!-- Tab Navigation -->
       <div class="flex border-b border-border mb-6">
-        <button id="tab-mensal" onclick="switchTab('mensal')" class="px-4 py-3 text-sm font-medium border-b-2 border-primary text-primary transition-colors">
+        <button id="tab-mensal" onclick="switchTab('mensal')" class="px-4 py-3 text-sm font-medium border-b-2 border-graphite text-graphite transition-colors">
           Relatório Mensal
         </button>
         <button id="tab-folha" onclick="switchTab('folha')" class="px-4 py-3 text-sm font-medium border-b-2 border-transparent text-muted hover:text-gray-700 transition-colors">
@@ -64,7 +64,7 @@
         <div class="flex flex-col md:flex-row items-start md:items-end gap-4">
           <div>
             <label class="block text-sm font-medium mb-1">Mês</label>
-            <select id="filter-mes" class="px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            <select id="filter-mes" class="px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
               <option value="1">Janeiro</option>
               <option value="2">Fevereiro</option>
               <option value="3">Março</option>
@@ -81,16 +81,16 @@
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Ano</label>
-            <input type="number" id="filter-ano" min="2020" max="2030" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            <input type="number" id="filter-ano" min="2020" max="2030" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
           </div>
           <div class="flex-1 min-w-0">
             <label class="block text-sm font-medium mb-1">Funcionário</label>
-            <select id="filter-funcionario" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            <select id="filter-funcionario" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
               <option value="">Todos</option>
             </select>
           </div>
           <div class="flex gap-2 flex-wrap">
-            <button onclick="gerarRelatorio()" class="px-4 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+            <button onclick="gerarRelatorio()" class="px-4 py-2.5 bg-graphite hover:bg-graphite/90 text-white rounded-lg font-medium transition-colors flex items-center gap-2">
               <i class="bi bi-play-fill"></i>
               <span>Gerar</span>
             </button>
@@ -201,16 +201,16 @@
       const contentFolha = document.getElementById('content-folha');
 
       if (tab === 'mensal') {
-        tabMensal.classList.add('border-primary', 'text-primary');
+        tabMensal.classList.add('border-graphite', 'text-graphite');
         tabMensal.classList.remove('border-transparent', 'text-muted');
-        tabFolha.classList.remove('border-primary', 'text-primary');
+        tabFolha.classList.remove('border-graphite', 'text-graphite');
         tabFolha.classList.add('border-transparent', 'text-muted');
         contentMensal.classList.remove('hidden');
         contentFolha.classList.add('hidden');
       } else {
-        tabFolha.classList.add('border-primary', 'text-primary');
+        tabFolha.classList.add('border-graphite', 'text-graphite');
         tabFolha.classList.remove('border-transparent', 'text-muted');
-        tabMensal.classList.remove('border-primary', 'text-primary');
+        tabMensal.classList.remove('border-graphite', 'text-graphite');
         tabMensal.classList.add('border-transparent', 'text-muted');
         contentFolha.classList.remove('hidden');
         contentMensal.classList.add('hidden');
@@ -451,13 +451,13 @@
         let grandTotalHtml = '';
         if (funcionarios.length > 1) {
           grandTotalHtml = `
-            <div class="bg-primary/5 rounded-xl border-2 border-primary/30 p-6">
+            <div class="bg-graphite/5 rounded-xl border-2 border-graphite/30 p-6">
               <div class="flex items-center justify-between">
                 <div>
                   <p class="text-sm text-muted uppercase font-semibold">Total Consolidado (${funcionarios.length} funcionários)</p>
                 </div>
                 <div class="text-right">
-                  <p class="text-3xl font-bold text-primary">${formatCurrency(grandTotal)}</p>
+                  <p class="text-3xl font-bold text-graphite">${formatCurrency(grandTotal)}</p>
                 </div>
               </div>
             </div>

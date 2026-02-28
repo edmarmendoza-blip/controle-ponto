@@ -144,9 +144,11 @@
         presente: 'bg-success/10 text-success',
         ausente: 'bg-danger/10 text-danger',
         atrasado: 'bg-warning/10 text-warning',
-        saiu: 'bg-indigo/10 text-indigo'
+        saiu: 'bg-indigo/10 text-indigo',
+        folga: 'bg-mist text-eucalyptus'
       };
-      const label = status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Ausente';
+      const labelMap = { presente: 'Presente', ausente: 'Ausente', atrasado: 'Atrasado', saiu: 'Saiu', folga: 'Folga' };
+      const label = labelMap[status] || (status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Ausente');
       const cls = map[status] || map.ausente;
       return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${cls}">${label}</span>`;
     }
@@ -169,6 +171,17 @@
         document.getElementById('stat-presentes').textContent = stats.presentes || 0;
         document.getElementById('stat-ausentes').textContent = stats.ausentes || 0;
         document.getElementById('stat-atrasados').textContent = stats.atrasados || 0;
+
+        // Show day-off banner if weekend/holiday
+        if (data.isDayOff) {
+          const banner = document.createElement('div');
+          banner.className = 'bg-mist border border-eucalyptus/20 rounded-xl p-4 mb-4 flex items-center gap-3';
+          const dayDesc = data.dayLabel || 'Folga';
+          banner.innerHTML = `<i class="bi bi-calendar-x text-xl text-eucalyptus"></i><span class="text-sm text-eucalyptus font-medium">Hoje: ${dayDesc} — funcionários estão de folga</span>`;
+          const pageContent = document.getElementById('page-content');
+          const statsGrid = pageContent.querySelector('.grid');
+          if (statsGrid) pageContent.insertBefore(banner, statsGrid);
+        }
 
         const funcionarios = data.funcionarios || data.registros || [];
         const tbody = document.getElementById('attendance-table');

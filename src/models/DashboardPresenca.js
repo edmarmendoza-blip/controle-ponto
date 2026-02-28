@@ -3,6 +3,10 @@ const FeriadosService = require('../services/feriados');
 
 class DashboardPresenca {
   static getPresencaHoje(data) {
+    // Check if it's a weekend or holiday
+    const dayType = FeriadosService.getDayType(data);
+    const isDayOff = dayType.tipo !== 'normal';
+
     // Get all registros for the day grouped by employee
     const rows = db.prepare(`
       SELECT
@@ -55,7 +59,7 @@ class DashboardPresenca {
         }
       }
 
-      let status = 'ausente';
+      let status = isDayOff ? 'folga' : 'ausente';
       let minutos_atraso = 0;
       const esperado = f.horario_entrada || '08:00';
 
@@ -87,10 +91,11 @@ class DashboardPresenca {
       presentes: funcionarios.filter(f => f.status === 'presente').length,
       ausentes: funcionarios.filter(f => f.status === 'ausente').length,
       atrasados: funcionarios.filter(f => f.status === 'atrasado').length,
-      sairam: funcionarios.filter(f => f.status === 'saiu').length
+      sairam: funcionarios.filter(f => f.status === 'saiu').length,
+      folga: funcionarios.filter(f => f.status === 'folga').length
     };
 
-    return { data, resumo, funcionarios };
+    return { data, resumo, funcionarios, isDayOff, dayType: dayType.tipo, dayLabel: dayType.descricao || dayType.tipo };
   }
 
   static getPresencaMensal(mes, ano) {

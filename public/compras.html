@@ -136,10 +136,10 @@
           <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-5">
             <h3 class="text-sm font-semibold mb-3">Adicionar Item</h3>
             <div class="flex flex-col md:flex-row gap-3">
-              <input type="text" id="new-item-nome" placeholder="Nome do item *" class="flex-1 px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm">
+              <input type="text" id="new-item-nome" placeholder="Nome do item *" class="flex-1 px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus outline-none transition text-sm">
               <div class="flex gap-2">
-                <input type="number" id="new-item-qtd" placeholder="Qtd" min="0.001" step="any" value="1" class="w-20 px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm">
-                <select id="new-item-unidade" class="w-20 px-2 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm">
+                <input type="number" id="new-item-qtd" placeholder="Qtd" min="0.001" step="any" value="1" class="w-20 px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus outline-none transition text-sm">
+                <select id="new-item-unidade" class="w-20 px-2 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus outline-none transition text-sm">
                   <option value="un">un</option>
                   <option value="kg">kg</option>
                   <option value="g">g</option>
@@ -152,7 +152,7 @@
                   <option value="kit">kit</option>
                   <option value="dz">dz</option>
                 </select>
-                <select id="new-item-categoria" class="w-32 px-2 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm">
+                <select id="new-item-categoria" class="w-32 px-2 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus outline-none transition text-sm">
                   <option value="alimento">Alimento</option>
                   <option value="bebida">Bebida</option>
                   <option value="limpeza">Limpeza</option>
@@ -241,7 +241,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
           <div class="flex gap-3">
             <div class="flex-1">
-              <input type="text" id="historico-search" placeholder="Buscar item por nome..." oninput="filterHistorico()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm">
+              <input type="text" id="historico-search" placeholder="Buscar item por nome..." oninput="filterHistorico()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus outline-none transition text-sm">
             </div>
           </div>
         </div>
@@ -338,11 +338,11 @@
         <input type="hidden" id="modal-lista-id">
         <div>
           <label class="block text-sm font-medium mb-1">Nome <span class="text-red-500">*</span></label>
-          <input type="text" id="modal-lista-nome" placeholder="Ex: Mercado semana, Padaria..." class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm">
+          <input type="text" id="modal-lista-nome" placeholder="Ex: Mercado semana, Padaria..." class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus outline-none transition text-sm">
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Categoria</label>
-          <select id="modal-lista-categoria" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm">
+          <select id="modal-lista-categoria" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus outline-none transition text-sm">
             <option value="mercado">Supermercado</option>
             <option value="padaria">Padaria</option>
             <option value="hortifruti">Hortifruti</option>
@@ -356,7 +356,7 @@
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Observacoes</label>
-          <textarea id="modal-lista-obs" rows="3" placeholder="Observacoes opcionais..." class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm resize-none"></textarea>
+          <textarea id="modal-lista-obs" rows="3" placeholder="Observacoes opcionais..." class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus outline-none transition text-sm resize-none"></textarea>
         </div>
       </div>
       <div class="flex justify-end gap-3 p-5 border-t border-gray-100">
@@ -380,16 +380,16 @@
         <p class="text-sm text-gray-600" id="modal-comprado-item-nome"></p>
         <div>
           <label class="block text-sm font-medium mb-1">Preco Pago (R$) <span class="text-red-500">*</span></label>
-          <input type="number" id="modal-comprado-preco" placeholder="0,00" min="0" step="0.01" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm">
+          <input type="number" id="modal-comprado-preco" placeholder="0,00" min="0" step="0.01" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus outline-none transition text-sm">
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Estabelecimento</label>
-          <input type="text" id="modal-comprado-estabelecimento" placeholder="Ex: Carrefour, Pao de Acucar..." class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm" list="estabelecimentos-datalist">
+          <input type="text" id="modal-comprado-estabelecimento" placeholder="Ex: Carrefour, Pao de Acucar..." class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus outline-none transition text-sm" list="estabelecimentos-datalist">
           <datalist id="estabelecimentos-datalist"></datalist>
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Data da Compra</label>
-          <input type="date" id="modal-comprado-data" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary outline-none transition text-sm">
+          <input type="date" id="modal-comprado-data" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus outline-none transition text-sm">
         </div>
       </div>
       <div class="flex justify-end gap-3 p-5 border-t border-gray-100">

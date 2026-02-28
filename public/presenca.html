@@ -54,7 +54,7 @@
         <div class="flex flex-wrap items-end gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Mês</label>
-            <select id="filter-month" class="border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+            <select id="filter-month" class="border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm focus:ring-2 focus:ring-eucalyptus focus:border-eucalyptus">
               <option value="01">Janeiro</option>
               <option value="02">Fevereiro</option>
               <option value="03">Marco</option>
@@ -71,10 +71,10 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Ano</label>
-            <select id="filter-year" class="border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+            <select id="filter-year" class="border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm focus:ring-2 focus:ring-eucalyptus focus:border-eucalyptus">
             </select>
           </div>
-          <button onclick="loadPresenca()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
+          <button onclick="loadPresenca()" class="px-4 py-2 bg-graphite text-white rounded-lg hover:bg-graphite/90 transition-colors text-sm font-medium">
             <i class="bi bi-search mr-1"></i> Filtrar
           </button>
         </div>
@@ -186,35 +186,23 @@
       tbody.innerHTML = `<tr><td colspan="4" class="px-5 py-8 text-center text-muted"><i class="bi bi-arrow-repeat animate-spin text-2xl"></i><p class="mt-2">Carregando dados...</p></td></tr>`;
 
       try {
-        const [presencaData, funcData] = await Promise.all([
-          Shared.api(`/api/dashboard/presenca/mensal?mes=${mes}&ano=${ano}`),
-          Shared.api('/api/funcionarios')
-        ]);
+        const presencaData = await Shared.api(`/api/dashboard/presenca/mensal?mes=${mes}&ano=${ano}`);
 
-        const funcionarios = Array.isArray(funcData) ? funcData : (funcData.funcionarios || []);
-        const presenca = presencaData.presenca || presencaData.funcionarios || presencaData || [];
+        // Use pre-filtered data from API (already filters by precisa_bater_ponto and aparece_relatorios)
+        const funcionarios = presencaData.funcionarios || [];
         const diasUteis = presencaData.diasUteis || presencaData.dias_uteis || 22;
 
         document.getElementById('stat-total').textContent = funcionarios.length;
         document.getElementById('stat-workdays').textContent = diasUteis;
 
-        // Build attendance map from presenca data
-        const presencaMap = {};
-        if (Array.isArray(presenca)) {
-          presenca.forEach(p => {
-            presencaMap[p.funcionario_id || p.id] = p;
-          });
-        }
-
-        // Build table rows
+        // Build table rows from already-filtered data
         const rows = funcionarios.map(f => {
-          const p = presencaMap[f.id] || {};
-          const diasPresentes = p.dias_presentes || p.presentes || p.dias || 0;
-          const diasAusentes = Math.max(0, diasUteis - diasPresentes);
-          const percentual = diasUteis > 0 ? Math.round((diasPresentes / diasUteis) * 100) : 0;
+          const diasPresentes = f.dias_trabalhados || f.dias_presentes || 0;
+          const diasAusentes = f.faltas || Math.max(0, diasUteis - diasPresentes);
+          const percentual = f.taxa_assiduidade || (diasUteis > 0 ? Math.round((diasPresentes / diasUteis) * 100) : 0);
 
           return {
-            nome: f.nome || f.name || '-',
+            nome: f.nome || '-',
             cargo: f.cargo || '-',
             diasPresentes,
             diasAusentes,
@@ -245,8 +233,8 @@
           <tr class="hover:bg-porcelain transition-colors">
             <td class="px-5 py-3">
               <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <i class="bi bi-person-fill text-primary"></i>
+                <div class="w-8 h-8 rounded-full bg-eucalyptus/10 flex items-center justify-center">
+                  <i class="bi bi-person-fill text-eucalyptus"></i>
                 </div>
                 <div>
                   <span class="font-medium">${r.nome}</span>

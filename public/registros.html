@@ -54,28 +54,28 @@
         <div class="flex flex-col md:flex-row items-start md:items-end gap-4">
           <div class="flex-1 min-w-0">
             <label class="block text-sm font-medium mb-1">Data</label>
-            <input type="date" id="filter-data" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            <input type="date" id="filter-data" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
           </div>
           <div class="flex-1 min-w-0">
             <label class="block text-sm font-medium mb-1">Data Fim (opcional)</label>
-            <input type="date" id="filter-data-fim" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            <input type="date" id="filter-data-fim" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
           </div>
           <div class="flex-1 min-w-0">
             <label class="block text-sm font-medium mb-1">Funcionário</label>
-            <select id="filter-funcionario" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            <select id="filter-funcionario" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
               <option value="">Todos</option>
             </select>
           </div>
           <div class="flex-1 min-w-0">
             <label class="block text-sm font-medium mb-1">Tipo</label>
-            <select id="filter-tipo" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" onchange="filterByTipo()">
+            <select id="filter-tipo" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition" onchange="filterByTipo()">
               <option value="">Todos</option>
               <option value="entrada_saida">Entrada/Saída</option>
               <option value="almoco">Almoço</option>
             </select>
           </div>
           <div class="flex gap-2">
-            <button onclick="loadRegistros()" class="px-4 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+            <button onclick="loadRegistros()" class="px-4 py-2.5 bg-graphite hover:bg-graphite/90 text-white rounded-lg font-medium transition-colors flex items-center gap-2">
               <i class="bi bi-funnel"></i>
               <span>Filtrar</span>
             </button>
@@ -104,12 +104,13 @@
                 <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Saída</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Tipo</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Observação</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Status</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Ações</th>
               </tr>
             </thead>
             <tbody id="registros-table" class="divide-y divide-gray-100">
               <tr>
-                <td colspan="7" class="px-5 py-8 text-center text-muted">
+                <td colspan="8" class="px-5 py-8 text-center text-muted">
                   <i class="bi bi-arrow-repeat animate-spin text-2xl"></i>
                   <p class="mt-2">Carregando...</p>
                 </td>
@@ -134,33 +135,33 @@
         <input type="hidden" id="reg-id">
         <div>
           <label class="block text-sm font-medium mb-1" for="reg-funcionario">Funcionário *</label>
-          <select id="reg-funcionario" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+          <select id="reg-funcionario" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
             <option value="">Selecione...</option>
           </select>
         </div>
         <div>
           <label class="block text-sm font-medium mb-1" for="reg-data">Data *</label>
-          <input type="date" id="reg-data" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+          <input type="date" id="reg-data" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium mb-1" for="reg-entrada">Entrada *</label>
-            <input type="time" id="reg-entrada" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            <input type="time" id="reg-entrada" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
           </div>
           <div>
             <label class="block text-sm font-medium mb-1" for="reg-saida">Saída</label>
-            <input type="time" id="reg-saida" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+            <input type="time" id="reg-saida" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition">
           </div>
         </div>
         <div>
           <label class="block text-sm font-medium mb-1" for="reg-observacao">Observação</label>
-          <textarea id="reg-observacao" rows="3" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"></textarea>
+          <textarea id="reg-observacao" rows="3" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-eucalyptus focus:border-transparent outline-none transition resize-none"></textarea>
         </div>
         <div class="flex justify-end gap-3 pt-3">
           <button type="button" onclick="closeModal()" class="px-4 py-2.5 rounded-lg border border-gray-300 hover:bg-porcelain transition-colors">
             Cancelar
           </button>
-          <button type="submit" class="px-4 py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-white font-medium transition-colors">
+          <button type="submit" class="px-4 py-2.5 rounded-lg bg-graphite hover:bg-graphite/90 text-white font-medium transition-colors">
             Salvar
           </button>
         </div>
@@ -194,6 +195,26 @@
         return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success/10 text-success"><i class="bi bi-whatsapp mr-1"></i>WhatsApp</span>';
       }
       return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700"><i class="bi bi-pencil mr-1"></i>Manual</span>';
+    }
+
+    function getStatusBadge(reg) {
+      const obs = (reg.observacao || '').toLowerCase();
+      if (obs.includes('saída almoço') || obs.includes('saida almoço') || obs.includes('saida almoco')) {
+        return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning/10 text-warning"><i class="bi bi-cup-hot mr-1"></i>Saída Almoço</span>';
+      }
+      if (obs.includes('retorno almoço') || obs.includes('retorno almoco') || obs.includes('volta almoço')) {
+        return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning/10 text-warning"><i class="bi bi-cup-hot mr-1"></i>Retorno Almoço</span>';
+      }
+      if (reg.entrada && reg.saida) {
+        return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo/10 text-indigo"><i class="bi bi-check-circle mr-1"></i>Completo</span>';
+      }
+      if (reg.entrada && !reg.saida) {
+        return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success/10 text-success"><i class="bi bi-box-arrow-in-right mr-1"></i>Entrada</span>';
+      }
+      if (!reg.entrada && reg.saida) {
+        return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-danger/10 text-danger"><i class="bi bi-box-arrow-right mr-1"></i>Saída</span>';
+      }
+      return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">-</span>';
     }
 
     function setDefaultDate() {
@@ -242,7 +263,7 @@
       } catch (err) {
         console.error(err);
         document.getElementById('registros-table').innerHTML = `
-          <tr><td colspan="7" class="px-5 py-8 text-center text-red-400">
+          <tr><td colspan="8" class="px-5 py-8 text-center text-red-400">
             <i class="bi bi-exclamation-circle text-3xl"></i>
             <p class="mt-2">Erro: ${err.message}</p>
           </td></tr>`;
@@ -275,7 +296,7 @@
 
       if (filtered.length === 0) {
         tbody.innerHTML = `
-          <tr><td colspan="7" class="px-5 py-8 text-center text-muted">
+          <tr><td colspan="8" class="px-5 py-8 text-center text-muted">
             <i class="bi bi-inbox text-3xl"></i>
             <p class="mt-2">Nenhum registro encontrado</p>
           </td></tr>`;
@@ -290,6 +311,7 @@
           <td class="px-5 py-3">${formatTime(r.saida)}</td>
           <td class="px-5 py-3">${getTipoBadge(r.tipo || r.origem)}</td>
           <td class="px-5 py-3 text-muted max-w-xs truncate" title="${(r.observacao || '').replace(/"/g, '&quot;')}">${r.observacao || '-'}</td>
+          <td class="px-5 py-3">${getStatusBadge(r)}</td>
           <td class="px-5 py-3">
             <div class="flex items-center gap-2">
               <button onclick="editRegistro(${r.id})" class="gestor-only hidden p-1.5 rounded-lg hover:bg-blue-50 text-eucalyptus transition-colors" title="Editar">

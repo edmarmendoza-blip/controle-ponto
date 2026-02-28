@@ -108,7 +108,7 @@
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             <div>
               <label class="block text-xs font-medium mb-1 text-gray-600">Status</label>
-              <select id="filter-status" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+              <select id="filter-status" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
                 <option value="">Todos</option>
                 <option value="pendente">Pendente</option>
                 <option value="aprovado">Aprovado</option>
@@ -118,23 +118,23 @@
             </div>
             <div>
               <label class="block text-xs font-medium mb-1 text-gray-600">Funcionário</label>
-              <select id="filter-funcionario" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+              <select id="filter-funcionario" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
                 <option value="">Todos</option>
               </select>
             </div>
             <div>
               <label class="block text-xs font-medium mb-1 text-gray-600">Categoria</label>
-              <select id="filter-categoria" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+              <select id="filter-categoria" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
                 <option value="">Todas</option>
               </select>
             </div>
             <div>
               <label class="block text-xs font-medium mb-1 text-gray-600">Data Início</label>
-              <input type="date" id="filter-data-inicio" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+              <input type="date" id="filter-data-inicio" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
             </div>
             <div>
               <label class="block text-xs font-medium mb-1 text-gray-600">Data Fim</label>
-              <input type="date" id="filter-data-fim" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+              <input type="date" id="filter-data-fim" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
             </div>
             <div class="flex items-end">
               <button onclick="loadDespesas()" class="w-full px-4 py-2 bg-graphite hover:bg-graphite/90 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
@@ -223,7 +223,7 @@
           <div class="flex flex-col sm:flex-row items-start sm:items-end gap-3">
             <div>
               <label class="block text-xs font-medium mb-1 text-gray-600">Mês</label>
-              <select id="relatorio-mes" class="px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none">
+              <select id="relatorio-mes" class="px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none">
                 <option value="1">Janeiro</option>
                 <option value="2">Fevereiro</option>
                 <option value="3">Março</option>
@@ -240,7 +240,7 @@
             </div>
             <div>
               <label class="block text-xs font-medium mb-1 text-gray-600">Ano</label>
-              <select id="relatorio-ano" class="px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none">
+              <select id="relatorio-ano" class="px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none">
                 <option value="2024">2024</option>
                 <option value="2025">2025</option>
                 <option value="2026" selected>2026</option>
@@ -354,40 +354,40 @@
       <form id="form-new" class="p-5 space-y-4" onsubmit="submitNewDespesa(event)">
         <div>
           <label class="block text-sm font-medium mb-1">Funcionário <span class="text-red-500">*</span></label>
-          <select id="new-funcionario" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          <select id="new-funcionario" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
             <option value="">Selecionar funcionário...</option>
           </select>
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Descrição <span class="text-red-500">*</span></label>
-          <input type="text" id="new-descricao" required placeholder="Ex: Compras no supermercado..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          <input type="text" id="new-descricao" required placeholder="Ex: Compras no supermercado..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium mb-1">Valor (R$) <span class="text-red-500">*</span></label>
-            <input type="number" id="new-valor" required min="0.01" step="0.01" placeholder="0,00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            <input type="number" id="new-valor" required min="0.01" step="0.01" placeholder="0,00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Data <span class="text-red-500">*</span></label>
-            <input type="date" id="new-data" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            <input type="date" id="new-data" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium mb-1">Categoria <span class="text-red-500">*</span></label>
-            <select id="new-categoria" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            <select id="new-categoria" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
               <option value="">Selecionar...</option>
             </select>
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Estabelecimento</label>
-            <input type="text" id="new-estabelecimento" placeholder="Nome do local..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            <input type="text" id="new-estabelecimento" placeholder="Nome do local..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
           </div>
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Comprovante (foto/PDF)</label>
           <div class="flex items-center gap-3">
-            <label for="new-comprovante" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-gray-300 hover:border-primary cursor-pointer text-sm text-gray-500 transition-colors">
+            <label for="new-comprovante" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-gray-300 hover:border-graphite cursor-pointer text-sm text-gray-500 transition-colors">
               <i class="bi bi-upload"></i><span id="comprovante-label">Selecionar arquivo</span>
             </label>
             <input type="file" id="new-comprovante" accept="image/*,.pdf" class="hidden" onchange="updateComprovanteLabel(this)">
@@ -395,7 +395,7 @@
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Observação</label>
-          <textarea id="new-observacao" rows="2" placeholder="Informações adicionais..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition resize-none"></textarea>
+          <textarea id="new-observacao" rows="2" placeholder="Informações adicionais..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition resize-none"></textarea>
         </div>
         <div class="flex justify-end gap-3 pt-2">
           <button type="button" onclick="closeModal('modal-new')" class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 text-sm transition-colors">Cancelar</button>
@@ -420,7 +420,7 @@
         <p class="text-sm text-gray-600">Informe o motivo da rejeição. Essa informação será registrada.</p>
         <div>
           <label class="block text-sm font-medium mb-1">Motivo da Rejeição</label>
-          <textarea id="reject-observacao" rows="3" placeholder="Descreva o motivo..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition resize-none"></textarea>
+          <textarea id="reject-observacao" rows="3" placeholder="Descreva o motivo..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition resize-none"></textarea>
         </div>
         <div class="flex justify-end gap-3">
           <button onclick="closeModal('modal-reject')" class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 text-sm transition-colors">Cancelar</button>
@@ -671,7 +671,7 @@
       let html = '';
       if (currentPage > 1) html += `<button onclick="loadDespesas(${currentPage-1})" class="px-3 py-1.5 rounded border border-gray-300 text-sm hover:bg-gray-50"><i class="bi bi-chevron-left"></i></button>`;
       for (let p = Math.max(1, currentPage-2); p <= Math.min(totalPages, currentPage+2); p++) {
-        const active = p === currentPage ? 'bg-graphite text-white border-primary' : 'border-gray-300 hover:bg-gray-50';
+        const active = p === currentPage ? 'bg-graphite text-white border-graphite' : 'border-gray-300 hover:bg-gray-50';
         html += `<button onclick="loadDespesas(${p})" class="px-3 py-1.5 rounded border text-sm ${active}">${p}</button>`;
       }
       if (currentPage < totalPages) html += `<button onclick="loadDespesas(${currentPage+1})" class="px-3 py-1.5 rounded border border-gray-300 text-sm hover:bg-gray-50"><i class="bi bi-chevron-right"></i></button>`;

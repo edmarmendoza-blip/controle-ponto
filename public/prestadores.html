@@ -101,7 +101,7 @@
         <div class="flex items-center justify-between mb-3">
           <span class="text-sm text-gray-500"><span id="prestadores-count">0</span> prestadores</span>
           <label class="flex items-center gap-2 text-sm text-gray-500 cursor-pointer">
-            <input type="checkbox" id="toggle-inativos" onchange="renderTabelaCadastro()" class="w-4 h-4 rounded border-gray-300 text-primary cursor-pointer focus:ring-primary">
+            <input type="checkbox" id="toggle-inativos" onchange="renderTabelaCadastro()" class="w-4 h-4 rounded border-gray-300 text-eucalyptus cursor-pointer focus:ring-eucalyptus">
             <span>Mostrar inativos (<span id="inativos-count">0</span>)</span>
           </label>
         </div>
@@ -139,17 +139,17 @@
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div>
               <label class="block text-xs font-medium mb-1 text-gray-600">Prestador</label>
-              <select id="filter-visita-prestador" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+              <select id="filter-visita-prestador" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
                 <option value="">Todos</option>
               </select>
             </div>
             <div>
               <label class="block text-xs font-medium mb-1 text-gray-600">Data Inicio</label>
-              <input type="date" id="filter-visita-inicio" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+              <input type="date" id="filter-visita-inicio" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
             </div>
             <div>
               <label class="block text-xs font-medium mb-1 text-gray-600">Data Fim</label>
-              <input type="date" id="filter-visita-fim" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+              <input type="date" id="filter-visita-fim" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
             </div>
             <div class="flex items-end">
               <button onclick="loadAllVisitas()" class="w-full px-4 py-2 bg-graphite hover:bg-graphite/90 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
@@ -197,13 +197,13 @@
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div>
               <label class="block text-xs font-medium mb-1 text-gray-600">Prestador</label>
-              <select id="filter-pag-prestador" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+              <select id="filter-pag-prestador" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
                 <option value="">Todos</option>
               </select>
             </div>
             <div>
               <label class="block text-xs font-medium mb-1 text-gray-600">Mes</label>
-              <select id="filter-pag-mes" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+              <select id="filter-pag-mes" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
                 <option value="">Todos</option>
                 <option value="1">Janeiro</option>
                 <option value="2">Fevereiro</option>
@@ -221,7 +221,7 @@
             </div>
             <div>
               <label class="block text-xs font-medium mb-1 text-gray-600">Ano</label>
-              <select id="filter-pag-ano" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+              <select id="filter-pag-ano" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
                 <option value="2024">2024</option>
                 <option value="2025">2025</option>
                 <option value="2026" selected>2026</option>
@@ -291,20 +291,20 @@
         <input type="hidden" id="prestador-id">
         <div>
           <label class="block text-sm font-medium mb-1">Nome <span class="text-red-500">*</span></label>
-          <input type="text" id="prestador-nome" required placeholder="Nome do prestador..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          <input type="text" id="prestador-nome" required placeholder="Nome do prestador..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Telefone</label>
-          <input type="text" id="prestador-telefone" placeholder="(11) 99999-9999" maxlength="15" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          <input type="text" id="prestador-telefone" placeholder="(11) 99999-9999" maxlength="15" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Especialidade</label>
-          <input type="text" id="prestador-especialidade" placeholder="Ex: Eletricista, Jardineiro, Diarista..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          <input type="text" id="prestador-especialidade" placeholder="Ex: Eletricista, Jardineiro, Diarista..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium mb-1">Tipo</label>
-            <select id="prestador-tipo" onchange="toggleFrequencia()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            <select id="prestador-tipo" onchange="toggleFrequencia()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
               <option value="avulso">Avulso</option>
               <option value="fixo">Fixo</option>
             </select>
@@ -315,41 +315,41 @@
           <label class="block text-sm font-medium mb-2">Frequencia (dias da semana)</label>
           <div class="flex flex-wrap gap-2">
             <label class="flex items-center gap-1.5 text-sm cursor-pointer">
-              <input type="checkbox" name="freq-dia" value="seg" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"> Seg
+              <input type="checkbox" name="freq-dia" value="seg" class="w-4 h-4 rounded border-gray-300 text-eucalyptus focus:ring-eucalyptus"> Seg
             </label>
             <label class="flex items-center gap-1.5 text-sm cursor-pointer">
-              <input type="checkbox" name="freq-dia" value="ter" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"> Ter
+              <input type="checkbox" name="freq-dia" value="ter" class="w-4 h-4 rounded border-gray-300 text-eucalyptus focus:ring-eucalyptus"> Ter
             </label>
             <label class="flex items-center gap-1.5 text-sm cursor-pointer">
-              <input type="checkbox" name="freq-dia" value="qua" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"> Qua
+              <input type="checkbox" name="freq-dia" value="qua" class="w-4 h-4 rounded border-gray-300 text-eucalyptus focus:ring-eucalyptus"> Qua
             </label>
             <label class="flex items-center gap-1.5 text-sm cursor-pointer">
-              <input type="checkbox" name="freq-dia" value="qui" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"> Qui
+              <input type="checkbox" name="freq-dia" value="qui" class="w-4 h-4 rounded border-gray-300 text-eucalyptus focus:ring-eucalyptus"> Qui
             </label>
             <label class="flex items-center gap-1.5 text-sm cursor-pointer">
-              <input type="checkbox" name="freq-dia" value="sex" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"> Sex
+              <input type="checkbox" name="freq-dia" value="sex" class="w-4 h-4 rounded border-gray-300 text-eucalyptus focus:ring-eucalyptus"> Sex
             </label>
             <label class="flex items-center gap-1.5 text-sm cursor-pointer">
-              <input type="checkbox" name="freq-dia" value="sab" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"> Sab
+              <input type="checkbox" name="freq-dia" value="sab" class="w-4 h-4 rounded border-gray-300 text-eucalyptus focus:ring-eucalyptus"> Sab
             </label>
             <label class="flex items-center gap-1.5 text-sm cursor-pointer">
-              <input type="checkbox" name="freq-dia" value="dom" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"> Dom
+              <input type="checkbox" name="freq-dia" value="dom" class="w-4 h-4 rounded border-gray-300 text-eucalyptus focus:ring-eucalyptus"> Dom
             </label>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium mb-1">Valor Hora (R$)</label>
-            <input type="number" id="prestador-valor-hora" min="0" step="0.01" placeholder="0,00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            <input type="number" id="prestador-valor-hora" min="0" step="0.01" placeholder="0,00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Valor Diaria (R$)</label>
-            <input type="number" id="prestador-valor-diaria" min="0" step="0.01" placeholder="0,00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            <input type="number" id="prestador-valor-diaria" min="0" step="0.01" placeholder="0,00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
           </div>
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Observacoes</label>
-          <textarea id="prestador-observacoes" rows="3" placeholder="Informacoes adicionais..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition resize-none"></textarea>
+          <textarea id="prestador-observacoes" rows="3" placeholder="Informacoes adicionais..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition resize-none"></textarea>
         </div>
         <div class="flex justify-end gap-3 pt-2">
           <button type="button" onclick="closeModal('modal-prestador')" class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 text-sm transition-colors">Cancelar</button>
@@ -375,25 +375,25 @@
         <p class="text-sm text-gray-500" id="visita-prestador-nome"></p>
         <div>
           <label class="block text-sm font-medium mb-1">Data <span class="text-red-500">*</span></label>
-          <input type="date" id="visita-data" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          <input type="date" id="visita-data" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium mb-1">Entrada</label>
-            <input type="time" id="visita-entrada" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            <input type="time" id="visita-entrada" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Saida</label>
-            <input type="time" id="visita-saida" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            <input type="time" id="visita-saida" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
           </div>
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Servico Realizado</label>
-          <input type="text" id="visita-servico" placeholder="Descreva o servico realizado..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          <input type="text" id="visita-servico" placeholder="Descreva o servico realizado..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Observacao</label>
-          <textarea id="visita-observacao" rows="2" placeholder="Observacoes adicionais..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition resize-none"></textarea>
+          <textarea id="visita-observacao" rows="2" placeholder="Observacoes adicionais..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition resize-none"></textarea>
         </div>
         <div class="flex justify-end gap-3 pt-2">
           <button type="button" onclick="closeModal('modal-visita')" class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 text-sm transition-colors">Cancelar</button>
@@ -420,16 +420,16 @@
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium mb-1">Valor (R$) <span class="text-red-500">*</span></label>
-            <input type="number" id="pagamento-valor" required min="0.01" step="0.01" placeholder="0,00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            <input type="number" id="pagamento-valor" required min="0.01" step="0.01" placeholder="0,00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Data <span class="text-red-500">*</span></label>
-            <input type="date" id="pagamento-data" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            <input type="date" id="pagamento-data" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
           </div>
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Tipo</label>
-          <select id="pagamento-tipo" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          <select id="pagamento-tipo" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
             <option value="diaria">Diaria</option>
             <option value="hora">Hora</option>
             <option value="fixo">Fixo</option>
@@ -437,12 +437,12 @@
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Descricao</label>
-          <input type="text" id="pagamento-descricao" placeholder="Descricao do pagamento..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          <input type="text" id="pagamento-descricao" placeholder="Descricao do pagamento..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-eucalyptus outline-none transition">
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Comprovante (foto/PDF)</label>
           <div class="flex items-center gap-3">
-            <label for="pagamento-comprovante" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-gray-300 hover:border-primary cursor-pointer text-sm text-gray-500 transition-colors">
+            <label for="pagamento-comprovante" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-gray-300 hover:border-graphite cursor-pointer text-sm text-gray-500 transition-colors">
               <i class="bi bi-upload"></i><span id="comprovante-pag-label">Selecionar arquivo</span>
             </label>
             <input type="file" id="pagamento-comprovante" accept="image/*,.pdf" class="hidden" onchange="updatePagComprovanteLabel(this)">
