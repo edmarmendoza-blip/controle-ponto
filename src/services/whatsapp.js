@@ -1093,26 +1093,36 @@ Ao final, inclua um bloco JSON:
       // Find matching funcionario for chat storage
       const func = this.matchEmployee(senderPhone, senderName);
 
+      // Download media once for reuse across chat storage and document detection
+      let _downloadedMedia = null;
+      let mediaPath = null;
+      if (msg.hasMedia) {
+        try {
+          _downloadedMedia = await Promise.race([
+            msg.downloadMedia(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Media download timeout (30s)')), 30000))
+          ]);
+        } catch (e) {
+          console.error('[WhatsApp] Private media download error:', e.message);
+        }
+      }
+
       // Store as chat message if we can match a funcionario
       if (func) {
         let tipo = 'texto';
-        let mediaPath = null;
-        if (msg.hasMedia) {
+        if (_downloadedMedia) {
           try {
-            const media = await msg.downloadMedia();
-            if (media) {
-              const fs = require('fs');
-              const path = require('path');
-              const uploadDir = path.join(__dirname, '..', '..', 'public', 'uploads', 'chat');
-              fs.mkdirSync(uploadDir, { recursive: true });
-              const ext = media.mimetype.split('/')[1]?.split(';')[0] || 'bin';
-              const filename = `recv-${func.id}-${Date.now()}.${ext}`;
-              fs.writeFileSync(path.join(uploadDir, filename), Buffer.from(media.data, 'base64'));
-              mediaPath = `/uploads/chat/${filename}`;
-              tipo = media.mimetype.startsWith('image') ? 'foto' : media.mimetype.startsWith('audio') ? 'audio' : 'arquivo';
-            }
+            const fs = require('fs');
+            const path = require('path');
+            const uploadDir = path.join(__dirname, '..', '..', 'public', 'uploads', 'chat');
+            fs.mkdirSync(uploadDir, { recursive: true });
+            const ext = _downloadedMedia.mimetype.split('/')[1]?.split(';')[0] || 'bin';
+            const filename = `recv-${func.id}-${Date.now()}.${ext}`;
+            fs.writeFileSync(path.join(uploadDir, filename), Buffer.from(_downloadedMedia.data, 'base64'));
+            mediaPath = `/uploads/chat/${filename}`;
+            tipo = _downloadedMedia.mimetype.startsWith('image') ? 'foto' : _downloadedMedia.mimetype.startsWith('audio') ? 'audio' : 'arquivo';
           } catch (e) {
-            console.error('[WhatsApp] Private media download error:', e.message);
+            console.error('[WhatsApp] Private media save error:', e.message);
           }
         }
         db.prepare(`
@@ -1122,21 +1132,12 @@ Ao final, inclua um bloco JSON:
       }
 
       // Document detection for admin users with images (runs BEFORE task creation)
-      // Flag prevents falling through to task creation when doc detection was attempted
-      let _privateMediaAlreadyDownloaded = null;
       let _isDocumentDetected = false;
       let _imageAnalyzedForDocs = false;
-      if (user && user.role === 'admin' && msg.hasMedia) {
+      if (user && user.role === 'admin' && _downloadedMedia) {
         _imageAnalyzedForDocs = true; // Block task creation from this image regardless of outcome
         try {
-          // Reuse media from chat storage if available, otherwise download
-          _privateMediaAlreadyDownloaded = func ? null : await msg.downloadMedia().catch(() => null);
-          let media = _privateMediaAlreadyDownloaded;
-          if (!media && mediaPath) {
-            media = await msg.downloadMedia().catch(() => null);
-          } else if (!media) {
-            media = await msg.downloadMedia().catch(() => null);
-          }
+          const media = _downloadedMedia;
           if (media && media.mimetype.startsWith('image')) {
             // Check if there's a pending document confirmation for this chat
             const chatId = msg.from;
@@ -1196,7 +1197,7 @@ Retorne APENAS JSON válido.` }
                   // Create pending confirmation
                   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
                   const suggestedType = docResult.suggested_entity || (extData.placa ? 'veiculo' : 'funcionario');
-                  db.prepare(`INSERT INTO pending_confirmations (tipo, funcionario_id, data, horario, message_text, status, whatsapp_chat_id, created_at) VALUES ('documento_upload', 0, ?, '00:00', ?, 'pending', ?, datetime('now','localtime'))`).run(
+                  db.prepare(`INSERT INTO pending_confirmations (tipo, funcionario_id, data, horario, message_text, status, whatsapp_chat_id, created_at) VALUES ('documento_upload', NULL, ?, '00:00', ?, 'pending', ?, datetime('now','localtime'))`).run(
                     today,
                     JSON.stringify({
                       doc_type: docResult.type,
@@ -1249,7 +1250,7 @@ Retorne APENAS JSON válido.` }
         if (pendingDoc) {
           const isYes = /^(sim|s)$/i.test(text.trim());
           if (isYes) {
-            const docData = JSON.parse(pendingDoc.data);
+            const docData = JSON.parse(pendingDoc.message_text);
             const Documento = require('../models/Documento');
             let entTipo = docData.matched_entity ? docData.matched_entity.tipo : (docData.suggested_entity || 'funcionario');
             let entId = docData.matched_entity ? docData.matched_entity.id : 0;
@@ -1338,6 +1339,9 @@ Retorne APENAS JSON válido.` }
         }
         return;
       }
+
+      // Never create tasks from confirmation words
+      if (text && /^(sim|não|nao|s|n)$/i.test(text.trim())) return;
 
       // Process task creation via AI
       if (!text && !msg.hasMedia) return;

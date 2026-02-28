@@ -135,9 +135,14 @@ if (require.main === module || process.env.NODE_ENV === 'production' || process.
     console.log(`Acesse: http://localhost:${PORT}`);
 
     // Initialize WhatsApp in background (non-blocking)
-    whatsappService.initialize().catch(err => {
-      console.error('[WhatsApp] Startup error:', err.message);
-    });
+    // Skip WhatsApp on sandbox to avoid duplicate message processing with production
+    if (process.env.DB_PATH && process.env.DB_PATH.includes('sandbox')) {
+      console.log('[WhatsApp] Skipped on sandbox (production handles messages)');
+    } else {
+      whatsappService.initialize().catch(err => {
+        console.error('[WhatsApp] Startup error:', err.message);
+      });
+    }
 
     // Auto-sync holidays on startup and every 30 days
     const GoogleCalendarService = require('./src/services/googleCalendar');
