@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <title>Cargos - Lar Digital</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -22,7 +23,7 @@
         <i class="bi bi-clock-history text-2xl"></i>
         <span class="text-xl font-bold">Lar Digital</span>
       </a>
-      <p class="text-blue-200 text-xs mt-1">Gestao da Casa</p>
+      <p class="text-blue-200 text-xs mt-1">Gestão da Casa</p>
     </div>
     <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-180px)]">
       <a href="/dashboard.html" data-page="dashboard" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
@@ -54,6 +55,9 @@
       </a>
       <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-calendar-heart"></i><span>Férias</span>
+      </a>
+      <a href="/sugestoes.html" data-page="sugestoes" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-lightbulb"></i><span>Sugestões</span>
       </a>
       <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-shield-lock"></i><span>Usuários</span>
@@ -135,10 +139,10 @@
                 <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Dia Extra?</th>
                 <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">VT?</th>
                 <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">VR?</th>
-                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Combustivel?</th>
+                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Combustível?</th>
                 <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Dorme?</th>
                 <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acoes</th>
+                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
               </tr>
             </thead>
             <tbody id="cargos-table" class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -204,9 +208,9 @@
           </div>
         </div>
 
-        <!-- Beneficios -->
+        <!-- Benefícios -->
         <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-          <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Beneficios</h4>
+          <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Benefícios</h4>
           <div class="space-y-3">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <!-- Vale-Transporte -->
@@ -223,17 +227,17 @@
               <div>
                 <label class="flex items-center gap-3 cursor-pointer mb-2">
                   <input type="checkbox" id="cargo-recebe-vr" onchange="toggleField('vr')" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
-                  <span class="text-sm">Vale-Refeicao</span>
+                  <span class="text-sm">Vale-Refeição</span>
                 </label>
                 <div id="field-vr" class="hidden">
                   <input type="number" step="0.01" id="cargo-valor-vr" placeholder="Valor R$" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
                 </div>
               </div>
-              <!-- Ajuda Combustivel -->
+              <!-- Ajuda Combustível -->
               <div>
                 <label class="flex items-center gap-3 cursor-pointer mb-2">
                   <input type="checkbox" id="cargo-recebe-combustivel" onchange="toggleField('combustivel')" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
-                  <span class="text-sm">Ajuda Combustivel</span>
+                  <span class="text-sm">Ajuda Combustível</span>
                 </label>
                 <div id="field-combustivel" class="hidden">
                   <input type="number" step="0.01" id="cargo-valor-combustivel" placeholder="Valor R$" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
@@ -252,14 +256,14 @@
           </label>
           <div id="field-dormida" class="hidden grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Dias de dormida</label>
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1" for="cargo-dias-dormida">Dias de dormida</label>
               <input type="number" id="cargo-dias-dormida" min="0" max="31" placeholder="0" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
             </div>
             <div>
-              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Tipo</label>
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1" for="cargo-tipo-dormida">Tipo</label>
               <select id="cargo-tipo-dormida" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
                 <option value="semana">Por semana</option>
-                <option value="mes">Por mes</option>
+                <option value="mes">Por mês</option>
                 <option value="escala">Por escala</option>
               </select>
             </div>
@@ -278,6 +282,7 @@
   <!-- Toast Container -->
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
 
+  <script src="/js/utils.js?v=1"></script>
   <script src="/js/shared.js"></script>
   <script>
     let cargos = [];
@@ -328,11 +333,11 @@
           <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
             <td class="px-5 py-3 font-medium">${c.nome}</td>
             <td class="px-5 py-3 text-center">${boolBadge(c.precisa_bater_ponto)}</td>
-            <td class="px-5 py-3 text-center">${boolBadge(c.permite_hora_extra)}${c.permite_hora_extra && c.valor_hora_extra ? '<br><span class="text-xs text-gray-500">R$ ' + Number(c.valor_hora_extra).toFixed(2) + '</span>' : ''}</td>
-            <td class="px-5 py-3 text-center">${boolBadge(c.permite_dia_extra)}${c.permite_dia_extra && c.valor_dia_extra ? '<br><span class="text-xs text-gray-500">R$ ' + Number(c.valor_dia_extra).toFixed(2) + '</span>' : ''}</td>
-            <td class="px-5 py-3 text-center">${boolBadge(c.recebe_vale_transporte)}${c.recebe_vale_transporte && c.valor_vale_transporte ? '<br><span class="text-xs text-gray-500">R$ ' + Number(c.valor_vale_transporte).toFixed(2) + '</span>' : ''}</td>
-            <td class="px-5 py-3 text-center">${boolBadge(c.recebe_vale_refeicao)}${c.recebe_vale_refeicao && c.valor_vale_refeicao ? '<br><span class="text-xs text-gray-500">R$ ' + Number(c.valor_vale_refeicao).toFixed(2) + '</span>' : ''}</td>
-            <td class="px-5 py-3 text-center">${boolBadge(c.recebe_ajuda_combustivel)}${c.recebe_ajuda_combustivel && c.valor_ajuda_combustivel ? '<br><span class="text-xs text-gray-500">R$ ' + Number(c.valor_ajuda_combustivel).toFixed(2) + '</span>' : ''}</td>
+            <td class="px-5 py-3 text-center">${boolBadge(c.permite_hora_extra)}${c.permite_hora_extra && c.valor_hora_extra ? '<br><span class="text-xs text-gray-500">R$ ' + Number(c.valor_hora_extra).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</span>' : ''}</td>
+            <td class="px-5 py-3 text-center">${boolBadge(c.permite_dia_extra)}${c.permite_dia_extra && c.valor_dia_extra ? '<br><span class="text-xs text-gray-500">R$ ' + Number(c.valor_dia_extra).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</span>' : ''}</td>
+            <td class="px-5 py-3 text-center">${boolBadge(c.recebe_vale_transporte)}${c.recebe_vale_transporte && c.valor_vale_transporte ? '<br><span class="text-xs text-gray-500">R$ ' + Number(c.valor_vale_transporte).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</span>' : ''}</td>
+            <td class="px-5 py-3 text-center">${boolBadge(c.recebe_vale_refeicao)}${c.recebe_vale_refeicao && c.valor_vale_refeicao ? '<br><span class="text-xs text-gray-500">R$ ' + Number(c.valor_vale_refeicao).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</span>' : ''}</td>
+            <td class="px-5 py-3 text-center">${boolBadge(c.recebe_ajuda_combustivel)}${c.recebe_ajuda_combustivel && c.valor_ajuda_combustivel ? '<br><span class="text-xs text-gray-500">R$ ' + Number(c.valor_ajuda_combustivel).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</span>' : ''}</td>
             <td class="px-5 py-3 text-center">${boolBadge(c.dorme_no_local)}${c.dorme_no_local && c.dias_dormida ? '<br><span class="text-xs text-gray-500">' + c.dias_dormida + ' dias/' + c.tipo_dias_dormida + '</span>' : ''}</td>
             <td class="px-5 py-3 text-center">${statusBadge(c.ativo)}</td>
             <td class="px-5 py-3">
@@ -402,7 +407,7 @@
       const nome = document.getElementById('cargo-nome').value.trim();
 
       if (!nome) {
-        showToast('Nome do cargo e obrigatorio.', 'warning');
+        showToast('Nome do cargo é obrigatório.', 'warning');
         return;
       }
 
@@ -445,14 +450,15 @@
     }
 
     async function deleteCargo(id, nome) {
-      if (!confirm(`Desativar o cargo "${nome}"? Funcionarios com este cargo nao serao afetados.`)) return;
-      try {
-        await Shared.api(`/api/cargos/${id}`, { method: 'DELETE' });
-        showToast('Cargo desativado.');
-        await loadCargos();
-      } catch (err) {
-        showToast('Erro: ' + err.message, 'danger');
-      }
+      Shared.showConfirmModal(`Desativar o cargo "${nome}"? Funcionários com este cargo não serão afetados.`, async () => {
+        try {
+          await Shared.api(`/api/cargos/${id}`, { method: 'DELETE' });
+          showToast('Cargo desativado.');
+          await loadCargos();
+        } catch (err) {
+          showToast('Erro: ' + err.message, 'danger');
+        }
+      });
     }
 
     // Close modal on backdrop click

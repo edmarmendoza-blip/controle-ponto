@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <title>Feriados - Lar Digital</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -54,6 +55,9 @@
       </a>
       <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-calendar-heart"></i><span>Férias</span>
+      </a>
+      <a href="/sugestoes.html" data-page="sugestoes" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-lightbulb"></i><span>Sugestões</span>
       </a>
       <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-shield-lock"></i><span>Usuários</span>
@@ -183,10 +187,10 @@
             <thead>
               <tr class="bg-gray-50 dark:bg-gray-700/50">
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Descricao</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Descrição</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tipo</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Dia da Semana</th>
-                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acoes</th>
+                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
               </tr>
             </thead>
             <tbody id="feriados-table" class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -219,7 +223,7 @@
           <input type="date" id="feriado-data" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary" required>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="feriado-descricao">Descricao</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="feriado-descricao">Descrição</label>
           <input type="text" id="feriado-descricao" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Ex: Natal" required>
         </div>
         <div>
@@ -244,6 +248,7 @@
   <!-- Toast Container -->
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
 
+  <script src="/js/utils.js?v=1"></script>
   <script src="/js/shared.js"></script>
   <script>
     let feriados = [];
@@ -274,7 +279,7 @@
 
     function diaSemana(dateStr) {
       if (!dateStr) return '-';
-      const dias = ['Domingo', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado'];
+      const dias = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
       const d = new Date(dateStr + 'T00:00:00');
       return dias[d.getDay()];
     }
@@ -397,7 +402,7 @@
       const tipo = document.getElementById('feriado-tipo').value;
 
       if (!data || !descricao) {
-        showToast('Preencha data e descricao.', 'warning');
+        showToast('Preencha data e descrição.', 'warning');
         return;
       }
 
@@ -425,14 +430,15 @@
     }
 
     async function deleteFeriado(id, descricao) {
-      if (!confirm(`Excluir feriado "${descricao}"?`)) return;
-      try {
-        await Shared.api(`/api/feriados/${id}`, { method: 'DELETE' });
-        showToast('Feriado excluido.');
-        await loadFeriados();
-      } catch (err) {
-        showToast('Erro: ' + err.message, 'danger');
-      }
+      Shared.showConfirmModal(`Excluir feriado "${descricao}"?`, async () => {
+        try {
+          await Shared.api(`/api/feriados/${id}`, { method: 'DELETE' });
+          showToast('Feriado excluído.');
+          await loadFeriados();
+        } catch (err) {
+          showToast('Erro: ' + err.message, 'danger');
+        }
+      });
     }
 
     window.onAuthReady = function(user) {

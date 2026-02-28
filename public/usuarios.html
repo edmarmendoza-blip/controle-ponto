@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <title>Gerenciamento de Usuários - Lar Digital</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -53,6 +54,9 @@
       </a>
       <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-calendar-heart"></i><span>Férias</span>
+      </a>
+      <a href="/sugestoes.html" data-page="sugestoes" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-lightbulb"></i><span>Sugestões</span>
       </a>
       <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-shield-lock"></i><span>Usuários</span>
@@ -175,7 +179,7 @@
             <label class="block text-sm font-medium mb-1" for="field-password">Senha <span id="password-hint" class="text-xs text-gray-400 font-normal"></span></label>
             <input type="password" id="field-password"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors"
-              placeholder="Mínimo 6 caracteres" minlength="6">
+              placeholder="Mínimo 8 caracteres" minlength="8">
           </div>
 
           <div>
@@ -238,6 +242,7 @@
   </div>
 
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+  <script src="/js/utils.js?v=1"></script>
   <script src="/js/shared.js"></script>
   <script>
     let users = [];
@@ -455,17 +460,18 @@
 
     // Reset password
     async function resetPassword(id, name) {
-      if (!confirm(`Redefinir a senha de "${name}" e enviar por e-mail?`)) return;
-      try {
-        const data = await Shared.api(`/api/auth/users/${id}/reset-password`, { method: 'POST' });
-        if (data.emailSent) {
-          Shared.showToast(`Nova senha enviada para o e-mail de ${name}`, 'success');
-        } else {
-          Shared.showToast('Senha redefinida, mas o e-mail não foi enviado (SMTP não configurado)', 'warning');
+      Shared.showConfirmModal(`Redefinir a senha de "${name}" e enviar por e-mail?`, async () => {
+        try {
+          const data = await Shared.api(`/api/auth/users/${id}/reset-password`, { method: 'POST' });
+          if (data.emailSent) {
+            Shared.showToast(`Nova senha enviada para o e-mail de ${name}`, 'success');
+          } else {
+            Shared.showToast('Senha redefinida, mas o e-mail não foi enviado (SMTP não configurado)', 'warning');
+          }
+        } catch (err) {
+          Shared.showToast(err.message, 'danger');
         }
-      } catch (err) {
-        Shared.showToast(err.message, 'danger');
-      }
+      });
     }
 
     // Init

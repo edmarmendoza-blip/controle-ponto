@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <title>Funcionários - Lar Digital</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -54,6 +55,9 @@
       </a>
       <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-calendar-heart"></i><span>Férias</span>
+      </a>
+      <a href="/sugestoes.html" data-page="sugestoes" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-lightbulb"></i><span>Sugestões</span>
       </a>
       <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-shield-lock"></i><span>Usuários</span>
@@ -157,7 +161,7 @@
   <div id="modal-funcionario" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
       <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700 shrink-0">
-        <h3 class="text-lg font-semibold" id="modal-title">Novo Funcionario</h3>
+        <h3 class="text-lg font-semibold" id="modal-title">Novo Funcionário</h3>
         <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
           <i class="bi bi-x-lg text-xl"></i>
         </button>
@@ -462,6 +466,7 @@
   <!-- Toast Container -->
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
 
+  <script src="/js/utils.js?v=1"></script>
   <script src="/js/shared.js"></script>
   <script>
     let allFuncionarios = [];
@@ -817,7 +822,7 @@
       switchTab('pessoais');
 
       if (func) {
-        title.textContent = 'Editar Funcionario';
+        title.textContent = 'Editar Funcionário';
         statusField.classList.remove('hidden');
 
         // Dados Pessoais
@@ -911,7 +916,7 @@
           document.getElementById('func-notif-lembrete-ponto').checked = !!notifs.lembrete_ponto;
         }
       } else {
-        title.textContent = 'Novo Funcionario';
+        title.textContent = 'Novo Funcionário';
         statusField.classList.add('hidden');
       }
 
@@ -1021,7 +1026,7 @@
           throw new Error(err.error || 'Erro ao salvar');
         }
         closeModal();
-        if (typeof showToast === 'function') showToast(id ? 'Funcionario atualizado!' : 'Funcionario criado!', 'success');
+        if (typeof showToast === 'function') showToast(id ? 'Funcionário atualizado!' : 'Funcionário criado!', 'success');
         loadFuncionarios();
       } catch (err) {
         if (typeof showToast === 'function') showToast(err.message, 'error');
@@ -1029,18 +1034,19 @@
     }
 
     async function deleteFuncionario(id, nome) {
-      if (!confirm(`Deseja realmente desativar o funcionario "${nome}"?`)) return;
-      try {
-        const res = await fetch(`/api/funcionarios/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('ponto_token') || localStorage.getItem('token')) }
-        });
-        if (!res.ok) throw new Error('Erro ao excluir');
-        if (typeof showToast === 'function') showToast('Funcionario desativado!', 'success');
-        loadFuncionarios();
-      } catch (err) {
-        if (typeof showToast === 'function') showToast(err.message, 'error');
-      }
+      Shared.showConfirmModal(`Deseja realmente desativar o funcionário "${nome}"?`, async () => {
+        try {
+          const res = await fetch(`/api/funcionarios/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('ponto_token') || localStorage.getItem('token')) }
+          });
+          if (!res.ok) throw new Error('Erro ao excluir');
+          if (typeof showToast === 'function') showToast('Funcionário desativado!', 'success');
+          loadFuncionarios();
+        } catch (err) {
+          if (typeof showToast === 'function') showToast(err.message, 'error');
+        }
+      });
     }
 
     // Close modal on backdrop click

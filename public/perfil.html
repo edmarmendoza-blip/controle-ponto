@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <title>Meu Perfil - Lar Digital</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -54,6 +55,9 @@
       </a>
       <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-calendar-heart"></i><span>Férias</span>
+      </a>
+      <a href="/sugestoes.html" data-page="sugestoes" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-lightbulb"></i><span>Sugestões</span>
       </a>
       <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-shield-lock"></i><span>Usuários</span>
@@ -113,7 +117,7 @@
           <div class="p-5 border-b border-gray-100 dark:border-gray-700">
             <h2 class="text-lg font-semibold flex items-center gap-2">
               <i class="bi bi-person-circle text-primary"></i>
-              Informacoes do Usuario
+              Informações do Usuário
             </h2>
           </div>
           <div class="p-5 space-y-4">
@@ -146,11 +150,11 @@
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="new-password">Nova Senha</label>
-                <input type="password" id="new-password" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary" required minlength="6">
+                <input type="password" id="new-password" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary" required minlength="8">
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="confirm-password">Confirmar Nova Senha</label>
-                <input type="password" id="confirm-password" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary" required minlength="6">
+                <input type="password" id="confirm-password" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary" required minlength="8">
               </div>
               <div class="flex justify-end">
                 <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
@@ -166,7 +170,7 @@
           <div class="p-5 border-b border-gray-100 dark:border-gray-700">
             <h2 class="text-lg font-semibold flex items-center gap-2">
               <i class="bi bi-shield-lock text-green-500"></i>
-              Autenticacao em Dois Fatores (2FA)
+              Autenticação em Dois Fatores (2FA)
             </h2>
           </div>
           <div class="p-5" id="twofa-section">
@@ -182,7 +186,7 @@
                 <i class="bi bi-shield-fill-check text-2xl text-green-600 dark:text-green-400"></i>
                 <div>
                   <p class="font-medium text-green-700 dark:text-green-300">2FA Ativado</p>
-                  <p class="text-sm text-green-600 dark:text-green-400">Sua conta esta protegida com autenticacao em dois fatores.</p>
+                  <p class="text-sm text-green-600 dark:text-green-400">Sua conta está protegida com autenticação em dois fatores.</p>
                 </div>
               </div>
               <button onclick="disable2FA()" id="btn-disable-2fa" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium">
@@ -196,7 +200,7 @@
                 <i class="bi bi-shield-exclamation text-2xl text-yellow-600 dark:text-yellow-400"></i>
                 <div>
                   <p class="font-medium text-yellow-700 dark:text-yellow-300">2FA Desativado</p>
-                  <p class="text-sm text-yellow-600 dark:text-yellow-400">Ative a autenticacao em dois fatores para maior seguranca.</p>
+                  <p class="text-sm text-yellow-600 dark:text-yellow-400">Ative a autenticação em dois fatores para maior segurança.</p>
                 </div>
               </div>
               <button onclick="setup2FA()" id="btn-setup-2fa" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium">
@@ -214,7 +218,7 @@
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Ou insira manualmente: <code id="twofa-secret" class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs">-</code></p>
               </div>
               <div class="max-w-xs mx-auto">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Codigo de Verificacao</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Código de Verificação</label>
                 <div class="flex gap-2">
                   <input type="text" id="twofa-code" class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm text-center tracking-widest font-mono focus:ring-2 focus:ring-primary focus:border-primary" placeholder="000000" maxlength="6" inputmode="numeric">
                   <button onclick="verify2FA()" id="btn-verify-2fa" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
@@ -236,6 +240,7 @@
   <!-- Toast Container -->
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
 
+  <script src="/js/utils.js?v=1"></script>
   <script src="/js/shared.js"></script>
   <script>
     let twofaSecret = null;
@@ -275,7 +280,7 @@
       const confirmPassword = document.getElementById('confirm-password').value;
 
       if (newPassword !== confirmPassword) {
-        showToast('As senhas nao conferem.', 'warning');
+        showToast('As senhas não conferem.', 'warning');
         return;
       }
       if (newPassword.length < 6) {
@@ -319,7 +324,7 @@
     async function verify2FA() {
       const code = document.getElementById('twofa-code').value.trim();
       if (!code || code.length !== 6) {
-        showToast('Insira o codigo de 6 digitos.', 'warning');
+        showToast('Insira o código de 6 dígitos.', 'warning');
         return;
       }
 
@@ -348,21 +353,21 @@
     }
 
     async function disable2FA() {
-      if (!confirm('Deseja realmente desativar a autenticacao em dois fatores?')) return;
+      Shared.showConfirmModal('Deseja realmente desativar a autenticação em dois fatores?', async () => {
+        const btn = document.getElementById('btn-disable-2fa');
+        btn.disabled = true;
 
-      const btn = document.getElementById('btn-disable-2fa');
-      btn.disabled = true;
-
-      try {
-        await Shared.api('/api/auth/2fa', { method: 'DELETE' });
-        showToast('2FA desativado.');
-        document.getElementById('twofa-enabled').classList.add('hidden');
-        document.getElementById('twofa-disabled').classList.remove('hidden');
-      } catch (err) {
-        showToast('Erro: ' + err.message, 'danger');
-      } finally {
-        btn.disabled = false;
-      }
+        try {
+          await Shared.api('/api/auth/2fa', { method: 'DELETE' });
+          showToast('2FA desativado.');
+          document.getElementById('twofa-enabled').classList.add('hidden');
+          document.getElementById('twofa-disabled').classList.remove('hidden');
+        } catch (err) {
+          showToast('Erro: ' + err.message, 'danger');
+        } finally {
+          btn.disabled = false;
+        }
+      });
     }
 
     window.onAuthReady = function(user) {

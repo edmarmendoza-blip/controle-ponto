@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>Sugestões de Melhoria - Lar Digital</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+    }
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen bg-blue-800 text-white transition-transform -translate-x-full md:translate-x-0">
+    <div class="p-4 border-b border-blue-700">
+      <a href="/dashboard.html" class="flex items-center gap-2">
+        <i class="bi bi-clock-history text-2xl"></i>
+        <span class="text-xl font-bold">Lar Digital</span>
+      </a>
+      <p class="text-blue-200 text-xs mt-1">Gestão da Casa</p>
+    </div>
+    <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-180px)]">
+      <a href="/dashboard.html" data-page="dashboard" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+      </a>
+      <a href="/funcionarios.html" data-page="funcionarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-people"></i><span>Funcionários</span>
+      </a>
+      <a href="/cargos.html" data-page="cargos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-briefcase"></i><span>Cargos</span>
+      </a>
+      <a href="/registros.html" data-page="registros" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-clock"></i><span>Registros</span>
+      </a>
+      <a href="/relatorios.html" data-page="relatorios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-file-earmark-text"></i><span>Relatórios</span>
+      </a>
+      <a href="/relatorios-graficos.html" data-page="relatorios-graficos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-bar-chart-line"></i><span>Gráficos</span>
+      </a>
+      <a href="/presenca.html" data-page="presenca" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-calendar-check"></i><span>Presença</span>
+      </a>
+      <a href="/entregas.html" data-page="entregas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-box-seam"></i><span>Entregas</span>
+      </a>
+      <a href="/holerites.html" data-page="holerites" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-receipt"></i><span>Holerites</span>
+      </a>
+      <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-calendar-heart"></i><span>Férias</span>
+      </a>
+      <a href="/sugestoes.html" data-page="sugestoes" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-lightbulb"></i><span>Sugestões</span>
+      </a>
+      <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-shield-lock"></i><span>Usuários</span>
+      </a>
+      <a href="/feriados.html" data-page="feriados" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-calendar-event"></i><span>Feriados</span>
+      </a>
+      <a href="/insights.html" data-page="insights" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-stars"></i><span>Insights IA</span>
+      </a>
+      <a href="/whatsapp.html" data-page="whatsapp" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
+      </a>
+      <a href="/audit-log.html" data-page="audit-log" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-journal-text"></i><span>Audit Log</span>
+      </a>
+      <hr class="border-blue-700 my-2">
+      <a href="/perfil.html" data-page="perfil" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-person-gear"></i><span>Perfil</span>
+      </a>
+    </nav>
+    <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-blue-700 bg-blue-800">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2 text-sm">
+          <i class="bi bi-person-circle"></i>
+          <div>
+            <div id="user-name" class="font-medium">-</div>
+            <div id="user-role" class="text-blue-300 text-xs">-</div>
+          </div>
+        </div>
+        <button id="theme-toggle" class="p-1.5 rounded-lg hover:bg-blue-700 transition-colors">
+          <i id="theme-icon" class="bi bi-moon-fill"></i>
+        </button>
+      </div>
+      <button id="logout-btn" class="w-full py-1.5 text-sm bg-blue-700 hover:bg-blue-600 rounded-lg transition-colors">Sair</button>
+    </div>
+  </aside>
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+
+  <!-- Main Content -->
+  <main class="md:ml-64 min-h-screen">
+    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+      <div class="flex items-center gap-3">
+        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300">
+          <i class="bi bi-list text-xl"></i>
+        </button>
+        <h1 class="text-xl font-semibold">Sugestões de Melhoria</h1>
+      </div>
+      <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
+    </header>
+
+    <div class="p-4 md:p-6" id="page-content">
+      <!-- Stats -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div class="text-2xl font-bold text-yellow-600" id="stat-pendentes">0</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">Pendentes</div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div class="text-2xl font-bold text-blue-600" id="stat-analise">0</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">Em Análise</div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div class="text-2xl font-bold text-green-600" id="stat-convertidas">0</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">Convertidas</div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div class="text-2xl font-bold text-gray-600" id="stat-total">0</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">Total</div>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-6">
+        <div class="flex flex-col md:flex-row items-start md:items-end gap-4">
+          <div class="flex-1 min-w-0">
+            <label class="block text-sm font-medium mb-1">Status</label>
+            <select id="filter-status" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <option value="">Todos</option>
+              <option value="pendente" selected>Pendente</option>
+              <option value="em_analise">Em Análise</option>
+              <option value="convertida">Convertida</option>
+              <option value="ignorada">Ignorada</option>
+            </select>
+          </div>
+          <div class="flex-1 min-w-0">
+            <label class="block text-sm font-medium mb-1">Categoria</label>
+            <select id="filter-categoria" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+              <option value="">Todas</option>
+            </select>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="loadSugestoes()" class="px-4 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+              <i class="bi bi-funnel"></i><span>Filtrar</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+        <span id="sugestoes-count">0</span> sugestões encontradas
+      </div>
+
+      <!-- Cards Grid -->
+      <div id="sugestoes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="col-span-full text-center py-8 text-gray-400">
+          <i class="bi bi-arrow-repeat animate-spin text-2xl"></i>
+          <p class="mt-2">Carregando...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal Detail/Edit -->
+  <div id="modal-sugestao" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+        <h3 class="text-lg font-semibold" id="modal-title">Sugestão</h3>
+        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+          <i class="bi bi-x-lg text-xl"></i>
+        </button>
+      </div>
+      <div class="p-5 space-y-4" id="modal-body"></div>
+      <div class="flex justify-end gap-3 p-5 border-t border-gray-100 dark:border-gray-700" id="modal-actions"></div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+  <script src="/js/utils.js?v=1"></script>
+  <script src="/js/shared.js"></script>
+  <script>
+    let allSugestoes = [];
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    }
+
+    function formatDateTime(dateStr) {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) + ' ' +
+             d.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function getStatusBadge(status) {
+      const map = {
+        pendente: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-400', label: 'Pendente', icon: 'bi-hourglass-split' },
+        em_analise: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-400', label: 'Em Análise', icon: 'bi-search' },
+        convertida: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', label: 'Convertida', icon: 'bi-check-circle' },
+        ignorada: { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-600 dark:text-gray-400', label: 'Ignorada', icon: 'bi-x-circle' }
+      };
+      const s = map[status] || map.pendente;
+      return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${s.bg} ${s.text}"><i class="bi ${s.icon}"></i>${s.label}</span>`;
+    }
+
+    function getPrioridadeBadge(prioridade) {
+      const map = {
+        alta: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400', icon: 'bi-arrow-up-circle-fill' },
+        media: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-400', icon: 'bi-dash-circle-fill' },
+        baixa: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', icon: 'bi-arrow-down-circle-fill' }
+      };
+      const p = map[prioridade] || map.media;
+      return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${p.bg} ${p.text}"><i class="bi ${p.icon}"></i>${prioridade || 'media'}</span>`;
+    }
+
+    function getFonteBadge(fonteTipo) {
+      const map = {
+        texto: { icon: 'bi-chat-text', label: 'Texto' },
+        audio: { icon: 'bi-mic', label: 'Áudio' },
+        imagem: { icon: 'bi-image', label: 'Foto' }
+      };
+      const f = map[fonteTipo] || map.texto;
+      return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"><i class="bi ${f.icon}"></i>${f.label}</span>`;
+    }
+
+    async function loadSugestoes() {
+      try {
+        const status = document.getElementById('filter-status').value;
+        const categoria = document.getElementById('filter-categoria').value;
+        const params = new URLSearchParams();
+        if (status) params.set('status', status);
+        if (categoria) params.set('categoria', categoria);
+
+        const result = await Shared.api(`/api/sugestoes?${params.toString()}`);
+        allSugestoes = result.data || [];
+        updateStats();
+        renderGrid();
+      } catch (err) {
+        console.error(err);
+        document.getElementById('sugestoes-grid').innerHTML = `
+          <div class="col-span-full text-center py-8 text-red-400">
+            <i class="bi bi-exclamation-circle text-3xl"></i>
+            <p class="mt-2">Erro: ${err.message}</p>
+          </div>`;
+      }
+    }
+
+    async function loadAllForStats() {
+      try {
+        const result = await Shared.api('/api/sugestoes');
+        const all = result.data || [];
+        document.getElementById('stat-pendentes').textContent = all.filter(s => s.status === 'pendente').length;
+        document.getElementById('stat-analise').textContent = all.filter(s => s.status === 'em_analise').length;
+        document.getElementById('stat-convertidas').textContent = all.filter(s => s.status === 'convertida').length;
+        document.getElementById('stat-total').textContent = all.length;
+
+        // Populate categories dropdown
+        const categorias = [...new Set(all.map(s => s.categoria).filter(Boolean))].sort();
+        const select = document.getElementById('filter-categoria');
+        categorias.forEach(c => {
+          const opt = new Option(c.charAt(0).toUpperCase() + c.slice(1), c);
+          select.appendChild(opt);
+        });
+      } catch (err) {
+        console.error('Erro ao carregar stats:', err);
+      }
+    }
+
+    function updateStats() {
+      document.getElementById('sugestoes-count').textContent = allSugestoes.length;
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('sugestoes-grid');
+
+      if (allSugestoes.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-8 text-gray-400">
+            <i class="bi bi-lightbulb text-3xl"></i>
+            <p class="mt-2">Nenhuma sugestão encontrada</p>
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = allSugestoes.map(s => `
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="openDetail(${s.id})">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center gap-2 flex-wrap">
+              ${getStatusBadge(s.status)}
+              ${getPrioridadeBadge(s.prioridade)}
+            </div>
+            <span class="text-xs text-gray-400">#${s.id}</span>
+          </div>
+          <h3 class="font-semibold text-sm mb-1 line-clamp-2">${escapeHtml(s.titulo || 'Sem título')}</h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">${escapeHtml(s.descricao || '')}</p>
+          <div class="flex items-center justify-between text-xs text-gray-400">
+            <div class="flex items-center gap-2">
+              ${getFonteBadge(s.fonte_tipo)}
+              ${s.categoria ? `<span class="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">${escapeHtml(s.categoria)}</span>` : ''}
+            </div>
+            <span>${formatDate(s.created_at)}</span>
+          </div>
+          ${s.remetente_nome ? `<div class="mt-2 text-xs text-gray-400"><i class="bi bi-person"></i> ${escapeHtml(s.remetente_nome)}</div>` : ''}
+          ${s.convertida_tarefa_id ? `<div class="mt-2 text-xs text-green-600"><i class="bi bi-check2-circle"></i> Tarefa #${s.convertida_tarefa_id}</div>` : ''}
+        </div>
+      `).join('');
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function openDetail(id) {
+      const s = allSugestoes.find(x => x.id === id);
+      if (!s) return;
+
+      const modal = document.getElementById('modal-sugestao');
+      document.getElementById('modal-title').textContent = `Sugestão #${s.id}`;
+
+      let mediaHtml = '';
+      if (s.imagem_path) {
+        mediaHtml = `<div class="mb-3"><img src="/${s.imagem_path}" class="max-h-48 rounded-lg border" alt="Imagem da sugestão"></div>`;
+      }
+
+      document.getElementById('modal-body').innerHTML = `
+        <div class="flex items-center gap-2 flex-wrap mb-3">
+          ${getStatusBadge(s.status)}
+          ${getPrioridadeBadge(s.prioridade)}
+          ${getFonteBadge(s.fonte_tipo)}
+          ${s.categoria ? `<span class="px-2 py-0.5 rounded text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">${escapeHtml(s.categoria)}</span>` : ''}
+        </div>
+        ${mediaHtml}
+        <div>
+          <label class="block text-sm font-medium mb-1">Título</label>
+          <input type="text" id="edit-titulo" value="${escapeHtml(s.titulo || '')}" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Descrição</label>
+          <textarea id="edit-descricao" rows="3" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm resize-none">${escapeHtml(s.descricao || '')}</textarea>
+        </div>
+        ${s.transcricao ? `<div>
+          <label class="block text-sm font-medium mb-1">Transcrição do Áudio</label>
+          <p class="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 rounded-lg p-3">${escapeHtml(s.transcricao)}</p>
+        </div>` : ''}
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Prioridade</label>
+            <select id="edit-prioridade" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm">
+              <option value="baixa" ${s.prioridade === 'baixa' ? 'selected' : ''}>Baixa</option>
+              <option value="media" ${s.prioridade === 'media' ? 'selected' : ''}>Média</option>
+              <option value="alta" ${s.prioridade === 'alta' ? 'selected' : ''}>Alta</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Status</label>
+            <select id="edit-status" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm">
+              <option value="pendente" ${s.status === 'pendente' ? 'selected' : ''}>Pendente</option>
+              <option value="em_analise" ${s.status === 'em_analise' ? 'selected' : ''}>Em Análise</option>
+              <option value="ignorada" ${s.status === 'ignorada' ? 'selected' : ''}>Ignorada</option>
+              ${s.status === 'convertida' ? '<option value="convertida" selected>Convertida</option>' : ''}
+            </select>
+          </div>
+        </div>
+        <div class="text-xs text-gray-400 space-y-1">
+          <p><i class="bi bi-person"></i> Remetente: ${escapeHtml(s.remetente_nome || 'Desconhecido')}</p>
+          <p><i class="bi bi-calendar3"></i> Criada em: ${formatDateTime(s.created_at)}</p>
+          ${s.convertida_tarefa_id ? `<p><i class="bi bi-check2-circle text-green-600"></i> Convertida em Tarefa #${s.convertida_tarefa_id}</p>` : ''}
+        </div>
+      `;
+
+      let actions = `<button onclick="closeModal()" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm">Fechar</button>`;
+
+      if (s.status !== 'convertida') {
+        actions = `
+          <button onclick="deleteSugestao(${s.id})" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm transition-colors">
+            <i class="bi bi-trash"></i> Excluir
+          </button>
+          <button onclick="converterTarefa(${s.id})" class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm transition-colors">
+            <i class="bi bi-arrow-right-circle"></i> Converter em Tarefa
+          </button>
+          <button onclick="saveSugestao(${s.id})" class="px-4 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-medium transition-colors">
+            Salvar
+          </button>` + actions;
+      }
+
+      document.getElementById('modal-actions').innerHTML = actions;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('modal-sugestao');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function saveSugestao(id) {
+      try {
+        const body = {
+          titulo: document.getElementById('edit-titulo').value,
+          descricao: document.getElementById('edit-descricao').value,
+          prioridade: document.getElementById('edit-prioridade').value,
+          status: document.getElementById('edit-status').value
+        };
+        await Shared.api(`/api/sugestoes/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+        showToast('Sugestão atualizada!', 'success');
+        closeModal();
+        loadSugestoes();
+        loadAllForStats();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function converterTarefa(id) {
+      Shared.showConfirmModal('Converter esta sugestão em tarefa?', async () => {
+        try {
+          const result = await Shared.api(`/api/sugestoes/${id}/converter-tarefa`, { method: 'POST' });
+          showToast(result.message || 'Tarefa criada!', 'success');
+          closeModal();
+          loadSugestoes();
+          loadAllForStats();
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
+      });
+    }
+
+    async function deleteSugestao(id) {
+      Shared.showConfirmModal('Deseja realmente excluir esta sugestão?', async () => {
+        try {
+          await Shared.api(`/api/sugestoes/${id}`, { method: 'DELETE' });
+          showToast('Sugestão excluída!', 'success');
+          closeModal();
+          loadSugestoes();
+          loadAllForStats();
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
+      });
+    }
+
+    // Close modal on backdrop click
+    document.getElementById('modal-sugestao').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    window.onAuthReady = function() {
+      loadAllForStats();
+      loadSugestoes();
+    };
+  </script>
+</body>
+</html>

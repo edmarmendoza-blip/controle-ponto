@@ -5,15 +5,26 @@
   'use strict';
 
   // Support both 'ponto_token' (original SPA) and 'token' (new pages)
-  const token = localStorage.getItem('ponto_token') || localStorage.getItem('token');
+  let token = localStorage.getItem('ponto_token') || localStorage.getItem('token');
   let currentUser = null;
 
   // --- API Helper ---
+  let _refreshing = null;
   async function api(url, options = {}) {
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
     const res = await fetch(url, { ...options, headers: { ...headers, ...options.headers } });
-    if (res.status === 401 && !url.includes('/api/auth/login')) {
+    if (res.status === 401 && !url.includes('/api/auth/login') && !url.includes('/api/auth/refresh')) {
+      const refreshed = await tryRefreshToken();
+      if (refreshed) {
+        const retryHeaders = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+        const retryRes = await fetch(url, { ...options, headers: { ...retryHeaders, ...options.headers } });
+        if (retryRes.ok) {
+          const ct = retryRes.headers.get('content-type');
+          if (ct && ct.includes('application/json')) return retryRes.json();
+          return retryRes;
+        }
+      }
       logout();
       throw new Error('Sessão expirada');
     }
@@ -28,13 +39,44 @@
     return res;
   }
 
+  async function tryRefreshToken() {
+    const refreshToken = localStorage.getItem('ponto_refresh_token');
+    if (!refreshToken) return false;
+    if (_refreshing) return _refreshing;
+    _refreshing = (async () => {
+      try {
+        const res = await fetch('/api/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          token = data.token;
+          localStorage.setItem('ponto_token', data.token);
+          localStorage.setItem('token', data.token);
+          if (data.refreshToken) localStorage.setItem('ponto_refresh_token', data.refreshToken);
+          return true;
+        }
+        localStorage.removeItem('ponto_refresh_token');
+        return false;
+      } catch (e) {
+        return false;
+      } finally {
+        _refreshing = null;
+      }
+    })();
+    return _refreshing;
+  }
+
   // --- Auth ---
   function checkAuth() {
     if (!token) {
       window.location.href = '/login.html';
       return;
     }
-    api('/api/auth/me').then(user => {
+    api('/api/auth/me').then(data => {
+      const user = data.user || data;
       currentUser = user;
       const nameEl = document.getElementById('user-name');
       nameEl.textContent = user.name;
@@ -64,6 +106,7 @@
   function logout() {
     localStorage.removeItem('ponto_token');
     localStorage.removeItem('token');
+    localStorage.removeItem('ponto_refresh_token');
     window.location.href = '/login.html';
   }
 
@@ -88,45 +131,31 @@
     }
   }
 
-  // --- Toast ---
-  function showToast(message, type = 'success') {
+  // --- Utility functions (delegated to Utils when available) ---
+  const showToast = window.Utils ? window.Utils.showToast : function(message, type = 'success') {
     const container = document.getElementById('toast-container');
     if (!container) return;
-    const colors = {
-      success: 'bg-green-500',
-      danger: 'bg-red-500',
-      warning: 'bg-yellow-500',
-      info: 'bg-blue-500'
-    };
     const toast = document.createElement('div');
-    toast.className = `${colors[type] || colors.success} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-slide-in`;
-    toast.innerHTML = `
-      <span>${message}</span>
-      <button onclick="this.parentElement.remove()" class="ml-2 text-white/80 hover:text-white">&times;</button>`;
+    toast.className = `toast show align-items-center text-bg-${type} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
     container.appendChild(toast);
-    setTimeout(() => toast.remove(), 4000);
-  }
-
-  // --- Date helpers ---
-  function formatDate(d) {
-    if (!d) return '-';
-    const [y, m, day] = d.split('-');
-    return `${day}/${m}/${y}`;
-  }
-
-  function formatCurrency(v) {
+    const duration = (type === 'danger' || type === 'warning') ? 8000 : 4000;
+    setTimeout(() => toast.remove(), duration);
+  };
+  const formatDate = window.Utils ? window.Utils.formatDate : function(d) {
+    if (!d) return '-'; const [y, m, day] = d.split('-'); return `${day}/${m}/${y}`;
+  };
+  const formatCurrency = window.Utils ? window.Utils.formatCurrency : function(v) {
     return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
-  }
-
-  function monthName(m) {
+  };
+  const monthName = window.Utils ? window.Utils.monthName : function(m) {
     return ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'][parseInt(m)];
-  }
-
-  function today() {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  }
+  };
+  const today = window.Utils ? window.Utils.today : function() {
+    return new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+  };
 
   // --- Sidebar ---
   function initSidebar() {
@@ -172,6 +201,40 @@
     if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
   }
 
+  // --- Confirm Modal ---
+  function showConfirmModal(message, onConfirm) {
+    let modal = document.getElementById('shared-confirm-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'shared-confirm-modal';
+      modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;';
+      modal.innerHTML = `
+        <div style="background:#fff;border-radius:8px;padding:24px;max-width:400px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.2);">
+          <p id="shared-confirm-message" style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.5;"></p>
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button id="shared-confirm-cancel" style="padding:8px 18px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#374151;cursor:pointer;font-size:14px;">Cancelar</button>
+            <button id="shared-confirm-ok" style="padding:8px 18px;border:none;border-radius:6px;background:#dc2626;color:#fff;cursor:pointer;font-size:14px;font-weight:500;">Confirmar</button>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+      document.getElementById('shared-confirm-cancel').addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.style.display = 'none';
+      });
+    }
+    document.getElementById('shared-confirm-message').textContent = message;
+    modal.style.display = 'flex';
+    const okBtn = document.getElementById('shared-confirm-ok');
+    const newOk = okBtn.cloneNode(true);
+    okBtn.parentNode.replaceChild(newOk, okBtn);
+    newOk.addEventListener('click', () => {
+      modal.style.display = 'none';
+      if (typeof onConfirm === 'function') onConfirm();
+    });
+  }
+
   // Export
   window.Shared = {
     api,
@@ -184,6 +247,7 @@
     today,
     toggleTheme,
     init,
+    showConfirmModal,
     get currentUser() { return currentUser; },
     get token() { return token; }
   };

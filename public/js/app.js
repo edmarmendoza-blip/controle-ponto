@@ -11,11 +11,24 @@
   let currentPage = 'dashboard';
 
   // --- API Helper ---
+  let _refreshing = null;
   async function api(url, options = {}) {
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
     const res = await fetch(url, { ...options, headers: { ...headers, ...options.headers } });
-    if (res.status === 401 && !url.includes('/api/auth/login')) {
+    if (res.status === 401 && !url.includes('/api/auth/login') && !url.includes('/api/auth/refresh')) {
+      // Try refresh token before logout
+      const refreshed = await tryRefreshToken();
+      if (refreshed) {
+        // Retry original request with new token
+        const retryHeaders = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+        const retryRes = await fetch(url, { ...options, headers: { ...retryHeaders, ...options.headers } });
+        if (retryRes.ok) {
+          const ct = retryRes.headers.get('content-type');
+          if (ct && ct.includes('application/json')) return retryRes.json();
+          return retryRes;
+        }
+      }
       logout();
       throw new Error('Sessão expirada');
     }
@@ -30,27 +43,66 @@
     return res;
   }
 
-  // --- Toast ---
-  function showToast(message, type = 'success') {
+  async function tryRefreshToken() {
+    const refreshToken = localStorage.getItem('ponto_refresh_token');
+    if (!refreshToken) return false;
+    // Deduplicate concurrent refresh attempts
+    if (_refreshing) return _refreshing;
+    _refreshing = (async () => {
+      try {
+        const res = await fetch('/api/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          token = data.token;
+          localStorage.setItem('ponto_token', data.token);
+          localStorage.setItem('token', data.token);
+          if (data.refreshToken) localStorage.setItem('ponto_refresh_token', data.refreshToken);
+          return true;
+        }
+        localStorage.removeItem('ponto_refresh_token');
+        return false;
+      } catch (e) {
+        return false;
+      } finally {
+        _refreshing = null;
+      }
+    })();
+    return _refreshing;
+  }
+
+  // --- Toast (delegated to Utils) ---
+  const showToast = window.Utils ? window.Utils.showToast : function(message, type = 'success') {
     const container = document.getElementById('toast-container');
+    if (!container) return;
     const toast = document.createElement('div');
     toast.className = `toast show align-items-center text-bg-${type} border-0`;
     toast.setAttribute('role', 'alert');
-    toast.innerHTML = `
-      <div class="d-flex">
-        <div class="toast-body">${message}</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>`;
+    toast.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
     container.appendChild(toast);
     setTimeout(() => toast.remove(), 4000);
-  }
+  };
 
   // --- Modal helpers ---
-  function openModal(title, bodyHtml, footerHtml) {
+  function openModal(title, bodyHtml, footerHtml, size) {
+    const modalEl = document.getElementById('app-modal');
+    const dialogEl = modalEl.querySelector('.modal-dialog');
     document.getElementById('modal-title').textContent = title;
     document.getElementById('modal-body').innerHTML = bodyHtml;
     document.getElementById('modal-footer').innerHTML = footerHtml || '';
-    const modal = new bootstrap.Modal(document.getElementById('app-modal'));
+    // Apply size class (modal-lg, modal-xl, etc.)
+    dialogEl.classList.remove('modal-lg', 'modal-xl');
+    if (size) dialogEl.classList.add(size);
+    const modal = new bootstrap.Modal(modalEl);
+    if (size) {
+      modalEl.addEventListener('hidden.bs.modal', function _removeSize() {
+        dialogEl.classList.remove(size);
+        modalEl.removeEventListener('hidden.bs.modal', _removeSize);
+      });
+    }
     modal.show();
     return modal;
   }
@@ -74,21 +126,32 @@
     modal.show();
   }
 
-  // --- Date helpers ---
-  function today() {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  // --- Loading state helper ---
+  function withLoading(btn, asyncFn) {
+    if (typeof btn === 'string') btn = document.getElementById(btn);
+    if (!btn || btn.disabled) return;
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Salvando...';
+    asyncFn().catch(() => {}).finally(() => {
+      btn.disabled = false;
+      btn.innerHTML = original;
+    });
   }
 
-  function formatDate(d) {
+  // --- Date helpers (delegated to Utils when available) ---
+  const today = window.Utils ? window.Utils.today : function() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  };
+  const formatDate = window.Utils ? window.Utils.formatDate : function(d) {
     if (!d) return '-';
     const [y, m, day] = d.split('-');
     return `${day}/${m}/${y}`;
-  }
-
-  function formatCurrency(v) {
+  };
+  const formatCurrency = window.Utils ? window.Utils.formatCurrency : function(v) {
     return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
-  }
+  };
 
   function maskPhone(value) {
     const nums = (value || '').replace(/\D/g, '').slice(0, 11);
@@ -108,10 +171,10 @@
     if (el) el.addEventListener('input', () => { el.value = maskPhone(el.value); });
   }
 
-  function monthName(m) {
+  const monthName = window.Utils ? window.Utils.monthName : function(m) {
     return ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'][parseInt(m)];
-  }
+  };
 
   // --- Auth ---
   function showLogin() {
@@ -146,13 +209,19 @@
   }
 
   function logout() {
-    // Log logout before clearing token
+    // Log logout before clearing token, send refresh token for cleanup
     if (token) {
-      fetch('/api/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } }).catch(() => {});
+      const refreshToken = localStorage.getItem('ponto_refresh_token');
+      fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken })
+      }).catch(() => {});
     }
     token = null;
     currentUser = null;
     localStorage.removeItem('ponto_token');
+    localStorage.removeItem('ponto_refresh_token');
     showLogin();
   }
 
@@ -188,6 +257,8 @@
       token = data.token;
       currentUser = data.user;
       localStorage.setItem('ponto_token', token);
+      localStorage.setItem('token', token);
+      if (data.refreshToken) localStorage.setItem('ponto_refresh_token', data.refreshToken);
       showApp();
     } catch (err) {
       errorEl.textContent = err.message;
@@ -254,7 +325,7 @@
     const newPassword = document.getElementById('forgot-new-password').value;
     const msgEl = document.getElementById('forgot-message');
     if (!code || !newPassword) { msgEl.textContent = 'Preencha código e nova senha'; msgEl.className = 'small mt-2 text-danger'; return; }
-    if (newPassword.length < 6) { msgEl.textContent = 'Senha deve ter no mínimo 6 caracteres'; msgEl.className = 'small mt-2 text-danger'; return; }
+    if (newPassword.length < 8) { msgEl.textContent = 'Senha deve ter no mínimo 8 caracteres'; msgEl.className = 'small mt-2 text-danger'; return; }
     try {
       const res = await fetch('/api/auth/reset-password', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -346,7 +417,15 @@
       case 'estoque': renderEstoque(); break;
       case 'tarefas': renderTarefas(); break;
       case 'accesslog': renderAccessLog(); break;
-      default: content.innerHTML = '<p>Página não encontrada</p>';
+      default: content.innerHTML = `
+          <div class="text-center py-5">
+            <i class="bi bi-exclamation-triangle display-1 text-muted"></i>
+            <h3 class="mt-3 text-muted">Página não encontrada</h3>
+            <p class="text-muted">A página que você está procurando não existe ou foi movida.</p>
+            <button class="btn btn-primary mt-3" onclick="document.querySelector('[data-page=dashboard]').click()">
+              <i class="bi bi-house"></i> Voltar ao Dashboard
+            </button>
+          </div>`;
     }
   }
 
@@ -457,13 +536,13 @@
           <table class="table">
             <thead>
               <tr>
-                <th>Nome</th>
-                <th>Cargo</th>
-                <th>Salário/Hora</th>
-                <th>Telefone</th>
-                <th>Horário</th>
-                <th>Status</th>
-                ${canManage ? '<th>Ações</th>' : ''}
+                <th scope="col">Nome</th>
+                <th scope="col">Cargo</th>
+                <th scope="col">Salário/Hora</th>
+                <th scope="col">Telefone</th>
+                <th scope="col">Horário</th>
+                <th scope="col">Status</th>
+                ${canManage ? '<th scope="col">Ações</th>' : ''}
               </tr>
             </thead>
             <tbody>
@@ -735,7 +814,7 @@
 
     const footer = `
       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-      <button type="button" class="btn btn-primary" onclick="App.saveFuncionario(${id || 'null'})">Salvar</button>`;
+      <button type="button" class="btn btn-primary" onclick="App.saveFuncionario(${id || 'null'})" id="btn-save-func">Salvar</button>`;
 
     // Use modal-lg for the expanded form
     const modalEl = document.getElementById('app-modal');
@@ -1170,11 +1249,41 @@
       return;
     }
 
+    // Email validation
+    if (data.email_pessoal && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email_pessoal)) {
+      showToast('Email pessoal inválido', 'danger');
+      return;
+    }
+
+    // Phone validation (11 digits when filled)
+    const phoneFields = [
+      { val: data.telefone, label: 'Telefone' },
+      { val: data.telefone_contato2, label: 'Telefone contato 2' },
+      { val: data.telefone_emergencia, label: 'Telefone emergência' }
+    ];
+    for (const pf of phoneFields) {
+      if (pf.val && (pf.val.length < 10 || pf.val.length > 11)) {
+        showToast(`${pf.label}: deve ter 10 ou 11 dígitos`, 'danger');
+        return;
+      }
+    }
+
+    // CEP validation (8 digits when filled)
+    if (data.endereco_cep) {
+      const cepDigits = data.endereco_cep.replace(/\D/g, '');
+      if (cepDigits.length !== 8) {
+        showToast('CEP deve ter 8 dígitos', 'danger');
+        return;
+      }
+    }
+
     if (id) {
       const statusEl = document.getElementById('func-status');
       if (statusEl) data.status = statusEl.value;
     }
 
+    const saveBtn = document.getElementById('btn-save-func');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Salvando...'; }
     try {
       let funcId = id;
       if (id) {
@@ -1201,6 +1310,8 @@
       renderFuncionarios();
     } catch (err) {
       showToast(err.message, 'danger');
+    } finally {
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = 'Salvar'; }
     }
   }
 
@@ -1373,15 +1484,15 @@
           <table class="table">
             <thead>
               <tr>
-                <th>Funcionário</th>
-                <th>Cargo</th>
-                <th>Data</th>
-                <th>Entrada</th>
-                <th>Saída</th>
-                <th>Tipo</th>
-                <th>Local</th>
-                <th>Obs.</th>
-                <th>Ações</th>
+                <th scope="col">Funcionário</th>
+                <th scope="col">Cargo</th>
+                <th scope="col">Data</th>
+                <th scope="col">Entrada</th>
+                <th scope="col">Saída</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Local</th>
+                <th scope="col">Obs.</th>
+                <th scope="col">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -1453,6 +1564,7 @@
     }
   }
 
+  let _leafletMapInstance = null;
   function showLocationMap(lat, lng) {
     lat = parseFloat(lat);
     lng = parseFloat(lng);
@@ -1466,12 +1578,19 @@
     setTimeout(() => {
       const mapEl = document.getElementById('location-detail-map');
       if (!mapEl) return;
+      // Destroy previous map instance to prevent memory leak
+      if (_leafletMapInstance) { try { _leafletMapInstance.remove(); } catch(e) {} _leafletMapInstance = null; }
       const map = L.map('location-detail-map').setView([lat, lng], 16);
+      _leafletMapInstance = map;
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap'
       }).addTo(map);
       L.marker([lat, lng]).addTo(map);
       document.getElementById('app-modal').addEventListener('shown.bs.modal', () => map.invalidateSize(), { once: true });
+      // Cleanup map when modal is hidden
+      document.getElementById('app-modal').addEventListener('hidden.bs.modal', () => {
+        if (_leafletMapInstance) { try { _leafletMapInstance.remove(); } catch(e) {} _leafletMapInstance = null; }
+      }, { once: true });
       setTimeout(() => map.invalidateSize(), 300);
     }, 200);
   }
@@ -1750,8 +1869,8 @@
                   <table class="table table-sm">
                     <thead>
                       <tr>
-                        <th>Data</th><th>Dia</th><th>Entrada</th><th>Saída</th>
-                        <th>Horas</th>${funcHasHE ? '<th>Extras</th>' : ''}<th>Valor</th>
+                        <th scope="col">Data</th><th scope="col">Dia</th><th scope="col">Entrada</th><th scope="col">Saída</th>
+                        <th scope="col">Horas</th>${funcHasHE ? '<th scope="col">Extras</th>' : ''}<th scope="col">Valor</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1925,9 +2044,9 @@
                   <table class="table table-sm">
                     <thead>
                       <tr>
-                        <th>Data</th><th>Dia</th><th>Entrada</th><th>Saída</th>
-                        <th>H. Trab.</th><th>H. Extra</th><th>Tipo</th>
-                        <th>Pgto HE</th><th>Pgto FDS</th><th>Total</th>
+                        <th scope="col">Data</th><th scope="col">Dia</th><th scope="col">Entrada</th><th scope="col">Saída</th>
+                        <th scope="col">H. Trab.</th><th scope="col">H. Extra</th><th scope="col">Tipo</th>
+                        <th scope="col">Pgto HE</th><th scope="col">Pgto FDS</th><th scope="col">Total</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2103,11 +2222,11 @@
           <table class="table">
             <thead>
               <tr>
-                <th>Data</th>
-                <th>Dia</th>
-                <th>Descrição</th>
-                <th>Tipo</th>
-                ${isAdmin ? '<th>Ações</th>' : ''}
+                <th scope="col">Data</th>
+                <th scope="col">Dia</th>
+                <th scope="col">Descrição</th>
+                <th scope="col">Tipo</th>
+                ${isAdmin ? '<th scope="col">Ações</th>' : ''}
               </tr>
             </thead>
             <tbody>
@@ -2307,6 +2426,11 @@
 
       destroyCharts();
 
+      if (!data.employeeHours || data.employeeHours.length === 0) {
+        document.getElementById('charts-container').innerHTML = '<div class="empty-state"><i class="bi bi-bar-chart"></i><p>Nenhum dado encontrado para o período selecionado</p></div>';
+        return;
+      }
+
       // Bar Chart: Hours per employee
       const barCtx = document.getElementById('chart-bar');
       if (barCtx) {
@@ -2412,9 +2536,6 @@
         chartInstances.push(lineChart);
       }
 
-      if (data.employeeHours.length === 0) {
-        document.getElementById('charts-container').innerHTML = '<div class="empty-state"><i class="bi bi-bar-chart"></i><p>Nenhum dado encontrado para o período selecionado</p></div>';
-      }
     } catch (err) {
       showToast('Erro ao carregar gráficos: ' + err.message, 'danger');
     }
@@ -2555,15 +2676,15 @@
         <table class="table table-hover mb-0">
           <thead>
             <tr>
-              <th>Funcionário</th>
-              <th>Cargo</th>
-              <th>Esperado</th>
-              <th>Entrada</th>
-              <th title="Saída Almoço">Almoço ↗</th>
-              <th title="Retorno Almoço">Almoço ↙</th>
-              <th>Saída</th>
-              <th>Status</th>
-              <th>Atraso</th>
+              <th scope="col">Funcionário</th>
+              <th scope="col">Cargo</th>
+              <th scope="col">Esperado</th>
+              <th scope="col">Entrada</th>
+              <th scope="col" title="Saída Almoço">Almoço ↗</th>
+              <th scope="col" title="Retorno Almoço">Almoço ↙</th>
+              <th scope="col">Saída</th>
+              <th scope="col">Status</th>
+              <th scope="col">Atraso</th>
             </tr>
           </thead>
           <tbody>
@@ -2713,8 +2834,8 @@
           <table class="table table-sm table-bordered mb-0 text-center presenca-heatmap-table">
             <thead>
               <tr>
-                <th class="text-start" style="min-width:120px">Funcionário</th>
-                ${days.map(d => '<th style="padding:2px 4px">' + d + '</th>').join('')}
+                <th scope="col" class="text-start" style="min-width:120px">Funcionário</th>
+                ${days.map(d => '<th scope="col" style="padding:2px 4px">' + d + '</th>').join('')}
               </tr>
             </thead>
             <tbody>
@@ -2888,12 +3009,12 @@
           <table class="table">
             <thead>
               <tr>
-                <th>Nome</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Criado em</th>
-                <th>Ações</th>
+                <th scope="col">Nome</th>
+                <th scope="col">Email</th>
+                <th scope="col">Role</th>
+                <th scope="col">Status</th>
+                <th scope="col">Criado em</th>
+                <th scope="col">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -2968,7 +3089,7 @@
 
     const footer = `
       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-      <button type="button" class="btn btn-primary" onclick="App.saveUsuario(${id || 'null'})">Salvar</button>`;
+      <button type="button" class="btn btn-primary" onclick="App.saveUsuario(${id || 'null'})" id="btn-save-user">Salvar</button>`;
 
     openModal(isEdit ? 'Editar Usuário' : 'Novo Usuário', body, footer);
     applyPhoneMask('user-telefone-input');
@@ -3015,11 +3136,21 @@
       showToast('Preencha todos os campos obrigatórios', 'danger');
       return;
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      showToast('Email inválido', 'danger');
+      return;
+    }
     if (!id && !password) {
       showToast('Senha obrigatória para novo usuário', 'danger');
       return;
     }
+    if (password && password.length < 8) {
+      showToast('Senha deve ter no mínimo 8 caracteres', 'danger');
+      return;
+    }
 
+    const saveBtn = document.getElementById('btn-save-user');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Salvando...'; }
     try {
       if (id) {
         await api(`/api/auth/users/${id}`, { method: 'PUT', body: JSON.stringify(data) });
@@ -3032,6 +3163,8 @@
       renderUsuarios();
     } catch (err) {
       showToast(err.message, 'danger');
+    } finally {
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = 'Salvar'; }
     }
   }
 
@@ -3195,13 +3328,13 @@
           <table class="table">
             <thead>
               <tr>
-                <th>Data/Hora</th>
-                <th>Usuário</th>
-                <th>Ação</th>
-                <th>Entidade</th>
-                <th>ID</th>
-                <th>Detalhes</th>
-                <th>IP</th>
+                <th scope="col">Data/Hora</th>
+                <th scope="col">Usuário</th>
+                <th scope="col">Ação</th>
+                <th scope="col">Entidade</th>
+                <th scope="col">ID</th>
+                <th scope="col">Detalhes</th>
+                <th scope="col">IP</th>
               </tr>
             </thead>
             <tbody>
@@ -3377,7 +3510,7 @@
           ${(insights.presenca && insights.presenca.ranking || []).length > 0 ? `
             <div class="table-responsive">
               <table class="table table-sm table-striped">
-                <thead><tr><th>Funcionário</th><th>Dias Presente</th><th>Chegada Média</th><th>Saída Média</th></tr></thead>
+                <thead><tr><th scope="col">Funcionário</th><th scope="col">Dias Presente</th><th scope="col">Chegada Média</th><th scope="col">Saída Média</th></tr></thead>
                 <tbody>
                   ${insights.presenca.ranking.map(r => `
                     <tr>
@@ -3563,7 +3696,7 @@
         <div class="card-body">
           ${(insights.tarefas || []).length > 0
             ? `<table class="table table-sm mb-0">
-                <thead><tr><th>Tarefa</th><th>Responsável</th><th>Status</th></tr></thead>
+                <thead><tr><th scope="col">Tarefa</th><th scope="col">Responsável</th><th scope="col">Status</th></tr></thead>
                 <tbody>
                   ${insights.tarefas.map(t => `
                     <tr>
@@ -3620,7 +3753,7 @@
         </div>
         <div class="data-table">
           <table class="table">
-            <thead><tr><th>Nome</th><th>Descrição</th><th>Status</th>${canManage ? '<th>Ações</th>' : ''}</tr></thead>
+            <thead><tr><th scope="col">Nome</th><th scope="col">Descrição</th><th scope="col">Status</th>${canManage ? '<th scope="col">Ações</th>' : ''}</tr></thead>
             <tbody>
               ${cargos.length === 0 ? '<tr><td colspan="4" class="text-center text-muted py-4">Nenhum cargo cadastrado</td></tr>' : ''}
               ${cargos.map(c => `
@@ -3644,11 +3777,11 @@
         btn.addEventListener('click', () => openCargoModal(parseInt(btn.dataset.id)));
       });
       content.querySelectorAll('.btn-del-cargo').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          if (confirm('Excluir cargo "' + btn.dataset.nome + '"?')) {
+        btn.addEventListener('click', () => {
+          confirmAction('Excluir cargo "' + btn.dataset.nome + '"?', async () => {
             await api('/api/cargos/' + btn.dataset.id, { method: 'DELETE' });
             renderCargos();
-          }
+          });
         });
       });
     } catch (err) {
@@ -3696,7 +3829,7 @@
       </form>`;
     const footer = `
       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-      <button type="button" class="btn btn-primary" onclick="App.saveCargo(${id || 'null'})">Salvar</button>`;
+      <button type="button" class="btn btn-primary" onclick="App.saveCargo(${id || 'null'})" id="btn-save-cargo">Salvar</button>`;
     openModal(isEdit ? 'Editar Cargo' : 'Novo Cargo', body, footer);
     if (isEdit) {
       api('/api/cargos/' + id).then(c => {
@@ -3748,6 +3881,8 @@
       tipo_dias_dormida: document.getElementById('cargo-tipo-dormida').value || 'uteis'
     };
     if (!data.nome) return showToast('Nome obrigatório', 'danger');
+    const saveBtn = document.getElementById('btn-save-cargo');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Salvando...'; }
     try {
       if (id) {
         await api('/api/cargos/' + id, { method: 'PUT', body: JSON.stringify(data) });
@@ -3759,6 +3894,8 @@
       renderCargos();
     } catch (err) {
       showToast('Erro: ' + err.message, 'danger');
+    } finally {
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = 'Salvar'; }
     }
   }
 
@@ -3835,11 +3972,11 @@
         btn.addEventListener('click', () => openVeiculoModal(parseInt(btn.dataset.id), funcionarios));
       });
       content.querySelectorAll('.btn-del-veic').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          if (confirm('Desativar veículo "' + btn.dataset.nome + '"?')) {
+        btn.addEventListener('click', () => {
+          confirmAction('Desativar veículo "' + btn.dataset.nome + '"?', async () => {
             await api('/api/veiculos/' + btn.dataset.id, { method: 'DELETE' });
             renderVeiculos();
-          }
+          });
         });
       });
     } catch (err) {
@@ -4057,6 +4194,8 @@
       observacoes: document.getElementById('veic-obs').value
     };
     if (!data.placa && !data.modelo) return showToast('Placa ou modelo obrigatório', 'danger');
+    const saveBtn = document.getElementById('btn-save-veiculo');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Salvando...'; }
     try {
       if (id) {
         await api('/api/veiculos/' + id, { method: 'PUT', body: JSON.stringify(data) });
@@ -4068,6 +4207,8 @@
       renderVeiculos();
     } catch (err) {
       showToast('Erro: ' + err.message, 'danger');
+    } finally {
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = 'Salvar'; }
     }
   }
 
@@ -4189,11 +4330,11 @@
       html += '</div>';
       container.innerHTML = html;
       container.querySelectorAll('.btn-del-doc').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          if (confirm('Excluir este documento?')) {
+        btn.addEventListener('click', () => {
+          confirmAction('Excluir este documento?', async () => {
             await api('/api/documentos/' + btn.dataset.id, { method: 'DELETE' });
             loadDocumentos();
-          }
+          });
         });
       });
     } catch (err) {
@@ -4364,7 +4505,7 @@
         <div class="data-table">
           <table class="table table-sm">
             <thead>
-              <tr><th>Data/Hora</th><th>Usuário</th><th>Email</th><th>Ação</th><th>IP</th><th>Navegador</th></tr>
+              <tr><th scope="col">Data/Hora</th><th scope="col">Usuário</th><th scope="col">Email</th><th scope="col">Ação</th><th scope="col">IP</th><th scope="col">Navegador</th></tr>
             </thead>
             <tbody>
               ${logs.length === 0 ? '<tr><td colspan="6" class="text-center text-muted py-3">Nenhum registro</td></tr>' : logs.map(l => {
@@ -4733,7 +4874,7 @@
       </form>`;
 
     const footer = '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>' +
-      '<button type="button" class="btn btn-primary" onclick="App.saveTarefa(' + (id || 'null') + ')">Salvar</button>';
+      '<button type="button" class="btn btn-primary" onclick="App.saveTarefa(' + (id || 'null') + ')" id="btn-save-tarefa">Salvar</button>';
 
     openModal(isEdit ? 'Editar Tarefa' : 'Nova Tarefa', body, footer);
 
@@ -4766,6 +4907,8 @@
 
     if (!data.titulo) { showToast('Título obrigatório', 'danger'); return; }
 
+    const saveBtn = document.getElementById('btn-save-tarefa');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Salvando...'; }
     try {
       if (id) {
         await api('/api/tarefas/' + id, { method: 'PUT', body: JSON.stringify(data) });
@@ -4778,6 +4921,8 @@
       filterTarefas();
     } catch (err) {
       showToast(err.message, 'danger');
+    } finally {
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = 'Salvar'; }
     }
   }
 
@@ -4796,6 +4941,25 @@
   // ============================================================
   // CHAT WHATSAPP (modal on funcionários)
   // ============================================================
+  function renderChatMessage(m) {
+    const isSent = m.direcao === 'enviada';
+    const time = m.created_at ? m.created_at.slice(11, 16) : '';
+    const date = m.created_at ? m.created_at.slice(0, 10).split('-').reverse().join('/') : '';
+    let content = m.conteudo || '';
+    if (m.media_path) {
+      if (m.tipo === 'foto') {
+        content += '<br><img src="' + m.media_path + '" style="max-width:200px;border-radius:8px;margin-top:4px" onclick="window.open(\'' + m.media_path + '\')" class="cursor-pointer">';
+      } else {
+        content += '<br><a href="' + m.media_path + '" target="_blank" class="btn btn-sm btn-outline-primary mt-1"><i class="bi bi-download"></i> Arquivo</a>';
+      }
+    }
+    return '<div class="mb-2 d-flex ' + (isSent ? 'justify-content-end' : 'justify-content-start') + '">' +
+      '<div style="max-width:75%;padding:8px 12px;border-radius:12px;' + (isSent ? 'background:#0d6efd;color:#fff' : 'background:#fff;border:1px solid #dee2e6') + '">' +
+        '<div class="small">' + content + '</div>' +
+        '<div style="font-size:0.65rem;opacity:0.7;text-align:right">' + date + ' ' + time + '</div>' +
+      '</div></div>';
+  }
+
   async function openChatModal(funcionarioId, funcionarioNome) {
     const body = `
       <div id="chat-container" style="height:350px;overflow-y:auto;border:1px solid #dee2e6;border-radius:8px;padding:10px;background:#f8f9fa;margin-bottom:10px">
@@ -4810,14 +4974,7 @@
         <button class="btn btn-sm btn-outline-secondary mt-1" onclick="App.sendChatMedia(${funcionarioId})"><i class="bi bi-paperclip"></i> Enviar arquivo</button>
       </div>`;
 
-    const modalEl = document.getElementById('app-modal');
-    modalEl.querySelector('.modal-dialog').classList.add('modal-lg');
-    modalEl.addEventListener('hidden.bs.modal', function handler() {
-      modalEl.querySelector('.modal-dialog').classList.remove('modal-lg');
-      modalEl.removeEventListener('hidden.bs.modal', handler);
-    });
-
-    openModal('Chat com ' + funcionarioNome, body, '');
+    openModal('Chat com ' + funcionarioNome, body, '', 'modal-lg');
 
     // Load messages
     try {
@@ -4827,24 +4984,7 @@
         container.innerHTML = '<div class="text-center text-muted py-4"><i class="bi bi-chat-dots" style="font-size:2rem"></i><p>Nenhuma mensagem ainda</p></div>';
         return;
       }
-      container.innerHTML = data.messages.map(m => {
-        const isSent = m.direcao === 'enviada';
-        const time = m.created_at ? m.created_at.slice(11, 16) : '';
-        const date = m.created_at ? m.created_at.slice(0, 10).split('-').reverse().join('/') : '';
-        let content = m.conteudo || '';
-        if (m.media_path) {
-          if (m.tipo === 'foto') {
-            content += '<br><img src="' + m.media_path + '" style="max-width:200px;border-radius:8px;margin-top:4px" onclick="window.open(\'' + m.media_path + '\')" class="cursor-pointer">';
-          } else {
-            content += '<br><a href="' + m.media_path + '" target="_blank" class="btn btn-sm btn-outline-primary mt-1"><i class="bi bi-download"></i> Arquivo</a>';
-          }
-        }
-        return '<div class="mb-2 d-flex ' + (isSent ? 'justify-content-end' : 'justify-content-start') + '">' +
-          '<div style="max-width:75%;padding:8px 12px;border-radius:12px;' + (isSent ? 'background:#0d6efd;color:#fff' : 'background:#fff;border:1px solid #dee2e6') + '">' +
-            '<div class="small">' + content + '</div>' +
-            '<div style="font-size:0.65rem;opacity:0.7;text-align:right">' + date + ' ' + time + '</div>' +
-          '</div></div>';
-      }).join('');
+      container.innerHTML = data.messages.map(renderChatMessage).join('');
       container.scrollTop = container.scrollHeight;
     } catch (err) {
       document.getElementById('chat-container').innerHTML = '<div class="alert alert-danger">Erro: ' + err.message + '</div>';
@@ -4864,19 +5004,7 @@
       // Reload chat
       const data = await api('/api/whatsapp/chat/' + funcionarioId + '?limit=100');
       const container = document.getElementById('chat-container');
-      container.innerHTML = data.messages.map(m => {
-        const isSent = m.direcao === 'enviada';
-        const time = m.created_at ? m.created_at.slice(11, 16) : '';
-        let content = m.conteudo || '';
-        if (m.media_path && m.tipo === 'foto') {
-          content += '<br><img src="' + m.media_path + '" style="max-width:200px;border-radius:8px">';
-        }
-        return '<div class="mb-2 d-flex ' + (isSent ? 'justify-content-end' : 'justify-content-start') + '">' +
-          '<div style="max-width:75%;padding:8px 12px;border-radius:12px;' + (isSent ? 'background:#0d6efd;color:#fff' : 'background:#fff;border:1px solid #dee2e6') + '">' +
-            '<div class="small">' + content + '</div>' +
-            '<div style="font-size:0.65rem;opacity:0.7;text-align:right">' + time + '</div>' +
-          '</div></div>';
-      }).join('');
+      container.innerHTML = data.messages.map(renderChatMessage).join('');
       container.scrollTop = container.scrollHeight;
     } catch (err) {
       showToast(err.message, 'danger');
@@ -4913,7 +5041,7 @@
 
   async function renderEstoque() {
     const canManage = currentUser && (currentUser.role === 'admin' || currentUser.role === 'gestor');
-    const content = document.getElementById('content');
+    const content = document.getElementById('page-content');
     content.innerHTML = `
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="mb-0"><i class="bi bi-cart3 me-2"></i>Estoque</h4>
@@ -4940,8 +5068,8 @@
       <div class="table-responsive">
         <table class="table table-hover table-sm">
           <thead><tr>
-            <th>Item</th><th>Categoria</th><th>Qtd Atual</th><th>Mínimo</th><th>Unidade</th><th>Local</th>
-            ${canManage ? '<th>Ações</th>' : ''}
+            <th scope="col">Item</th><th scope="col">Categoria</th><th scope="col">Qtd Atual</th><th scope="col">Mínimo</th><th scope="col">Unidade</th><th scope="col">Local</th>
+            ${canManage ? '<th scope="col">Ações</th>' : ''}
           </tr></thead>
           <tbody id="estoque-tbody"></tbody>
         </table>
@@ -5053,7 +5181,7 @@
       </form>`;
     const footer = `
       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-      <button type="button" class="btn btn-primary" onclick="App.saveEstoqueItem(${id || 'null'})">Salvar</button>`;
+      <button type="button" class="btn btn-primary" onclick="App.saveEstoqueItem(${id || 'null'})" id="btn-save-estoque">Salvar</button>`;
     openModal(title, body, footer);
 
     if (isEdit) {
@@ -5079,6 +5207,8 @@
       localizacao: document.getElementById('estoque-localizacao').value.trim() || null
     };
     if (!data.nome) { showToast('Nome é obrigatório', 'warning'); return; }
+    const saveBtn = document.getElementById('btn-save-estoque');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Salvando...'; }
     try {
       if (id) {
         await api('/api/estoque/' + id, { method: 'PUT', body: JSON.stringify(data) });
@@ -5091,18 +5221,21 @@
       renderEstoque();
     } catch (err) {
       showToast('Erro: ' + err.message, 'danger');
+    } finally {
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = 'Salvar'; }
     }
   }
 
   async function deleteEstoqueItem(id, nome) {
-    if (!confirm('Desativar item "' + nome + '"?')) return;
-    try {
-      await api('/api/estoque/' + id, { method: 'DELETE' });
-      showToast('Item desativado');
-      renderEstoque();
-    } catch (err) {
-      showToast('Erro: ' + err.message, 'danger');
-    }
+    confirmAction('Desativar item "' + nome + '"?', async () => {
+      try {
+        await api('/api/estoque/' + id, { method: 'DELETE' });
+        showToast('Item desativado');
+        renderEstoque();
+      } catch (err) {
+        showToast('Erro: ' + err.message, 'danger');
+      }
+    });
   }
 
   function openMovimentacaoModal(itemId, itemNome) {
@@ -5160,7 +5293,7 @@
       const tipoBadge = { entrada: 'bg-success', saida: 'bg-danger', ajuste: 'bg-info', compra: 'bg-primary' };
       const body = movs.length === 0
         ? '<p class="text-muted text-center">Nenhuma movimentação registrada.</p>'
-        : `<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Data</th><th>Item</th><th>Tipo</th><th>Qtd</th><th>Obs</th><th>Por</th></tr></thead><tbody>
+        : `<div class="table-responsive"><table class="table table-sm"><thead><tr><th scope="col">Data</th><th scope="col">Item</th><th scope="col">Tipo</th><th scope="col">Qtd</th><th scope="col">Obs</th><th scope="col">Por</th></tr></thead><tbody>
           ${movs.map(m => `<tr>
             <td class="small">${new Date(m.created_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</td>
             <td>${m.item_nome || '-'}</td>
@@ -5208,14 +5341,15 @@
     openUsuarioModal: openUsuarioModal,
     saveUsuario: saveUsuario,
     deleteUsuario: deleteUsuario,
-    resetUsuarioPassword: async function(id, email) {
-      if (!confirm('Reenviar senha temporária para ' + email + '?')) return;
-      try {
-        await api('/api/auth/users/' + id + '/reset-password', { method: 'POST' });
-        showToast('Senha reenviada para ' + email);
-      } catch (err) {
-        showToast('Erro: ' + err.message, 'danger');
-      }
+    resetUsuarioPassword: function(id, email) {
+      confirmAction('Reenviar senha temporária para ' + email + '?', async () => {
+        try {
+          await api('/api/auth/users/' + id + '/reset-password', { method: 'POST' });
+          showToast('Senha reenviada para ' + email);
+        } catch (err) {
+          showToast('Erro: ' + err.message, 'danger');
+        }
+      });
     },
     loadAuditLog: loadAuditLog,
     showLocationMap: showLocationMap,

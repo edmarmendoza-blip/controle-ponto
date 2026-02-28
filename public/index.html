@@ -6,9 +6,11 @@
   <title>Lar Digital - Gestão da Casa</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-XGjxtQfXaH2tnPFa9x+ruJTuLE3Aa6LhHSWRr1XeTyhezb4abCG4ccI5AkVDxqC+" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#1e40af">
   <link rel="stylesheet" href="/css/style.css?v=3">
 </head>
 <body>
@@ -73,105 +75,110 @@
     <!-- Main App -->
     <div id="main-app" class="d-none">
       <!-- Sidebar -->
-      <nav id="sidebar" class="sidebar">
+      <nav id="sidebar" class="sidebar" role="navigation" aria-label="Menu principal">
         <div class="sidebar-header">
-          <i class="bi bi-clock-history"></i>
+          <i class="bi bi-clock-history" aria-hidden="true"></i>
           <span>Ponto</span>
         </div>
-        <ul class="sidebar-nav">
-          <li>
-            <a href="#" data-page="dashboard" class="active">
-              <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+        <ul class="sidebar-nav" role="menubar">
+          <li role="none">
+            <a href="#" data-page="dashboard" class="active" role="menuitem">
+              <i class="bi bi-speedometer2" aria-hidden="true"></i><span>Dashboard</span>
             </a>
           </li>
-          <li>
-            <a href="#" data-page="funcionarios">
-              <i class="bi bi-people"></i><span>Funcionários</span>
+          <li role="none">
+            <a href="#" data-page="funcionarios" role="menuitem">
+              <i class="bi bi-people" aria-hidden="true"></i><span>Funcionários</span>
             </a>
           </li>
-          <li>
-            <a href="#" data-page="registros">
-              <i class="bi bi-journal-check"></i><span>Registros</span>
+          <li role="none">
+            <a href="#" data-page="cargos" role="menuitem">
+              <i class="bi bi-briefcase" aria-hidden="true"></i><span>Cargos</span>
             </a>
           </li>
-          <li>
-            <a href="#" data-page="relatorios">
-              <i class="bi bi-bar-chart-line"></i><span>Relatórios</span>
+          <li role="none">
+            <a href="#" data-page="registros" role="menuitem">
+              <i class="bi bi-journal-check" aria-hidden="true"></i><span>Registros</span>
             </a>
           </li>
-          <li>
-            <a href="#" data-page="presenca">
-              <i class="bi bi-calendar-check"></i><span>Presença</span>
+          <li role="none">
+            <a href="#" data-page="relatorios" role="menuitem">
+              <i class="bi bi-bar-chart-line" aria-hidden="true"></i><span>Relatórios</span>
             </a>
           </li>
-          <li>
-            <a href="#" data-page="graficos">
-              <i class="bi bi-graph-up"></i><span>Gráficos</span>
+          <li role="none">
+            <a href="#" data-page="presenca" role="menuitem">
+              <i class="bi bi-calendar-check" aria-hidden="true"></i><span>Presença</span>
             </a>
           </li>
-          <li>
-            <a href="#" data-page="feriados">
-              <i class="bi bi-calendar-event"></i><span>Feriados</span>
+          <li role="none">
+            <a href="#" data-page="graficos" role="menuitem">
+              <i class="bi bi-graph-up" aria-hidden="true"></i><span>Gráficos</span>
             </a>
           </li>
-          <li>
-            <a href="#" data-page="whatsapp">
-              <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
+          <li role="none">
+            <a href="#" data-page="feriados" role="menuitem">
+              <i class="bi bi-calendar-event" aria-hidden="true"></i><span>Feriados</span>
             </a>
           </li>
-          <li>
-            <a href="#" data-page="cargos">
-              <i class="bi bi-briefcase"></i><span>Cargos</span>
+          <li role="none">
+            <a href="#" data-page="whatsapp" role="menuitem">
+              <i class="bi bi-whatsapp" aria-hidden="true"></i><span>WhatsApp</span>
             </a>
           </li>
-          <li>
-            <a href="#" data-page="veiculos">
-              <i class="bi bi-car-front"></i><span>Veículos</span>
+          <li role="none">
+            <a href="#" data-page="veiculos" role="menuitem">
+              <i class="bi bi-car-front" aria-hidden="true"></i><span>Veículos</span>
             </a>
           </li>
-          <li>
-            <a href="#" data-page="documentos">
-              <i class="bi bi-file-earmark-text"></i><span>Documentos</span>
+          <li role="none">
+            <a href="#" data-page="documentos" role="menuitem">
+              <i class="bi bi-file-earmark-text" aria-hidden="true"></i><span>Documentos</span>
             </a>
           </li>
-          <li>
-            <a href="#" data-page="entregas">
-              <i class="bi bi-box-seam"></i><span>Entregas</span>
+          <li role="none">
+            <a href="#" data-page="entregas" role="menuitem">
+              <i class="bi bi-box-seam" aria-hidden="true"></i><span>Entregas</span>
             </a>
           </li>
-          <li>
-            <a href="#" data-page="estoque">
-              <i class="bi bi-cart3"></i><span>Estoque</span>
+          <li role="none">
+            <a href="#" data-page="estoque" role="menuitem">
+              <i class="bi bi-cart3" aria-hidden="true"></i><span>Estoque</span>
             </a>
           </li>
-          <li>
-            <a href="#" data-page="tarefas">
-              <i class="bi bi-list-task"></i><span>Tarefas</span>
+          <li role="none">
+            <a href="#" data-page="tarefas" role="menuitem">
+              <i class="bi bi-list-task" aria-hidden="true"></i><span>Tarefas</span>
             </a>
           </li>
-          <li class="nav-admin-only d-none">
-            <a href="#" data-page="insights">
-              <i class="bi bi-lightbulb"></i><span>Insights IA</span>
+          <li class="nav-admin-only d-none" role="none">
+            <a href="#" data-page="insights" role="menuitem">
+              <i class="bi bi-lightbulb" aria-hidden="true"></i><span>Insights IA</span>
             </a>
           </li>
-          <li class="nav-admin-only d-none">
-            <a href="#" data-page="usuarios">
-              <i class="bi bi-person-gear"></i><span>Usuarios</span>
+          <li class="nav-admin-only d-none" role="none">
+            <a href="#" data-page="sugestoes" role="menuitem">
+              <i class="bi bi-chat-square-text" aria-hidden="true"></i><span>Sugestões</span>
             </a>
           </li>
-          <li class="nav-admin-only d-none">
-            <a href="#" data-page="auditlog">
-              <i class="bi bi-shield-check"></i><span>Audit Log</span>
+          <li class="nav-admin-only d-none" role="none">
+            <a href="#" data-page="usuarios" role="menuitem">
+              <i class="bi bi-person-gear" aria-hidden="true"></i><span>Usuários</span>
             </a>
           </li>
-          <li class="nav-admin-only d-none">
-            <a href="#" data-page="accesslog">
-              <i class="bi bi-door-open"></i><span>Log de Acessos</span>
+          <li class="nav-admin-only d-none" role="none">
+            <a href="#" data-page="auditlog" role="menuitem">
+              <i class="bi bi-shield-check" aria-hidden="true"></i><span>Audit Log</span>
             </a>
           </li>
-          <li>
-            <a href="#" data-page="perfil">
-              <i class="bi bi-person-circle"></i><span>Perfil</span>
+          <li class="nav-admin-only d-none" role="none">
+            <a href="#" data-page="accesslog" role="menuitem">
+              <i class="bi bi-door-open" aria-hidden="true"></i><span>Log de Acessos</span>
+            </a>
+          </li>
+          <li role="none">
+            <a href="#" data-page="perfil" role="menuitem">
+              <i class="bi bi-person-circle" aria-hidden="true"></i><span>Perfil</span>
             </a>
           </li>
         </ul>
@@ -180,8 +187,8 @@
             <i class="bi bi-person-circle"></i>
             <span id="user-name"></span>
           </div>
-          <button class="btn btn-sm btn-outline-light w-100 mt-2" id="logout-btn">
-            <i class="bi bi-box-arrow-right"></i> Sair
+          <button class="btn btn-sm btn-outline-light w-100 mt-2" id="logout-btn" aria-label="Sair do sistema">
+            <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sair
           </button>
         </div>
       </nav>
@@ -189,8 +196,8 @@
       <!-- Main Content -->
       <main id="main-content" class="main-content">
         <header class="top-bar">
-          <button class="btn btn-link sidebar-toggle" id="sidebar-toggle">
-            <i class="bi bi-list"></i>
+          <button class="btn btn-link sidebar-toggle" id="sidebar-toggle" aria-label="Abrir menu lateral">
+            <i class="bi bi-list" aria-hidden="true"></i>
           </button>
           <h2 id="page-title">Dashboard</h2>
           <div class="top-bar-right">
@@ -209,7 +216,7 @@
   <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toast-container"></div>
 
   <!-- Modal -->
-  <div class="modal fade" id="app-modal" tabindex="-1">
+  <div class="modal fade" id="app-modal" tabindex="-1" aria-labelledby="modal-title">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -239,9 +246,10 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" integrity="sha384-vsrfeLOOY6KuIYKDlmVH5UiBmgIdB1oEf7p01YgWHuqmOHfZr374+odEv96n9tNC" crossorigin="anonymous"></script>
+  <script src="/js/utils.js?v=1"></script>
   <script src="/js/app.js?v=4"></script>
 </body>
 </html>

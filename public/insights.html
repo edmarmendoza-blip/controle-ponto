@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <title>Insights IA - Lar Digital</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -54,6 +55,9 @@
       </a>
       <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-calendar-heart"></i><span>Férias</span>
+      </a>
+      <a href="/sugestoes.html" data-page="sugestoes" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-lightbulb"></i><span>Sugestões</span>
       </a>
       <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-shield-lock"></i><span>Usuários</span>
@@ -113,18 +117,18 @@
             <i class="bi bi-stars text-purple-600 dark:text-purple-400 text-lg"></i>
           </div>
           <div>
-            <h2 class="text-lg font-semibold">Analise Inteligente</h2>
+            <h2 class="text-lg font-semibold">Análise Inteligente</h2>
             <p class="text-xs text-gray-500 dark:text-gray-400">Insights gerados por IA sobre a equipe</p>
           </div>
         </div>
         <div class="flex flex-wrap gap-2">
           <button onclick="generateDaily()" id="btn-daily" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
             <i class="bi bi-lightning-charge-fill mr-1"></i>
-            Gerar Insight Diario
+            Gerar Insight Diário
           </button>
           <button onclick="showPeriodModal()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium">
             <i class="bi bi-calendar-range mr-1"></i>
-            Gerar por Periodo
+            Gerar por Período
           </button>
           <button onclick="generateMelhorias()" id="btn-melhorias" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-sm font-medium">
             <i class="bi bi-lightbulb-fill mr-1"></i>
@@ -197,7 +201,7 @@
   <div id="period-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full">
       <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
-        <h3 class="text-lg font-semibold">Gerar Insights por Periodo</h3>
+        <h3 class="text-lg font-semibold">Gerar Insights por Período</h3>
         <button onclick="closePeriodModal()" class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
           <i class="bi bi-x-lg"></i>
         </button>
@@ -205,7 +209,7 @@
       <div class="p-5 space-y-4">
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data Inicio</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data Início</label>
             <input type="date" id="period-start" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
           </div>
           <div>
@@ -215,7 +219,7 @@
         </div>
         <p class="text-xs text-gray-500 dark:text-gray-400">
           <i class="bi bi-info-circle mr-1"></i>
-          A IA analisara todos os registros e mensagens do periodo selecionado.
+          A IA analisará todos os registros e mensagens do período selecionado.
         </p>
       </div>
       <div class="flex justify-end gap-3 p-5 border-t border-gray-100 dark:border-gray-700">
@@ -237,7 +241,7 @@
           </div>
           <div>
             <h3 class="text-lg font-semibold">Insights de Melhorias</h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Sugestoes de melhorias geradas por IA</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Sugestões de melhorias geradas por IA</p>
           </div>
         </div>
         <button onclick="closeMelhoriasModal()" class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
@@ -256,6 +260,7 @@
   <!-- Toast Container -->
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
 
+  <script src="/js/utils.js?v=1"></script>
   <script src="/js/shared.js"></script>
   <script>
     let currentPage = 1;
@@ -296,7 +301,7 @@
                 <i class="bi bi-stars text-3xl text-purple-400"></i>
               </div>
               <p class="font-medium text-gray-500 dark:text-gray-400">Nenhum insight gerado ainda</p>
-              <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Clique em "Gerar Insight Diario" para comecar.</p>
+              <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Clique em "Gerar Insight Diário" para começar.</p>
             </div>`;
           updatePagination();
           return;
@@ -345,7 +350,7 @@
     }
 
     function updatePagination() {
-      document.getElementById('page-info').textContent = `Pagina ${currentPage} de ${totalPages}`;
+      document.getElementById('page-info').textContent = `Página ${currentPage} de ${totalPages}`;
       document.getElementById('btn-prev').disabled = currentPage <= 1;
       document.getElementById('btn-next').disabled = currentPage >= totalPages;
     }
@@ -364,13 +369,13 @@
           method: 'POST',
           body: JSON.stringify({ date: today })
         });
-        showToast('Insight diario gerado com sucesso!');
+        showToast('Insight diário gerado com sucesso!');
         await loadInsights(1);
       } catch (err) {
         showToast('Erro: ' + err.message, 'danger');
       } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-lightning-charge-fill mr-1"></i> Gerar Insight Diario';
+        btn.innerHTML = '<i class="bi bi-lightning-charge-fill mr-1"></i> Gerar Insight Diário';
       }
     }
 
@@ -403,7 +408,7 @@
           method: 'POST',
           body: JSON.stringify({ startDate, endDate })
         });
-        showToast('Insights do periodo gerados com sucesso!');
+        showToast('Insights do período gerados com sucesso!');
         closePeriodModal();
         await loadInsights(1);
       } catch (err) {
@@ -441,7 +446,7 @@
 
       const prioridadeBadge = (p) => {
         const map = { alta: 'bg-red-100 text-red-700', media: 'bg-yellow-100 text-yellow-700', baixa: 'bg-green-100 text-green-700' };
-        return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${map[p] || map.media}">${p || 'media'}</span>`;
+        return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${map[p] || map.media}">${p || 'média'}</span>`;
       };
 
       let html = '';

@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Presenca - Lar Digital</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>Presença - Lar Digital</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -55,6 +56,9 @@
       <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-calendar-heart"></i><span>Férias</span>
       </a>
+      <a href="/sugestoes.html" data-page="sugestoes" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-lightbulb"></i><span>Sugestões</span>
+      </a>
       <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-shield-lock"></i><span>Usuários</span>
       </a>
@@ -100,7 +104,7 @@
         <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300">
           <i class="bi bi-list text-xl"></i>
         </button>
-        <h1 class="text-xl font-semibold">Presenca</h1>
+        <h1 class="text-xl font-semibold">Presença</h1>
       </div>
       <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
     </header>
@@ -110,7 +114,7 @@
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 mb-6">
         <div class="flex flex-wrap items-end gap-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mes</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mês</label>
             <select id="filter-month" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
               <option value="01">Janeiro</option>
               <option value="02">Fevereiro</option>
@@ -142,7 +146,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Total Funcionarios</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Total Funcionários</p>
               <p class="text-3xl font-bold mt-1" id="stat-total">-</p>
             </div>
             <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
@@ -153,7 +157,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Media Presenca</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Média Presença</p>
               <p class="text-3xl font-bold mt-1 text-green-600 dark:text-green-400" id="stat-avg">-</p>
             </div>
             <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
@@ -164,7 +168,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Dias Uteis</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Dias Úteis</p>
               <p class="text-3xl font-bold mt-1 text-purple-600 dark:text-purple-400" id="stat-workdays">-</p>
             </div>
             <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
@@ -177,13 +181,13 @@
       <!-- Attendance Table -->
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
         <div class="p-5 border-b border-gray-100 dark:border-gray-700">
-          <h2 class="text-lg font-semibold">Presenca Mensal</h2>
+          <h2 class="text-lg font-semibold">Presença Mensal</h2>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full">
             <thead>
               <tr class="bg-gray-50 dark:bg-gray-700/50">
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Funcionario</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Funcionário</th>
                 <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Dias Presentes</th>
                 <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Dias Ausentes</th>
                 <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Percentual</th>
@@ -206,6 +210,7 @@
   <!-- Toast Container -->
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
 
+  <script src="/js/utils.js?v=1"></script>
   <script src="/js/shared.js"></script>
   <script>
     // Set default month/year
@@ -288,7 +293,7 @@
             <tr>
               <td colspan="4" class="px-5 py-8 text-center text-gray-400">
                 <i class="bi bi-inbox text-3xl"></i>
-                <p class="mt-2">Nenhum funcionario encontrado</p>
+                <p class="mt-2">Nenhum funcionário encontrado</p>
               </td>
             </tr>`;
           return;

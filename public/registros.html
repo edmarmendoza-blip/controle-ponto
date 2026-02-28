@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <title>Registros de Ponto - Lar Digital</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -54,6 +55,9 @@
       </a>
       <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-calendar-heart"></i><span>Férias</span>
+      </a>
+      <a href="/sugestoes.html" data-page="sugestoes" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-lightbulb"></i><span>Sugestões</span>
       </a>
       <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-shield-lock"></i><span>Usuários</span>
@@ -182,27 +186,27 @@
       <form id="form-registro" onsubmit="saveRegistro(event)" class="p-5 space-y-4">
         <input type="hidden" id="reg-id">
         <div>
-          <label class="block text-sm font-medium mb-1">Funcionário *</label>
+          <label class="block text-sm font-medium mb-1" for="reg-funcionario">Funcionário *</label>
           <select id="reg-funcionario" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
             <option value="">Selecione...</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1">Data *</label>
+          <label class="block text-sm font-medium mb-1" for="reg-data">Data *</label>
           <input type="date" id="reg-data" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium mb-1">Entrada *</label>
+            <label class="block text-sm font-medium mb-1" for="reg-entrada">Entrada *</label>
             <input type="time" id="reg-entrada" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Saída</label>
+            <label class="block text-sm font-medium mb-1" for="reg-saida">Saída</label>
             <input type="time" id="reg-saida" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
           </div>
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1">Observação</label>
+          <label class="block text-sm font-medium mb-1" for="reg-observacao">Observação</label>
           <textarea id="reg-observacao" rows="3" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"></textarea>
         </div>
         <div class="flex justify-end gap-3 pt-3">
@@ -220,6 +224,7 @@
   <!-- Toast Container -->
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
 
+  <script src="/js/utils.js?v=1"></script>
   <script src="/js/shared.js"></script>
   <script>
     let allRegistros = [];
@@ -245,17 +250,13 @@
     }
 
     function setDefaultDate() {
-      const today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+      const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
       document.getElementById('filter-data').value = today;
     }
 
     async function loadFuncionariosList() {
       try {
-        const res = await fetch('/api/funcionarios', {
-          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
-        });
-        if (!res.ok) return;
-        const data = await res.json();
+        const data = await Shared.api('/api/funcionarios');
         funcionariosList = Array.isArray(data) ? data : (data.funcionarios || []);
 
         const filterSelect = document.getElementById('filter-funcionario');
@@ -278,20 +279,17 @@
         const dataFim = document.getElementById('filter-data-fim').value;
         const funcId = document.getElementById('filter-funcionario').value;
 
-        let url;
-        if (dataFim) {
-          url = `/api/registros?dataInicio=${data}&dataFim=${dataFim}`;
-          if (funcId) url += `&funcionarioId=${funcId}`;
-        } else {
-          url = `/api/registros?data=${data}`;
-          if (funcId) url += `&funcionarioId=${funcId}`;
+        const params = new URLSearchParams();
+        if (dataFim && data) {
+          params.set('dataInicio', data);
+          params.set('dataFim', dataFim);
+        } else if (data) {
+          params.set('data', data);
         }
+        if (funcId) params.set('funcionarioId', funcId);
+        const url = `/api/registros?${params.toString()}`;
 
-        const res = await fetch(url, {
-          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
-        });
-        if (!res.ok) throw new Error('Erro ao carregar registros');
-        const result = await res.json();
+        const result = await Shared.api(url);
         allRegistros = Array.isArray(result) ? result : (result.registros || []);
         renderTable();
       } catch (err) {
@@ -324,7 +322,7 @@
           <td class="px-5 py-3">${formatTime(r.entrada)}</td>
           <td class="px-5 py-3">${formatTime(r.saida)}</td>
           <td class="px-5 py-3">${getTipoBadge(r.tipo || r.origem)}</td>
-          <td class="px-5 py-3 text-gray-600 dark:text-gray-400 max-w-xs truncate">${r.observacao || '-'}</td>
+          <td class="px-5 py-3 text-gray-600 dark:text-gray-400 max-w-xs truncate" title="${(r.observacao || '').replace(/"/g, '&quot;')}">${r.observacao || '-'}</td>
           <td class="px-5 py-3">
             <div class="flex items-center gap-2">
               <button onclick="editRegistro(${r.id})" class="gestor-only hidden p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400 transition-colors" title="Editar">
@@ -392,18 +390,7 @@
       try {
         const url = id ? `/api/registros/${id}` : '/api/registros';
         const method = id ? 'PUT' : 'POST';
-        const res = await fetch(url, {
-          method,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
-          },
-          body: JSON.stringify(body)
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.error || 'Erro ao salvar');
-        }
+        await Shared.api(url, { method, body: JSON.stringify(body) });
         closeModal();
         if (typeof showToast === 'function') showToast(id ? 'Registro atualizado!' : 'Registro criado!', 'success');
         loadRegistros();
@@ -413,18 +400,15 @@
     }
 
     async function deleteRegistro(id) {
-      if (!confirm('Deseja realmente excluir este registro?')) return;
-      try {
-        const res = await fetch(`/api/registros/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
-        });
-        if (!res.ok) throw new Error('Erro ao excluir');
-        if (typeof showToast === 'function') showToast('Registro excluído!', 'success');
-        loadRegistros();
-      } catch (err) {
-        if (typeof showToast === 'function') showToast(err.message, 'error');
-      }
+      Shared.showConfirmModal('Deseja realmente excluir este registro?', async () => {
+        try {
+          await Shared.api(`/api/registros/${id}`, { method: 'DELETE' });
+          if (typeof showToast === 'function') showToast('Registro excluído!', 'success');
+          loadRegistros();
+        } catch (err) {
+          if (typeof showToast === 'function') showToast(err.message, 'error');
+        }
+      });
     }
 
     // Close modal on backdrop click

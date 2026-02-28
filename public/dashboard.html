@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <title>Dashboard - Lar Digital</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -54,6 +55,9 @@
       </a>
       <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-calendar-heart"></i><span>Férias</span>
+      </a>
+      <a href="/sugestoes.html" data-page="sugestoes" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-lightbulb"></i><span>Sugestões</span>
       </a>
       <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
         <i class="bi bi-shield-lock"></i><span>Usuários</span>
@@ -154,6 +158,31 @@
         </div>
       </div>
 
+      <!-- Pendências Widget (admin only) -->
+      <div id="pendencias-widget" class="mb-6 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-orange-200 dark:border-orange-800">
+          <div class="p-4 border-b border-orange-100 dark:border-orange-800 flex items-center justify-between cursor-pointer" onclick="togglePendencias()">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
+                <i class="bi bi-exclamation-triangle-fill text-orange-500"></i>
+              </div>
+              <div>
+                <h2 class="text-lg font-semibold">Pendências</h2>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Confirmações que expiraram ou aguardam resposta</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span id="pendencias-badge" class="inline-flex items-center px-2.5 py-1 rounded-full text-sm font-bold bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300">0</span>
+              <i id="pendencias-chevron" class="bi bi-chevron-down text-gray-400 transition-transform"></i>
+            </div>
+          </div>
+          <div id="pendencias-body" class="hidden">
+            <div class="p-4 space-y-2 max-h-80 overflow-y-auto" id="pendencias-list">
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Attendance Table -->
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
         <div class="p-5 border-b border-gray-100 dark:border-gray-700">
@@ -187,6 +216,7 @@
   <!-- Toast Container -->
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
 
+  <script src="/js/utils.js?v=1"></script>
   <script src="/js/shared.js"></script>
   <script>
     function getStatusBadge(status) {
@@ -262,8 +292,107 @@
       }
     }
 
-    window.onAuthReady = function() {
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function togglePendencias() {
+      const body = document.getElementById('pendencias-body');
+      const chevron = document.getElementById('pendencias-chevron');
+      body.classList.toggle('hidden');
+      chevron.classList.toggle('rotate-180');
+    }
+
+    function getTipoInfo(tipo) {
+      const map = {
+        entrega: { icon: 'bi-box-seam', label: 'Entrega', color: 'blue' },
+        entrada: { icon: 'bi-box-arrow-in-right', label: 'Entrada', color: 'green' },
+        saida: { icon: 'bi-box-arrow-right', label: 'Saída', color: 'red' },
+        saida_almoco: { icon: 'bi-cup-hot', label: 'Saída Almoço', color: 'yellow' },
+        retorno_almoco: { icon: 'bi-cup-hot', label: 'Retorno Almoço', color: 'yellow' },
+        documento_upload: { icon: 'bi-file-earmark', label: 'Documento', color: 'purple' },
+        sugestao: { icon: 'bi-lightbulb', label: 'Sugestão', color: 'teal' }
+      };
+      return map[tipo] || { icon: 'bi-question-circle', label: tipo, color: 'gray' };
+    }
+
+    function parseDescription(item) {
+      try {
+        if (item.message_text && item.message_text.startsWith('{')) {
+          const data = JSON.parse(item.message_text);
+          if (data.type === 'entrega') {
+            const parts = [];
+            if (data.destinatario) parts.push(data.destinatario);
+            if (data.remetente) parts.push('de ' + data.remetente);
+            if (data.transportadora) parts.push('via ' + data.transportadora);
+            return parts.join(' — ') || 'Entrega sem detalhes';
+          }
+          if (data.doc_type) {
+            return (data.doc_type || '').toUpperCase() + (data.extracted_data?.placa ? ' — Placa: ' + data.extracted_data.placa : '');
+          }
+          return data.titulo || data.descricao || item.message_text.substring(0, 80);
+        }
+        return item.message_text ? item.message_text.substring(0, 80) : '-';
+      } catch { return item.message_text ? item.message_text.substring(0, 80) : '-'; }
+    }
+
+    async function loadPendencias() {
+      try {
+        const res = await fetch('/api/dashboard/presenca/pendencias', {
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+        });
+        if (!res.ok) return; // Not admin or error — just hide widget
+        const data = await res.json();
+
+        const total = (data.resumo?.expired_24h || 0) + (data.resumo?.pending || 0);
+        if (total === 0 && data.items.length === 0) return;
+
+        document.getElementById('pendencias-widget').classList.remove('hidden');
+        document.getElementById('pendencias-badge').textContent = total;
+
+        const list = document.getElementById('pendencias-list');
+        if (data.items.length === 0) {
+          list.innerHTML = '<p class="text-center text-gray-400 py-4">Nenhuma pendência recente</p>';
+          return;
+        }
+
+        list.innerHTML = data.items.map(item => {
+          const info = getTipoInfo(item.tipo);
+          const statusCls = item.status === 'pending'
+            ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+          const statusLabel = item.status === 'pending' ? 'Aguardando' : 'Expirou';
+          const desc = escapeHtml(parseDescription(item));
+          const time = item.created_at ? item.created_at.substring(11, 16) : '';
+          const date = item.data ? item.data.split('-').reverse().join('/') : '';
+
+          return `<div class="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/30 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
+            <div class="w-9 h-9 rounded-lg bg-${info.color}-100 dark:bg-${info.color}-900/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <i class="bi ${info.icon} text-${info.color}-600 dark:text-${info.color}-400"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-sm font-medium">${escapeHtml(info.label)}</span>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${statusCls}">${statusLabel}</span>
+                ${item.horario && item.horario !== '00:00' ? `<span class="text-xs text-gray-500">às ${escapeHtml(item.horario)}</span>` : ''}
+              </div>
+              <p class="text-sm text-gray-600 dark:text-gray-400 truncate mt-0.5">${desc}</p>
+              <div class="flex items-center gap-3 mt-1 text-xs text-gray-400">
+                ${item.funcionario_nome ? `<span><i class="bi bi-person"></i> ${escapeHtml(item.funcionario_nome)}</span>` : ''}
+                <span><i class="bi bi-calendar3"></i> ${date} ${time}</span>
+              </div>
+            </div>
+          </div>`;
+        }).join('');
+      } catch (err) {
+        console.error('Pendencias error:', err);
+      }
+    }
+
+    window.onAuthReady = function(user) {
       loadDashboard();
+      if (user.role === 'admin') loadPendencias();
     };
   </script>
 </body>

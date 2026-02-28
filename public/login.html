@@ -4,250 +4,414 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - Lar Digital</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#1e40af">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' }
-          }
-        }
-      }
-    }
-  </script>
   <style>
-    /* Smooth transitions for theme toggle */
+    :root {
+      --primary: #1e40af;
+      --primary-light: #3b82f6;
+      --primary-dark: #1e3a8a;
+    }
     html.dark { color-scheme: dark; }
-    body { transition: background-color 0.3s ease, color 0.3s ease; }
+    body {
+      transition: background-color 0.3s ease, color 0.3s ease;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f1f5f9, #eff6ff, #e2e8f0);
+    }
+    html.dark body {
+      background: linear-gradient(135deg, #030712, #111827, #030712);
+    }
+    .hidden { display: none !important; }
 
-    /* Subtle floating animation for the icon */
+    /* Floating animation */
     @keyframes float {
       0%, 100% { transform: translateY(0px); }
       50% { transform: translateY(-6px); }
     }
     .float-animation { animation: float 3s ease-in-out infinite; }
 
-    /* Gradient background animation */
+    /* Gradient animation for icon */
     @keyframes gradientShift {
       0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
     .animated-gradient {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
       background-size: 200% 200%;
       animation: gradientShift 8s ease infinite;
     }
 
-    /* Spinner for loading state */
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    .spinner {
+    /* Spinner */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .login-spinner {
       animation: spin 0.7s linear infinite;
       border: 2px solid rgba(255,255,255,0.3);
       border-top-color: #fff;
       border-radius: 50%;
       width: 20px;
       height: 20px;
+      display: inline-block;
     }
 
-    /* Input focus ring */
-    input:focus {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    /* Login card */
+    .login-card-wrapper {
+      max-width: 440px;
+      width: 100%;
     }
-    html.dark input:focus {
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
+    .login-card-glass {
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 1rem;
+      border: 1px solid rgba(255,255,255,0.5);
+      box-shadow: 0 25px 50px -12px rgba(30, 64, 175, 0.1);
+    }
+    html.dark .login-card-glass {
+      background: rgba(17,24,39,0.7);
+      border-color: rgba(55,65,81,0.5);
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3);
+    }
+
+    /* Icon box */
+    .icon-box {
+      width: 80px; height: 80px;
+      border-radius: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 10px 15px -3px rgba(30,64,175,0.3);
+    }
+
+    /* Inputs */
+    .login-input {
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem 0.75rem 2.5rem;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      font-size: 0.875rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .login-input:hover { border-color: var(--primary-light); }
+    .login-input:focus {
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.3);
+      outline: none;
+    }
+    html.dark .login-input {
+      background: #1f2937;
+      border-color: #4b5563;
+      color: #f3f4f6;
+    }
+    html.dark .login-input::placeholder { color: #6b7280; }
+    html.dark .login-input:focus { box-shadow: 0 0 0 3px rgba(59,130,246,0.4); }
+
+    .input-icon {
+      position: absolute;
+      left: 0.875rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af;
+      pointer-events: none;
+    }
+    html.dark .input-icon { color: #6b7280; }
+
+    .toggle-pw-btn {
+      position: absolute;
+      right: 0.875rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #9ca3af;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .toggle-pw-btn:hover { color: var(--primary-light); }
+
+    /* Login button */
+    .btn-login {
+      background: linear-gradient(to right, var(--primary), var(--primary-light));
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.875rem;
+      letter-spacing: 0.025em;
+      border: none;
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+      box-shadow: 0 10px 15px -3px rgba(30,64,175,0.25);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .btn-login:hover {
+      background: linear-gradient(to right, var(--primary-dark), var(--primary));
+      box-shadow: 0 20px 25px -5px rgba(30,64,175,0.3);
+      transform: translateY(-1px);
+      color: #fff;
+    }
+    .btn-login:active { transform: translateY(0); }
+    .btn-login:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    .btn-login.success-state {
+      background: linear-gradient(to right, #22c55e, #16a34a) !important;
+    }
+
+    /* Theme toggle */
+    .theme-toggle {
+      position: fixed;
+      top: 1.25rem;
+      right: 1.25rem;
+      z-index: 50;
+      padding: 0.625rem;
+      border-radius: 0.75rem;
+      background: rgba(255,255,255,0.8);
+      backdrop-filter: blur(4px);
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .theme-toggle:hover { transform: scale(1.1); }
+    .theme-toggle:active { transform: scale(0.95); }
+    html.dark .theme-toggle {
+      background: rgba(31,41,55,0.8);
+      border-color: #374151;
+    }
+    .theme-toggle .bi-sun-fill { color: #f59e0b; }
+    .theme-toggle .bi-moon-stars-fill { color: #93c5fd; }
+    html.dark .theme-toggle .bi-sun-fill { display: inline-block; }
+    html.dark .theme-toggle .bi-moon-stars-fill { display: none; }
+    html:not(.dark) .theme-toggle .bi-sun-fill { display: none; }
+    html:not(.dark) .theme-toggle .bi-moon-stars-fill { display: inline-block; }
+
+    /* Background decorative */
+    .bg-decor { position: fixed; inset: 0; overflow: hidden; pointer-events: none; }
+    .bg-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(64px);
+    }
+    .bg-blob-1 {
+      top: -10rem; right: -10rem; width: 24rem; height: 24rem;
+      background: rgba(59,130,246,0.1);
+    }
+    .bg-blob-2 {
+      bottom: -10rem; left: -10rem; width: 24rem; height: 24rem;
+      background: rgba(30,64,175,0.1);
+    }
+    .bg-blob-3 {
+      top: 50%; left: 50%; transform: translate(-50%,-50%);
+      width: 37.5rem; height: 37.5rem;
+      background: rgba(191,219,254,0.2);
+    }
+    html.dark .bg-blob-1 { background: rgba(59,130,246,0.05); }
+    html.dark .bg-blob-2 { background: rgba(30,64,175,0.05); }
+    html.dark .bg-blob-3 { background: rgba(30,58,138,0.1); }
+
+    /* Text helpers */
+    .text-primary-light { color: var(--primary-light); }
+    html.dark .text-primary-light { color: #60a5fa; }
+    .text-title { color: #1f2937; font-weight: 700; }
+    html.dark .text-title { color: #fff; }
+    .text-muted-custom { color: #9ca3af; }
+    html.dark .text-muted-custom { color: #6b7280; }
+
+    /* Error alert */
+    .login-alert {
+      border-radius: 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    /* Forgot password section */
+    .forgot-section {
+      padding: 1rem;
+      border-radius: 0.75rem;
+      background: rgba(239,246,255,0.5);
+      border: 1px solid rgba(191,219,254,0.5);
+    }
+    html.dark .forgot-section {
+      background: rgba(30,58,138,0.1);
+      border-color: rgba(30,64,175,0.3);
+    }
+    .forgot-section input {
+      font-size: 0.875rem;
+      border-radius: 0.5rem;
+    }
+    html.dark .forgot-section input {
+      background: #1f2937;
+      border-color: #4b5563;
+      color: #f3f4f6;
+    }
+
+    /* Footer */
+    .login-footer {
+      border-top: 1px solid #e5e7eb;
+    }
+    html.dark .login-footer {
+      border-top-color: rgba(55,65,81,0.5);
+    }
+
+    /* 2FA info */
+    .info-2fa-box {
+      border-radius: 0.75rem;
+      background: rgba(239,246,255,0.8);
+      border: 1px solid rgba(191,219,254,0.5);
+      color: #1d4ed8;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    html.dark .info-2fa-box {
+      background: rgba(30,58,138,0.2);
+      border-color: rgba(30,64,175,0.5);
+      color: #60a5fa;
+    }
+
+    /* TOTP input */
+    .totp-input {
+      text-align: center;
+      letter-spacing: 0.5em;
+      font-family: monospace;
+      font-size: 1.125rem;
     }
   </style>
 </head>
-<body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50 to-slate-200 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 transition-colors duration-300">
+<body class="d-flex align-items-center justify-content-center">
 
   <!-- Theme Toggle Button -->
-  <button
-    id="themeToggle"
-    type="button"
-    class="fixed top-5 right-5 z-50 p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg border border-gray-200 dark:border-gray-700 hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer"
-    aria-label="Alternar tema"
-  >
-    <i class="bi bi-sun-fill text-xl text-amber-500 dark:hidden"></i>
-    <i class="bi bi-moon-stars-fill text-xl text-blue-300 hidden dark:inline-block"></i>
+  <button id="themeToggle" type="button" class="theme-toggle" aria-label="Alternar tema">
+    <i class="bi bi-sun-fill fs-5"></i>
+    <i class="bi bi-moon-stars-fill fs-5"></i>
   </button>
 
   <!-- Background decorative elements -->
-  <div class="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-    <div class="absolute -top-40 -right-40 w-96 h-96 bg-primary-light/10 dark:bg-primary-light/5 rounded-full blur-3xl"></div>
-    <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-primary/10 dark:bg-primary/5 rounded-full blur-3xl"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-200/20 dark:bg-blue-900/10 rounded-full blur-3xl"></div>
+  <div class="bg-decor" aria-hidden="true">
+    <div class="bg-blob bg-blob-1"></div>
+    <div class="bg-blob bg-blob-2"></div>
+    <div class="bg-blob bg-blob-3"></div>
   </div>
 
   <!-- Login Card -->
-  <div class="relative w-full max-w-md mx-4">
-    <div class="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-2xl shadow-blue-900/10 dark:shadow-black/30 border border-white/50 dark:border-gray-700/50 p-8 sm:p-10">
+  <div class="position-relative login-card-wrapper mx-3">
+    <div class="login-card-glass p-4 p-sm-5">
 
       <!-- Logo / Icon -->
-      <div class="flex flex-col items-center mb-8">
-        <div class="float-animation mb-5">
-          <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary-light animated-gradient flex items-center justify-center shadow-lg shadow-primary/30">
-            <i class="bi bi-clock-history text-white text-4xl"></i>
+      <div class="text-center mb-4">
+        <div class="float-animation mb-3 d-inline-block">
+          <div class="icon-box animated-gradient">
+            <i class="bi bi-clock-history text-white" style="font-size:2.25rem"></i>
           </div>
         </div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white tracking-tight text-center">
-          Lar Digital
-        </h1>
-        <p class="mt-2 text-sm font-medium text-primary-light dark:text-blue-400 tracking-wide uppercase">
+        <h1 class="text-title fs-3 mb-1">Lar Digital</h1>
+        <p class="text-primary-light small fw-medium text-uppercase ls-wide mb-0" style="letter-spacing:0.05em">
           Gestão da Casa
         </p>
       </div>
 
       <!-- Error Message -->
-      <div
-        id="errorDiv"
-        class="hidden mb-5 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400 text-sm font-medium transition-all duration-300"
-        role="alert"
-      >
-        <div class="flex items-center gap-2">
-          <i class="bi bi-exclamation-triangle-fill text-base flex-shrink-0"></i>
+      <div id="errorDiv" class="alert alert-danger login-alert hidden mb-3" role="alert">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
           <span id="errorMessage">Erro ao fazer login.</span>
         </div>
       </div>
 
       <!-- Login Form -->
-      <form id="loginForm" class="space-y-5" novalidate>
+      <form id="loginForm" novalidate>
         <!-- Email -->
-        <div>
-          <label for="email" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-            E-mail
-          </label>
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
-              <i class="bi bi-envelope-fill text-gray-400 dark:text-gray-500"></i>
-            </span>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              required
-              autocomplete="email"
-              placeholder="seu.email@exemplo.com"
-              class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 text-sm transition-all duration-200 hover:border-primary-light dark:hover:border-primary-light focus:border-primary-light dark:focus:border-primary-light"
-            />
+        <div class="mb-3">
+          <label for="email" class="form-label small fw-semibold">E-mail</label>
+          <div class="position-relative">
+            <span class="input-icon"><i class="bi bi-envelope-fill"></i></span>
+            <input type="email" id="email" name="email" required autocomplete="email"
+              placeholder="seu.email@exemplo.com" class="form-control login-input">
           </div>
         </div>
 
         <!-- Password -->
-        <div>
-          <label for="password" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-            Senha
-          </label>
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
-              <i class="bi bi-lock-fill text-gray-400 dark:text-gray-500"></i>
-            </span>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              required
-              autocomplete="current-password"
-              placeholder="Digite sua senha"
-              class="w-full pl-10 pr-12 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 text-sm transition-all duration-200 hover:border-primary-light dark:hover:border-primary-light focus:border-primary-light dark:focus:border-primary-light"
-            />
-            <button
-              type="button"
-              id="togglePassword"
-              class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 dark:text-gray-500 hover:text-primary-light dark:hover:text-primary-light transition-colors cursor-pointer"
-              aria-label="Mostrar senha"
-            >
-              <i class="bi bi-eye-fill text-lg" id="eyeIcon"></i>
+        <div class="mb-3">
+          <label for="password" class="form-label small fw-semibold">Senha</label>
+          <div class="position-relative">
+            <span class="input-icon"><i class="bi bi-lock-fill"></i></span>
+            <input type="password" id="password" name="password" required autocomplete="current-password"
+              placeholder="Digite sua senha" class="form-control login-input" style="padding-right:3rem">
+            <button type="button" id="togglePassword" class="toggle-pw-btn" aria-label="Mostrar senha">
+              <i class="bi bi-eye-fill fs-5" id="eyeIcon"></i>
             </button>
           </div>
         </div>
 
         <!-- 2FA Token (hidden by default) -->
-        <div id="totpField" class="hidden">
-          <label for="totpToken" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-            Codigo 2FA
-          </label>
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
-              <i class="bi bi-shield-lock-fill text-gray-400 dark:text-gray-500"></i>
-            </span>
-            <input
-              type="text"
-              id="totpToken"
-              name="totpToken"
-              maxlength="6"
-              pattern="[0-9]{6}"
-              inputmode="numeric"
-              autocomplete="one-time-code"
-              placeholder="000000"
-              class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 text-sm text-center tracking-[0.5em] font-mono text-lg transition-all duration-200 hover:border-primary-light dark:hover:border-primary-light focus:border-primary-light dark:focus:border-primary-light"
-            />
+        <div id="totpField" class="hidden mb-3">
+          <label for="totpToken" class="form-label small fw-semibold">Código 2FA</label>
+          <div class="position-relative">
+            <span class="input-icon"><i class="bi bi-shield-lock-fill"></i></span>
+            <input type="text" id="totpToken" name="totpToken" maxlength="6" pattern="[0-9]{6}"
+              inputmode="numeric" autocomplete="one-time-code" placeholder="000000"
+              class="form-control login-input totp-input">
           </div>
-          <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-            <i class="bi bi-info-circle mr-1"></i>
+          <p class="mt-1 small text-muted-custom">
+            <i class="bi bi-info-circle me-1"></i>
             Digite o codigo do seu aplicativo autenticador
           </p>
         </div>
 
         <!-- Login Button -->
-        <button
-          type="submit"
-          id="loginBtn"
-          class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-primary to-primary-light hover:from-primary-dark hover:to-primary text-white font-semibold text-sm tracking-wide shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none disabled:hover:shadow-lg"
-        >
+        <button type="submit" id="loginBtn" class="btn btn-login w-100 mb-3">
           <span id="btnText">Entrar</span>
           <span id="btnSpinner" class="hidden">
-            <div class="spinner"></div>
+            <div class="login-spinner"></div>
           </span>
-          <i class="bi bi-arrow-right-short text-xl" id="btnIcon"></i>
+          <i class="bi bi-arrow-right-short fs-4" id="btnIcon"></i>
         </button>
       </form>
 
       <!-- Forgot Password -->
-      <div class="mt-4 text-center">
-        <button type="button" id="forgotPasswordBtn" class="text-sm text-primary-light hover:text-primary dark:text-blue-400 dark:hover:text-blue-300 hover:underline transition-colors cursor-pointer">
-          <i class="bi bi-key mr-1"></i>Esqueci minha senha
+      <div class="text-center">
+        <button type="button" id="forgotPasswordBtn" class="btn btn-link text-decoration-none small text-primary-light p-0">
+          <i class="bi bi-key me-1"></i>Esqueci minha senha
         </button>
       </div>
-      <div id="forgotPasswordDiv" class="hidden mt-4">
-        <div class="p-4 rounded-xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-200/50 dark:border-blue-800/30">
+      <div id="forgotPasswordDiv" class="hidden mt-3">
+        <div class="forgot-section">
           <!-- Step 1: Send code -->
           <div id="forgotStep1">
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Digite seu e-mail para receber um código de recuperação.</p>
-            <div class="flex gap-2">
-              <input type="email" id="forgotEmail" placeholder="seu@email.com" class="flex-1 text-sm py-2 px-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-              <button type="button" onclick="sendForgotPassword()" id="sendResetBtn" class="text-sm py-2 px-4 rounded-lg bg-primary text-white hover:bg-primary-dark transition-colors whitespace-nowrap">Enviar</button>
+            <p class="small text-muted mb-2">Digite seu e-mail para receber um código de recuperação.</p>
+            <div class="d-flex gap-2">
+              <input type="email" id="forgotEmail" placeholder="seu@email.com" class="form-control form-control-sm flex-grow-1">
+              <button type="button" onclick="sendForgotPassword()" id="sendResetBtn" class="btn btn-primary btn-sm text-nowrap">Enviar</button>
             </div>
           </div>
           <!-- Step 2: Enter code + new password -->
           <div id="forgotStep2" class="hidden">
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Digite o código recebido por e-mail e sua nova senha.</p>
-            <div class="space-y-3">
-              <input type="text" id="resetCode" placeholder="Código de 6 dígitos" maxlength="6" class="w-full text-sm py-2 px-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-center tracking-widest font-bold text-lg">
-              <input type="password" id="resetNewPassword" placeholder="Nova senha (mínimo 6 caracteres)" class="w-full text-sm py-2 px-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-              <button type="button" onclick="resetPassword()" id="resetPasswordBtn" class="w-full text-sm py-2 px-4 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors">Redefinir Senha</button>
+            <p class="small text-muted mb-2">Digite o código recebido por e-mail e sua nova senha.</p>
+            <div class="d-flex flex-column gap-2">
+              <input type="text" id="resetCode" placeholder="Código de 6 dígitos" maxlength="6" class="form-control form-control-sm text-center fw-bold fs-5" style="letter-spacing:0.15em">
+              <input type="password" id="resetNewPassword" placeholder="Nova senha (mínimo 8 caracteres)" class="form-control form-control-sm">
+              <button type="button" onclick="resetPassword()" id="resetPasswordBtn" class="btn btn-success btn-sm w-100">Redefinir Senha</button>
             </div>
           </div>
-          <div id="forgotMessage" class="hidden mt-2 text-sm"></div>
+          <div id="forgotMessage" class="hidden mt-2 small"></div>
         </div>
       </div>
 
       <!-- Footer -->
-      <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700/50 text-center">
-        <p class="text-xs text-gray-400 dark:text-gray-500">
-          <i class="bi bi-shield-lock-fill mr-1"></i>
+      <div class="login-footer mt-4 pt-3 text-center">
+        <p class="small text-muted-custom mb-0">
+          <i class="bi bi-shield-lock-fill me-1"></i>
           Acesso restrito a colaboradores autorizados
         </p>
       </div>
     </div>
 
     <!-- Bottom branding -->
-    <p class="text-center mt-6 text-xs text-gray-400 dark:text-gray-600">
+    <p class="text-center mt-3 small text-muted-custom mb-0">
       &copy; 2026 Lar Digital &mdash; Todos os direitos reservados <span id="login-version"></span>
     </p>
   </div>
@@ -257,7 +421,7 @@
     // Theme Management
     // ==============================
     (function initTheme() {
-      const stored = localStorage.getItem('theme');
+      const stored = localStorage.getItem('theme') || localStorage.getItem('ponto_theme');
       if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark');
       } else {
@@ -268,6 +432,7 @@
     document.getElementById('themeToggle').addEventListener('click', function () {
       const isDark = document.documentElement.classList.toggle('dark');
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      localStorage.setItem('ponto_theme', isDark ? 'dark' : 'light');
     });
 
     // ==============================
@@ -284,7 +449,6 @@
         if (res.ok) {
           window.location.href = '/dashboard.html';
         } else {
-          // Token is invalid or expired, remove it
           localStorage.removeItem('ponto_token');
         }
       } catch (e) {
@@ -302,7 +466,7 @@
     togglePasswordBtn.addEventListener('click', function () {
       const isPassword = passwordInput.type === 'password';
       passwordInput.type = isPassword ? 'text' : 'password';
-      eyeIcon.className = isPassword ? 'bi bi-eye-slash-fill text-lg' : 'bi bi-eye-fill text-lg';
+      eyeIcon.className = isPassword ? 'bi bi-eye-slash-fill fs-5' : 'bi bi-eye-fill fs-5';
       this.setAttribute('aria-label', isPassword ? 'Ocultar senha' : 'Mostrar senha');
     });
 
@@ -320,9 +484,6 @@
     function showError(message) {
       errorMessage.textContent = message;
       errorDiv.classList.remove('hidden');
-      errorDiv.style.animation = 'none';
-      errorDiv.offsetHeight; // Trigger reflow
-      errorDiv.style.animation = null;
     }
 
     function hideError() {
@@ -349,7 +510,6 @@
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
 
-      // Client-side validation
       if (!email) {
         showError('Por favor, informe seu e-mail.');
         document.getElementById('email').focus();
@@ -362,10 +522,9 @@
         return;
       }
 
-      // Basic email format check
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        showError('Por favor, informe um e-mail valido.');
+        showError('Por favor, informe um e-mail válido.');
         document.getElementById('email').focus();
         return;
       }
@@ -375,7 +534,6 @@
       try {
         const body = { email, password };
 
-        // Include TOTP token if 2FA field is visible
         const totpField = document.getElementById('totpField');
         const totpInput = document.getElementById('totpToken');
         if (!totpField.classList.contains('hidden')) {
@@ -402,13 +560,11 @@
           setLoading(false);
           totpField.classList.remove('hidden');
           totpInput.focus();
-          showError('');
           errorDiv.classList.add('hidden');
-          // Show info message instead of error
           const infoDiv = document.createElement('div');
           infoDiv.id = 'info-2fa';
-          infoDiv.className = 'mb-5 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 text-blue-700 dark:text-blue-400 text-sm font-medium';
-          infoDiv.innerHTML = '<div class="flex items-center gap-2"><i class="bi bi-shield-lock-fill text-base flex-shrink-0"></i><span>Autenticação em dois fatores ativada. Digite o código do seu aplicativo.</span></div>';
+          infoDiv.className = 'info-2fa-box p-3 mb-3';
+          infoDiv.innerHTML = '<div class="d-flex align-items-center gap-2"><i class="bi bi-shield-lock-fill flex-shrink-0"></i><span>Autenticação em dois fatores ativada. Digite o código do seu aplicativo.</span></div>';
           const existing = document.getElementById('info-2fa');
           if (existing) existing.remove();
           totpField.parentElement.insertBefore(infoDiv, totpField);
@@ -418,14 +574,13 @@
         if (res.ok && data.token) {
           localStorage.setItem('ponto_token', data.token);
           localStorage.setItem('token', data.token);
+          if (data.refreshToken) localStorage.setItem('ponto_refresh_token', data.refreshToken);
 
-          // Success feedback before redirect
           btnText.textContent = 'Sucesso!';
           btnSpinner.classList.add('hidden');
-          btnIcon.className = 'bi bi-check-lg text-xl';
+          btnIcon.className = 'bi bi-check-lg fs-4';
           btnIcon.classList.remove('hidden');
-          loginBtn.classList.remove('from-primary', 'to-primary-light');
-          loginBtn.classList.add('from-green-500', 'to-green-600');
+          loginBtn.classList.add('success-state');
 
           setTimeout(function () {
             window.location.href = '/dashboard.html';
@@ -441,7 +596,7 @@
           }
         }
       } catch (err) {
-        showError('Erro de conexao. Verifique sua internet e tente novamente.');
+        showError('Erro de conexão. Verifique sua internet e tente novamente.');
         setLoading(false);
       }
     });
@@ -466,19 +621,18 @@
       const email = document.getElementById('forgotEmail').value.trim();
       const msgDiv = document.getElementById('forgotMessage');
       const btn = document.getElementById('sendResetBtn');
-      if (!email) { msgDiv.className = 'mt-2 text-sm text-red-500'; msgDiv.textContent = 'Informe seu e-mail.'; msgDiv.classList.remove('hidden'); return; }
+      if (!email) { msgDiv.className = 'mt-2 small text-danger'; msgDiv.textContent = 'Informe seu e-mail.'; msgDiv.classList.remove('hidden'); return; }
       btn.disabled = true; btn.textContent = 'Enviando...';
       try {
         const res = await fetch('/api/auth/forgot-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
         const data = await res.json();
-        msgDiv.className = 'mt-2 text-sm text-green-600 dark:text-green-400';
-        msgDiv.innerHTML = '<i class="bi bi-check-circle mr-1"></i>' + (data.message || 'Verifique seu e-mail.');
+        msgDiv.className = 'mt-2 small text-success';
+        msgDiv.innerHTML = '<i class="bi bi-check-circle me-1"></i>' + (data.message || 'Verifique seu e-mail.');
         msgDiv.classList.remove('hidden');
-        // Show step 2
         document.getElementById('forgotStep1').classList.add('hidden');
         document.getElementById('forgotStep2').classList.remove('hidden');
         document.getElementById('resetCode').focus();
-      } catch (err) { msgDiv.className = 'mt-2 text-sm text-red-500'; msgDiv.textContent = 'Erro ao enviar.'; msgDiv.classList.remove('hidden'); }
+      } catch (err) { msgDiv.className = 'mt-2 small text-danger'; msgDiv.textContent = 'Erro ao enviar.'; msgDiv.classList.remove('hidden'); }
       finally { btn.disabled = false; btn.textContent = 'Enviar'; }
     }
 
@@ -488,24 +642,25 @@
       const newPassword = document.getElementById('resetNewPassword').value;
       const msgDiv = document.getElementById('forgotMessage');
       const btn = document.getElementById('resetPasswordBtn');
-      if (!code || code.length !== 6) { msgDiv.className = 'mt-2 text-sm text-red-500'; msgDiv.textContent = 'Digite o código de 6 dígitos.'; msgDiv.classList.remove('hidden'); return; }
-      if (!newPassword || newPassword.length < 6) { msgDiv.className = 'mt-2 text-sm text-red-500'; msgDiv.textContent = 'A nova senha deve ter pelo menos 6 caracteres.'; msgDiv.classList.remove('hidden'); return; }
+      if (!code || code.length !== 6) { msgDiv.className = 'mt-2 small text-danger'; msgDiv.textContent = 'Digite o código de 6 dígitos.'; msgDiv.classList.remove('hidden'); return; }
+      if (!newPassword || newPassword.length < 8) { msgDiv.className = 'mt-2 small text-danger'; msgDiv.textContent = 'A nova senha deve ter pelo menos 8 caracteres.'; msgDiv.classList.remove('hidden'); return; }
       btn.disabled = true; btn.textContent = 'Redefinindo...';
       try {
         const res = await fetch('/api/auth/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, code, newPassword }) });
         const data = await res.json();
         if (res.ok) {
-          msgDiv.className = 'mt-2 text-sm text-green-600 dark:text-green-400';
-          msgDiv.innerHTML = '<i class="bi bi-check-circle mr-1"></i>' + data.message;
+          msgDiv.className = 'mt-2 small text-success';
+          msgDiv.innerHTML = '<i class="bi bi-check-circle me-1"></i>' + data.message;
           setTimeout(() => { document.getElementById('forgotPasswordDiv').classList.add('hidden'); document.getElementById('forgotStep1').classList.remove('hidden'); document.getElementById('forgotStep2').classList.add('hidden'); }, 3000);
         } else {
-          msgDiv.className = 'mt-2 text-sm text-red-500';
+          msgDiv.className = 'mt-2 small text-danger';
           msgDiv.textContent = data.error || 'Erro ao redefinir senha.';
         }
         msgDiv.classList.remove('hidden');
-      } catch (err) { msgDiv.className = 'mt-2 text-sm text-red-500'; msgDiv.textContent = 'Erro ao redefinir.'; msgDiv.classList.remove('hidden'); }
+      } catch (err) { msgDiv.className = 'mt-2 small text-danger'; msgDiv.textContent = 'Erro ao redefinir.'; msgDiv.classList.remove('hidden'); }
       finally { btn.disabled = false; btn.textContent = 'Redefinir Senha'; }
     }
+
     // Load version
     fetch('/api/version').then(r => r.json()).then(v => {
       const el = document.getElementById('login-version');
