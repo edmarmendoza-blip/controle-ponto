@@ -959,10 +959,10 @@ class WhatsAppService {
             '00:00',
             JSON.stringify({ sugestao_id: suggestion.id, titulo: suggestion.titulo, descricao: suggestion.descricao, prioridade: suggestion.prioridade })
           );
-          if (isAudioMessage) {
-            await this.sendAudioResponse(msg, responseText);
-          } else {
-            await this.sendGroupMessage(responseText);
+          // Send suggestion to admin privately (not to group)
+          const adminUser = db.prepare("SELECT telefone FROM users WHERE role = 'admin' AND telefone IS NOT NULL ORDER BY id LIMIT 1").get();
+          if (adminUser && adminUser.telefone) {
+            await this.sendPrivateMessage(adminUser.telefone, responseText);
           }
         }
       }
