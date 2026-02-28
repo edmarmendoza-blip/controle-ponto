@@ -24,7 +24,11 @@ function saveDocumentPath(entidadeTipo, entidadeId, tipo) {
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const entidadeTipo = req.body.entidade_tipo || 'avulso';
-    const entidadeId = req.body.entidade_id || null;
+    const rawId = req.body.entidade_id;
+    const entidadeId = rawId ? parseInt(rawId, 10) : null;
+    if (rawId && (isNaN(entidadeId) || entidadeId < 0)) {
+      return cb(new Error('ID de entidade inválido'));
+    }
     const tipo = req.body.tipo || 'outro';
     const dir = saveDocumentPath(entidadeTipo, entidadeId, tipo);
     cb(null, dir);
@@ -176,7 +180,7 @@ Retorne APENAS JSON válido: { "type": "", "description": "", "extracted_data": 
     res.json({ success: true, data });
   } catch (err) {
     console.error('Analyze documento error:', err);
-    res.status(500).json({ error: 'Erro ao analisar documento: ' + err.message });
+    res.status(500).json({ error: 'Erro ao analisar documento' });
   }
 });
 

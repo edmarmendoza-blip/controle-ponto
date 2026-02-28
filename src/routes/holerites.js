@@ -11,7 +11,7 @@ router.post('/sync', authenticateToken, requireAdmin, async (req, res) => {
     res.json(result);
   } catch (err) {
     console.error('[Holerites] Sync error:', err.message);
-    res.status(500).json({ error: 'Erro ao sincronizar holerites: ' + err.message });
+    res.status(500).json({ error: 'Erro ao sincronizar holerites' });
   }
 });
 

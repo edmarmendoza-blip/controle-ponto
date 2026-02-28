@@ -2,12 +2,18 @@ const Anthropic = require('@anthropic-ai/sdk');
 const { db } = require('../config/database');
 const Funcionario = require('../models/Funcionario');
 
+// Singleton Anthropic client
+let _anthropicClient = null;
+
 class InsightsIA {
   static getClient() {
     if (!process.env.ANTHROPIC_API_KEY) {
       throw new Error('ANTHROPIC_API_KEY não configurada no .env');
     }
-    return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    if (!_anthropicClient) {
+      _anthropicClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    }
+    return _anthropicClient;
   }
 
   static getMessagesByDate(date) {

@@ -52,6 +52,9 @@ class Schedulers {
     scheduleNext();
   }
 
+  // Store interval IDs for cleanup
+  static _intervalIds = [];
+
   // Schedule a job every N hours
   static _scheduleInterval(name, intervalHours, jobFn) {
     const ms = intervalHours * 3600000;
@@ -67,7 +70,7 @@ class Schedulers {
       }
     }, 30000);
 
-    setInterval(async () => {
+    const id = setInterval(async () => {
       try {
         await jobFn();
         console.log(`[Scheduler] ${name}: executado com sucesso`);
@@ -75,6 +78,7 @@ class Schedulers {
         console.error(`[Scheduler] ${name}: erro -`, err.message);
       }
     }, ms);
+    this._intervalIds.push(id);
   }
 
   // Schedule a job every N minutes
@@ -92,13 +96,49 @@ class Schedulers {
       }
     }, startupDelayMs);
 
-    setInterval(async () => {
+    const id = setInterval(async () => {
       try {
         await jobFn();
       } catch (err) {
         console.error(`[Scheduler] ${name}: erro -`, err.message);
       }
     }, ms);
+    this._intervalIds.push(id);
+  }
+
+  // Schedule a job at specific time on a specific day of week (0=Sunday, 5=Friday)
+  static _scheduleWeekly(name, dayOfWeek, hour, minute, jobFn) {
+    function scheduleNext() {
+      const now = new Date();
+      let next = new Date(now);
+      next.setHours(hour, minute, 0, 0);
+      // Calculate days until target day
+      const currentDay = now.getDay();
+      let daysUntil = dayOfWeek - currentDay;
+      if (daysUntil < 0 || (daysUntil === 0 && next <= now)) {
+        daysUntil += 7;
+      }
+      next.setDate(next.getDate() + daysUntil);
+      const ms = next - now;
+
+      console.log(`[Scheduler] ${name}: próxima execução em ${Math.round(ms / 3600000)}h`);
+      setTimeout(async () => {
+        try {
+          await jobFn();
+          console.log(`[Scheduler] ${name}: executado com sucesso`);
+        } catch (err) {
+          console.error(`[Scheduler] ${name}: erro -`, err.message);
+        }
+        scheduleNext();
+      }, ms);
+    }
+    scheduleNext();
+  }
+
+  // Cleanup all intervals (for graceful shutdown / hot-reload)
+  static destroy() {
+    this._intervalIds.forEach(id => clearInterval(id));
+    this._intervalIds = [];
   }
 
   // Initialize all schedulers
@@ -114,8 +154,18 @@ class Schedulers {
     // 3. IMAP holerite sync - every 6 hours
     this._scheduleInterval('Sync Holerites IMAP', 6, () => this.syncHolerites());
 
-    // 4. WhatsApp health check - every 20 minutes
-    this._scheduleIntervalMinutes('WhatsApp Health Check', 20, () => this.checkWhatsAppHealth(), 120000);
+    // 4. WhatsApp health check - every 20 minutes (production only)
+    if (process.env.DB_PATH && !process.env.DB_PATH.includes('sandbox')) {
+      this._scheduleIntervalMinutes('WhatsApp Health Check', 20, () => this.checkWhatsAppHealth(), 120000);
+    } else {
+      console.log('[Scheduler] WhatsApp Health Check: desativado no sandbox');
+    }
+
+    // 5. Weekly summary via WhatsApp - Friday at 18:00
+    this._scheduleWeekly('Resumo Semanal WhatsApp', 5, 18, 0, () => this.sendWeeklySummary());
+
+    // 6. Absence alert - daily at 09:30 (checks employees who didn't register entry)
+    this._scheduleDaily('Alerta de Ausência', 9, 30, () => this.checkAbsences());
 
     console.log('[Scheduler] Todos os schedulers iniciados');
   }
@@ -206,17 +256,14 @@ class Schedulers {
 
   // Feature 19: Monthly closing email (day 1)
   static async sendMonthlyClosing() {
-    // Calculate previous month
+    // Previous month (1-12)
     const now = new Date();
-    let mes = now.getMonth(); // 0-indexed, so current month -1 = previous month (but getMonth already is 0-indexed)
-    let ano = now.getFullYear();
-    if (mes === 0) {
-      mes = 12;
-      ano--;
-    }
-    // mes is now 1-12 for previous month
+    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const mes = prev.getMonth() + 1;
+    const ano = prev.getFullYear();
 
-    const funcionarios = Funcionario.getAll();
+    const allFuncionarios = Funcionario.getAll();
+    const funcionarios = allFuncionarios.filter(f => f.aparece_relatorios !== 0);
     const resultados = [];
     let totalHoras = 0;
     let totalExtras = 0;
@@ -297,6 +344,268 @@ class Schedulers {
       return result;
     } catch (err) {
       console.error('[Scheduler] Holerites sync error:', err.message);
+      return { success: false, error: err.message };
+    }
+  }
+
+  // Weekly summary via WhatsApp (Friday 18:00)
+  static async sendWeeklySummary() {
+    try {
+      const whatsappService = require('./whatsapp');
+      if (!whatsappService.ready) {
+        console.log('[Scheduler] Resumo semanal: WhatsApp não conectado, enviando por email');
+        // Fallback to email below
+      }
+
+      // Get admin phone from users table
+      const admin = db.prepare("SELECT telefone FROM users WHERE role = 'admin' ORDER BY id LIMIT 1").get();
+      if (!admin || !admin.telefone) {
+        console.log('[Scheduler] Resumo semanal: nenhum admin com telefone cadastrado');
+        return { success: false, error: 'Admin sem telefone' };
+      }
+
+      // Calculate week range (Monday to today/Friday)
+      const now = new Date();
+      const today = now.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+      const dayOfWeek = now.getDay(); // 0=Sun, 5=Fri
+      const daysBack = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // days since Monday
+      const monday = new Date(now);
+      monday.setDate(monday.getDate() - daysBack);
+      const mondayStr = monday.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+
+      // 1. Attendance summary per employee
+      const funcionarios = Funcionario.getAll().filter(f => f.precisa_bater_ponto === 1);
+      const attendanceRows = [];
+      let totalDias = 0;
+      let totalHE = 0;
+
+      for (const func of funcionarios) {
+        const registros = db.prepare(
+          `SELECT DISTINCT data FROM registros WHERE funcionario_id = ? AND data BETWEEN ? AND ? AND entrada IS NOT NULL`
+        ).all(func.id, mondayStr, today);
+        const diasPresente = registros.length;
+
+        // Sum extra hours
+        const extras = db.prepare(
+          `SELECT SUM(CASE WHEN saida IS NOT NULL AND entrada IS NOT NULL
+            THEN (CAST(substr(saida,1,2) AS REAL)*60 + CAST(substr(saida,4,2) AS REAL)) -
+                 (CAST(substr(entrada,1,2) AS REAL)*60 + CAST(substr(entrada,4,2) AS REAL))
+            ELSE 0 END) as total_min
+          FROM registros WHERE funcionario_id = ? AND data BETWEEN ? AND ?`
+        ).get(func.id, mondayStr, today);
+        const totalMin = extras?.total_min || 0;
+        const horasTrabalhadas = Math.round(totalMin / 60 * 10) / 10;
+
+        attendanceRows.push({
+          nome: func.nome,
+          dias: diasPresente,
+          horas: horasTrabalhadas
+        });
+        totalDias += diasPresente;
+        totalHE += horasTrabalhadas;
+      }
+
+      // 2. Deliveries this week
+      const entregas = db.prepare(
+        `SELECT COUNT(*) as total FROM entregas WHERE data_recebimento BETWEEN ? AND ?`
+      ).get(mondayStr, today);
+      const entregasTotal = entregas?.total || 0;
+
+      // 3. Low stock alerts
+      const estoqueBaixo = db.prepare(
+        `SELECT nome, quantidade_atual, quantidade_minima FROM estoque_itens
+         WHERE ativo = 1 AND quantidade_atual <= quantidade_minima`
+      ).all();
+
+      // 4. Pending confirmations (expired this week)
+      const expiradas = db.prepare(
+        `SELECT COUNT(*) as total FROM pending_confirmations
+         WHERE status = 'expired' AND created_at BETWEEN ? AND ?`
+      ).get(mondayStr + ' 00:00:00', today + ' 23:59:59');
+      const expiradasTotal = expiradas?.total || 0;
+
+      // 5. Tasks completed this week
+      const tarefasConcluidas = db.prepare(
+        `SELECT COUNT(*) as total FROM tarefas
+         WHERE status = 'concluida' AND updated_at BETWEEN ? AND ?`
+      ).get(mondayStr, today + ' 23:59:59');
+      const tarefasTotal = tarefasConcluidas?.total || 0;
+
+      // Format dates for display
+      const formatBR = (d) => { const [y, m, day] = d.split('-'); return `${day}/${m}`; };
+
+      // Build message
+      let msg = `📊 *Resumo Semanal — ${formatBR(mondayStr)} a ${formatBR(today)}*\n\n`;
+
+      msg += `👥 *Presença:*\n`;
+      for (const row of attendanceRows) {
+        const emoji = row.dias >= 5 ? '✅' : row.dias >= 3 ? '⚠️' : row.dias > 0 ? '🔶' : '❌';
+        msg += `${emoji} ${row.nome}: ${row.dias} dia(s) — ${row.horas}h\n`;
+      }
+
+      if (entregasTotal > 0) {
+        msg += `\n📦 *Entregas:* ${entregasTotal} recebida(s)\n`;
+      }
+
+      if (estoqueBaixo.length > 0) {
+        msg += `\n⚠️ *Estoque baixo:*\n`;
+        for (const item of estoqueBaixo) {
+          msg += `• ${item.nome}: ${item.quantidade_atual}/${item.quantidade_minima}\n`;
+        }
+      }
+
+      if (tarefasTotal > 0) {
+        msg += `\n✅ *Tarefas concluídas:* ${tarefasTotal}\n`;
+      }
+
+      if (expiradasTotal > 0) {
+        msg += `\n⏰ *${expiradasTotal} confirmação(ões) expiraram sem resposta*\n`;
+      }
+
+      msg += `\n_Lar Digital v${require('../../version.json').version}_`;
+
+      // Send via WhatsApp DM to admin
+      if (whatsappService.ready) {
+        const sent = await whatsappService.sendPrivateMessage(admin.telefone, msg);
+        if (sent) {
+          console.log('[Scheduler] Resumo semanal enviado via WhatsApp');
+          return { success: true, via: 'whatsapp' };
+        }
+      }
+
+      // Fallback: send via email
+      await EmailService.sendAlert('weekly_summary', 'Resumo Semanal — Lar Digital', msg.replace(/\n/g, '<br>').replace(/\*/g, ''));
+      console.log('[Scheduler] Resumo semanal enviado via email (fallback)');
+      return { success: true, via: 'email' };
+
+    } catch (err) {
+      console.error('[Scheduler] Resumo semanal error:', err.message);
+      return { success: false, error: err.message };
+    }
+  }
+  // G3: Check for absent employees and alert admin via WhatsApp
+  static async checkAbsences() {
+    try {
+      const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+      const now = new Date();
+      const dayOfWeek = now.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'America/Sao_Paulo' });
+
+      // Skip weekends
+      if (dayOfWeek === 'Sat' || dayOfWeek === 'Sun') {
+        console.log('[Scheduler] Alerta ausência: fim de semana, ignorando');
+        return { skipped: true, reason: 'weekend' };
+      }
+
+      // Skip feriados
+      const feriado = db.prepare(
+        `SELECT id, descricao FROM feriados WHERE data = ?`
+      ).get(today);
+      if (feriado) {
+        console.log(`[Scheduler] Alerta ausência: feriado (${feriado.descricao}), ignorando`);
+        return { skipped: true, reason: 'feriado', descricao: feriado.descricao };
+      }
+
+      // Get employees who need to clock in (precisa_bater_ponto=1, active, with horario_entrada)
+      const funcionarios = db.prepare(`
+        SELECT f.id, f.nome, f.horario_entrada, f.telefone
+        FROM funcionarios f
+        JOIN cargos c ON f.cargo_id = c.id
+        WHERE f.status = 'ativo'
+          AND c.precisa_bater_ponto = 1
+          AND c.aparece_relatorios = 1
+          AND f.horario_entrada IS NOT NULL
+          AND f.horario_entrada != ''
+      `).all();
+
+      if (funcionarios.length === 0) {
+        console.log('[Scheduler] Alerta ausência: nenhum funcionário com horário de entrada');
+        return { skipped: true, reason: 'no_employees' };
+      }
+
+      // Check who already registered entry today
+      const registrosHoje = db.prepare(`
+        SELECT DISTINCT funcionario_id
+        FROM registros
+        WHERE data = ? AND entrada IS NOT NULL
+      `).all(today).map(r => r.funcionario_id);
+
+      // Check who is on vacation
+      const emFerias = db.prepare(`
+        SELECT funcionario_id FROM ferias
+        WHERE status = 'aprovada'
+          AND data_inicio <= ? AND data_fim >= ?
+      `).all(today, today).map(f => f.funcionario_id);
+
+      // Current time in minutes for comparison
+      const nowStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+      const [nowH, nowM] = nowStr.split(':').map(Number);
+      const nowMinutes = nowH * 60 + nowM;
+
+      // Filter absent employees (no entry + past their expected time + 15min tolerance)
+      const TOLERANCE_MIN = 15;
+      const ausentes = [];
+
+      for (const func of funcionarios) {
+        // Skip if already registered
+        if (registrosHoje.includes(func.id)) continue;
+        // Skip if on vacation
+        if (emFerias.includes(func.id)) continue;
+
+        // Parse expected entry time
+        const [entH, entM] = func.horario_entrada.split(':').map(Number);
+        const expectedMinutes = entH * 60 + entM;
+
+        // Only alert if current time is past expected + tolerance
+        if (nowMinutes >= expectedMinutes + TOLERANCE_MIN) {
+          const atraso = nowMinutes - expectedMinutes;
+          ausentes.push({
+            id: func.id,
+            nome: func.nome,
+            horario_esperado: func.horario_entrada,
+            atraso_min: atraso
+          });
+        }
+      }
+
+      if (ausentes.length === 0) {
+        console.log('[Scheduler] Alerta ausência: todos presentes ou dentro do horário');
+        return { ausentes: 0 };
+      }
+
+      // Build alert message
+      let msg = `⚠️ *Alerta de Ausência — ${today.split('-').reverse().join('/')}*\n\n`;
+      msg += `${ausentes.length} funcionário(s) sem registro de entrada:\n\n`;
+
+      for (const a of ausentes) {
+        const horas = Math.floor(a.atraso_min / 60);
+        const mins = a.atraso_min % 60;
+        const atrasoStr = horas > 0 ? `${horas}h${mins > 0 ? mins + 'min' : ''}` : `${mins}min`;
+        msg += `❌ *${a.nome}*\n`;
+        msg += `   Esperado: ${a.horario_esperado} (atraso: ${atrasoStr})\n\n`;
+      }
+
+      msg += `_Verifique no dashboard: ${process.env.APP_URL || 'https://lardigital.app'}_`;
+
+      // Send via WhatsApp DM to admin
+      const whatsappService = require('./whatsapp');
+      const admin = db.prepare("SELECT telefone FROM users WHERE role = 'admin' ORDER BY id LIMIT 1").get();
+
+      if (whatsappService.ready && admin?.telefone) {
+        const sent = await whatsappService.sendPrivateMessage(admin.telefone, msg);
+        if (sent) {
+          console.log(`[Scheduler] Alerta ausência: ${ausentes.length} ausente(s), enviado via WhatsApp`);
+          return { ausentes: ausentes.length, via: 'whatsapp', funcionarios: ausentes };
+        }
+      }
+
+      // Fallback: email
+      const emailMsg = msg.replace(/\n/g, '<br>').replace(/\*/g, '<strong>').replace(/_/g, '<em>');
+      await EmailService.sendAlert('absence_alert', `Alerta de Ausência — ${ausentes.length} funcionário(s)`, emailMsg);
+      console.log(`[Scheduler] Alerta ausência: ${ausentes.length} ausente(s), enviado via email`);
+      return { ausentes: ausentes.length, via: 'email', funcionarios: ausentes };
+
+    } catch (err) {
+      console.error('[Scheduler] Alerta ausência error:', err.message);
       return { success: false, error: err.message };
     }
   }

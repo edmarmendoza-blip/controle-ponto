@@ -2,12 +2,22 @@ const { db } = require('../config/database');
 const FeriadosService = require('./feriados');
 
 class HorasExtrasService {
+  static _configCache = null;
+  static _configCacheTime = 0;
+  static _CONFIG_TTL = 5 * 60 * 1000; // 5 minutes
+
   static getConfig() {
+    const now = Date.now();
+    if (this._configCache && (now - this._configCacheTime) < this._CONFIG_TTL) {
+      return this._configCache;
+    }
     const configs = {};
     const rows = db.prepare('SELECT chave, valor FROM configuracoes').all();
     for (const row of rows) {
       configs[row.chave] = parseFloat(row.valor) || row.valor;
     }
+    this._configCache = configs;
+    this._configCacheTime = now;
     return configs;
   }
 
@@ -90,9 +100,9 @@ class HorasExtrasService {
     const horasTrabalhadas = totalMinutos / 60;
 
     const dayType = FeriadosService.getDayType(registro.data);
-    const jornada = funcionario.jornada_diaria || 9.8;
-    const valorHoraExtra = funcionario.valor_hora_extra || 43.25;
-    const valorDiaEspecial = funcionario.valor_dia_especial || 320.00;
+    const jornada = funcionario.jornada_diaria || 8;
+    const valorHoraExtra = funcionario.valor_hora_extra || 0;
+    const valorDiaEspecial = funcionario.valor_dia_especial || 0;
 
     let horasExtras = 0;
     let pgtoHoraExtra = 0;
@@ -158,9 +168,9 @@ class HorasExtrasService {
         id: funcionario.id,
         nome: funcionario.nome,
         cargo: funcionario.cargo,
-        valor_hora_extra: funcionario.valor_hora_extra || 43.25,
-        valor_dia_especial: funcionario.valor_dia_especial || 320.00,
-        jornada_diaria: funcionario.jornada_diaria || 9.8
+        valor_hora_extra: funcionario.valor_hora_extra || 0,
+        valor_dia_especial: funcionario.valor_dia_especial || 0,
+        jornada_diaria: funcionario.jornada_diaria || 8
       },
       registros: detalhes,
       resumo: {

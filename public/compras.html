@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>Lista de Compras - Lar Digital</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+    }
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen bg-blue-800 text-white transition-transform -translate-x-full md:translate-x-0">
+    <div class="p-4 border-b border-blue-700">
+      <a href="/dashboard.html" class="flex items-center gap-2">
+        <i class="bi bi-clock-history text-2xl"></i>
+        <span class="text-xl font-bold">Lar Digital</span>
+      </a>
+      <p class="text-blue-200 text-xs mt-1">Gestão da Casa</p>
+    </div>
+    <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-180px)]">
+      <a href="/dashboard.html" data-page="dashboard" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+      </a>
+      <a href="/funcionarios.html" data-page="funcionarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-people"></i><span>Funcionários</span>
+      </a>
+      <a href="/cargos.html" data-page="cargos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-briefcase"></i><span>Cargos</span>
+      </a>
+      <a href="/registros.html" data-page="registros" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-clock"></i><span>Registros</span>
+      </a>
+      <a href="/relatorios.html" data-page="relatorios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-file-earmark-text"></i><span>Relatórios</span>
+      </a>
+      <a href="/relatorios-graficos.html" data-page="relatorios-graficos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-bar-chart-line"></i><span>Gráficos</span>
+      </a>
+      <a href="/presenca.html" data-page="presenca" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-calendar-check"></i><span>Presença</span>
+      </a>
+      <a href="/entregas.html" data-page="entregas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-box-seam"></i><span>Entregas</span>
+      </a>
+      <a href="/compras.html" data-page="compras" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-cart3"></i><span>Compras</span>
+      </a>
+      <a href="/despesas.html" data-page="despesas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-cash-coin"></i><span>Despesas</span>
+      </a>
+      <a href="/holerites.html" data-page="holerites" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-receipt"></i><span>Holerites</span>
+      </a>
+      <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-calendar-heart"></i><span>Férias</span>
+      </a>
+      <a href="/sugestoes.html" data-page="sugestoes" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-lightbulb"></i><span>Sugestões</span>
+      </a>
+      <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-shield-lock"></i><span>Usuários</span>
+      </a>
+      <a href="/feriados.html" data-page="feriados" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-calendar-event"></i><span>Feriados</span>
+      </a>
+      <a href="/insights.html" data-page="insights" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-stars"></i><span>Insights IA</span>
+      </a>
+      <a href="/whatsapp.html" data-page="whatsapp" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
+      </a>
+      <a href="/audit-log.html" data-page="audit-log" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-journal-text"></i><span>Audit Log</span>
+      </a>
+      <hr class="border-blue-700 my-2">
+      <a href="/ajuda.html" data-page="ajuda" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-chat-left-dots"></i><span>Ajuda</span>
+      </a>
+      <a href="/perfil.html" data-page="perfil" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-person-gear"></i><span>Perfil</span>
+      </a>
+    </nav>
+    <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-blue-700 bg-blue-800">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2 text-sm">
+          <i class="bi bi-person-circle"></i>
+          <div>
+            <div id="user-name" class="font-medium">-</div>
+            <div id="user-role" class="text-blue-300 text-xs">-</div>
+          </div>
+        </div>
+        <button id="theme-toggle" class="p-1.5 rounded-lg hover:bg-blue-700 transition-colors">
+          <i id="theme-icon" class="bi bi-moon-fill"></i>
+        </button>
+      </div>
+      <button id="logout-btn" class="w-full py-1.5 text-sm bg-blue-700 hover:bg-blue-600 rounded-lg transition-colors">Sair</button>
+    </div>
+  </aside>
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+
+  <!-- Main Content -->
+  <main class="md:ml-64 min-h-screen">
+    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+      <div class="flex items-center gap-3">
+        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300">
+          <i class="bi bi-list text-xl"></i>
+        </button>
+        <h1 class="text-xl font-semibold">Lista de Compras</h1>
+      </div>
+      <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
+    </header>
+
+    <div class="p-4 md:p-6" id="page-content">
+
+      <!-- Tabs -->
+      <div class="flex gap-1 bg-gray-100 dark:bg-gray-700 rounded-xl p-1 mb-6 w-fit">
+        <button onclick="switchTab('listas')" id="tab-listas" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 shadow-sm">
+          <i class="bi bi-list-check"></i> Listas
+        </button>
+        <button onclick="switchTab('historico')" id="tab-historico" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+          <i class="bi bi-graph-down"></i> Histórico de Preços
+        </button>
+        <button onclick="switchTab('notas')" id="tab-notas" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+          <i class="bi bi-receipt-cutoff"></i> Notas Fiscais
+        </button>
+      </div>
+
+      <!-- ===== TAB: LISTAS ===== -->
+      <div id="pane-listas">
+        <!-- Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+            <div class="text-2xl font-bold text-green-600" id="stat-ativas">0</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">Listas Ativas</div>
+          </div>
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+            <div class="text-2xl font-bold text-yellow-600" id="stat-andamento">0</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">Em Andamento</div>
+          </div>
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+            <div class="text-2xl font-bold text-gray-500" id="stat-concluidas">0</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">Concluídas</div>
+          </div>
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+            <div class="text-2xl font-bold text-blue-600" id="stat-total-itens">0</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">Total Itens</div>
+          </div>
+        </div>
+
+        <!-- List View: cards grid -->
+        <div id="view-lista-cards">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="font-semibold text-gray-700 dark:text-gray-300">Listas de Compras</h2>
+            <button onclick="openModalNovaLista()" class="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors">
+              <i class="bi bi-plus-lg"></i> Nova Lista
+            </button>
+          </div>
+
+          <div id="listas-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="col-span-full text-center py-8 text-gray-400">
+              <i class="bi bi-arrow-repeat animate-spin text-2xl"></i>
+              <p class="mt-2">Carregando...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detail View: single list -->
+        <div id="view-lista-detail" class="hidden">
+          <div class="flex items-center gap-3 mb-5">
+            <button onclick="backToListCards()" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <i class="bi bi-arrow-left"></i> Voltar
+            </button>
+            <div>
+              <h2 id="detail-nome" class="text-lg font-bold"></h2>
+              <div id="detail-badges" class="flex items-center gap-2 mt-1"></div>
+            </div>
+            <div class="ml-auto flex items-center gap-2">
+              <button id="btn-concluir-lista" onclick="concluirLista()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors hidden">
+                <i class="bi bi-check-all"></i> Concluir Lista
+              </button>
+              <button id="btn-share-lista" onclick="shareListaWhatsApp()" class="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm transition-colors">
+                <i class="bi bi-whatsapp"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Progress bar -->
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-5">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium">Progresso</span>
+              <div class="flex items-center gap-3">
+                <span id="detail-progress-text" class="text-sm text-gray-500">0 / 0 itens</span>
+                <span id="detail-total" class="text-sm font-semibold text-green-600">R$ 0,00</span>
+              </div>
+            </div>
+            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+              <div id="detail-progress-bar" class="bg-green-500 h-2.5 rounded-full transition-all" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Add item inline form -->
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-5">
+            <h3 class="text-sm font-semibold mb-3">Adicionar Item</h3>
+            <div class="flex flex-col md:flex-row gap-3">
+              <input type="text" id="new-item-nome" placeholder="Nome do item *" class="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm">
+              <div class="flex gap-2">
+                <input type="number" id="new-item-qtd" placeholder="Qtd" min="0.001" step="any" value="1" class="w-20 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm">
+                <select id="new-item-unidade" class="w-20 px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm">
+                  <option value="un">un</option>
+                  <option value="kg">kg</option>
+                  <option value="g">g</option>
+                  <option value="L">L</option>
+                  <option value="ml">ml</option>
+                  <option value="cx">cx</option>
+                  <option value="pct">pct</option>
+                  <option value="rolo">rolo</option>
+                  <option value="par">par</option>
+                  <option value="kit">kit</option>
+                  <option value="dz">dz</option>
+                </select>
+                <select id="new-item-categoria" class="w-32 px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm">
+                  <option value="alimento">Alimento</option>
+                  <option value="bebida">Bebida</option>
+                  <option value="limpeza">Limpeza</option>
+                  <option value="higiene">Higiene</option>
+                  <option value="pet">Pet</option>
+                  <option value="hortifruti">Hortifruti</option>
+                  <option value="carne">Carne</option>
+                  <option value="padaria">Padaria</option>
+                  <option value="frios">Frios</option>
+                  <option value="congelados">Congelados</option>
+                  <option value="outro">Outro</option>
+                </select>
+              </div>
+              <button onclick="addItemToLista()" class="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap">
+                <i class="bi bi-plus-lg"></i> Adicionar
+              </button>
+            </div>
+          </div>
+
+          <!-- Items table -->
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50 dark:bg-gray-700/50">
+                  <tr>
+                    <th class="px-4 py-3 text-left w-10"></th>
+                    <th class="px-4 py-3 text-left">Item</th>
+                    <th class="px-4 py-3 text-left">Qtd</th>
+                    <th class="px-4 py-3 text-left">Categoria</th>
+                    <th class="px-4 py-3 text-left">Preco Pago</th>
+                    <th class="px-4 py-3 text-left">Estabelecimento</th>
+                    <th class="px-4 py-3 text-left w-10"></th>
+                  </tr>
+                </thead>
+                <tbody id="detail-itens-tbody">
+                  <tr>
+                    <td colspan="7" class="px-4 py-8 text-center text-gray-400">Nenhum item na lista</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB: HISTORICO DE PRECOS ===== -->
+      <div id="pane-historico" class="hidden">
+        <!-- Economy card -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                <i class="bi bi-piggy-bank text-green-600"></i>
+              </div>
+              <div>
+                <div class="text-2xl font-bold text-green-600" id="stat-economia">R$ 0,00</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">Economia este mes</div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                <i class="bi bi-bag-check text-blue-600"></i>
+              </div>
+              <div>
+                <div class="text-2xl font-bold text-blue-600" id="stat-itens-monitorados">0</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">Itens Monitorados</div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
+                <i class="bi bi-shop text-yellow-600"></i>
+              </div>
+              <div>
+                <div class="text-2xl font-bold text-yellow-600" id="stat-estabelecimentos">0</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">Estabelecimentos</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-6">
+          <div class="flex gap-3">
+            <div class="flex-1">
+              <input type="text" id="historico-search" placeholder="Buscar item por nome..." oninput="filterHistorico()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm">
+            </div>
+          </div>
+        </div>
+
+        <!-- Price history table -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50 dark:bg-gray-700/50">
+                <tr>
+                  <th class="px-4 py-3 text-left">Item</th>
+                  <th class="px-4 py-3 text-left">Ultimo Preco</th>
+                  <th class="px-4 py-3 text-left">Melhor Preco</th>
+                  <th class="px-4 py-3 text-left">Pior Preco</th>
+                  <th class="px-4 py-3 text-left">Melhor Estabelecimento</th>
+                  <th class="px-4 py-3 text-left">Ultima Compra</th>
+                  <th class="px-4 py-3 text-left w-10"></th>
+                </tr>
+              </thead>
+              <tbody id="historico-tbody">
+                <tr>
+                  <td colspan="7" class="px-4 py-8 text-center text-gray-400">
+                    <i class="bi bi-arrow-repeat animate-spin text-2xl block mb-2"></i>Carregando...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Item price detail (expandable) -->
+        <div id="historico-detalhe" class="hidden mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold" id="historico-detalhe-nome"></h3>
+            <button onclick="document.getElementById('historico-detalhe').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50 dark:bg-gray-700/50">
+                <tr>
+                  <th class="px-4 py-2 text-left">Data</th>
+                  <th class="px-4 py-2 text-left">Preco Pago</th>
+                  <th class="px-4 py-2 text-left">Estabelecimento</th>
+                  <th class="px-4 py-2 text-left">Lista</th>
+                </tr>
+              </thead>
+              <tbody id="historico-detalhe-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB: NOTAS FISCAIS ===== -->
+      <div id="pane-notas" class="hidden">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="font-semibold text-gray-700 dark:text-gray-300">Notas Fiscais</h2>
+          <label class="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors cursor-pointer">
+            <i class="bi bi-upload"></i> Enviar Nota Fiscal
+            <input type="file" id="nota-upload-input" accept="image/*,application/pdf" class="hidden" onchange="uploadNotaFiscal(this)">
+          </label>
+        </div>
+
+        <!-- Upload progress -->
+        <div id="nota-upload-progress" class="hidden bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-4">
+          <div class="flex items-center gap-3">
+            <i class="bi bi-arrow-repeat animate-spin text-blue-600"></i>
+            <span class="text-sm text-blue-700 dark:text-blue-400">Processando nota fiscal...</span>
+          </div>
+        </div>
+
+        <div id="notas-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="col-span-full text-center py-8 text-gray-400">
+            <i class="bi bi-arrow-repeat animate-spin text-2xl"></i>
+            <p class="mt-2">Carregando...</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Modal: Nova / Editar Lista -->
+  <div id="modal-lista" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+        <h3 class="text-lg font-semibold" id="modal-lista-title">Nova Lista</h3>
+        <button onclick="closeModalLista()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+          <i class="bi bi-x-lg text-xl"></i>
+        </button>
+      </div>
+      <div class="p-5 space-y-4">
+        <input type="hidden" id="modal-lista-id">
+        <div>
+          <label class="block text-sm font-medium mb-1">Nome <span class="text-red-500">*</span></label>
+          <input type="text" id="modal-lista-nome" placeholder="Ex: Mercado semana, Padaria..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Categoria</label>
+          <select id="modal-lista-categoria" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm">
+            <option value="mercado">Supermercado</option>
+            <option value="padaria">Padaria</option>
+            <option value="hortifruti">Hortifruti</option>
+            <option value="acougue">Acougue</option>
+            <option value="limpeza">Limpeza</option>
+            <option value="pet">Pet</option>
+            <option value="farmacia">Farmacia</option>
+            <option value="material_construcao">Material</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Observacoes</label>
+          <textarea id="modal-lista-obs" rows="3" placeholder="Observacoes opcionais..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm resize-none"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 p-5 border-t border-gray-100 dark:border-gray-700">
+        <button onclick="closeModalLista()" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm">Cancelar</button>
+        <button onclick="saveLista()" class="px-4 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-medium transition-colors">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Marcar item como comprado -->
+  <div id="modal-comprado" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-sm">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+        <h3 class="text-lg font-semibold">Marcar como Comprado</h3>
+        <button onclick="closeModalComprado()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+          <i class="bi bi-x-lg text-xl"></i>
+        </button>
+      </div>
+      <div class="p-5 space-y-4">
+        <input type="hidden" id="modal-comprado-item-id">
+        <p class="text-sm text-gray-600 dark:text-gray-400" id="modal-comprado-item-nome"></p>
+        <div>
+          <label class="block text-sm font-medium mb-1">Preco Pago (R$) <span class="text-red-500">*</span></label>
+          <input type="number" id="modal-comprado-preco" placeholder="0,00" min="0" step="0.01" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Estabelecimento</label>
+          <input type="text" id="modal-comprado-estabelecimento" placeholder="Ex: Carrefour, Pao de Acucar..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm" list="estabelecimentos-datalist">
+          <datalist id="estabelecimentos-datalist"></datalist>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Data da Compra</label>
+          <input type="date" id="modal-comprado-data" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none transition text-sm">
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 p-5 border-t border-gray-100 dark:border-gray-700">
+        <button onclick="closeModalComprado()" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm">Cancelar</button>
+        <button onclick="confirmarCompra()" class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors">
+          <i class="bi bi-check-lg"></i> Confirmar Compra
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Nota Fiscal Detalhe -->
+  <div id="modal-nota" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+        <h3 class="text-lg font-semibold" id="modal-nota-title">Nota Fiscal</h3>
+        <button onclick="closeModalNota()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+          <i class="bi bi-x-lg text-xl"></i>
+        </button>
+      </div>
+      <div class="p-5" id="modal-nota-body"></div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+  <script src="/js/utils.js?v=1"></script>
+  <script src="/js/shared.js"></script>
+  <script>
+    // ============================================================
+    // Constants
+    // ============================================================
+    const CATEGORIAS_LISTA = {
+      mercado:             { label: 'Supermercado',       color: 'blue' },
+      padaria:             { label: 'Padaria',             color: 'yellow' },
+      hortifruti:          { label: 'Hortifruti',          color: 'green' },
+      acougue:             { label: 'Acougue',             color: 'red' },
+      limpeza:             { label: 'Limpeza',             color: 'purple' },
+      pet:                 { label: 'Pet',                 color: 'orange' },
+      farmacia:            { label: 'Farmacia',            color: 'pink' },
+      material_construcao: { label: 'Material',            color: 'gray' },
+      outro:               { label: 'Outro',               color: 'gray' }
+    };
+
+    const COLOR_CLASSES = {
+      blue:   { bg: 'bg-blue-100 dark:bg-blue-900/30',   text: 'text-blue-700 dark:text-blue-400' },
+      yellow: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-400' },
+      green:  { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400' },
+      red:    { bg: 'bg-red-100 dark:bg-red-900/30',     text: 'text-red-700 dark:text-red-400' },
+      purple: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-400' },
+      orange: { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-700 dark:text-orange-400' },
+      pink:   { bg: 'bg-pink-100 dark:bg-pink-900/30',   text: 'text-pink-700 dark:text-pink-400' },
+      gray:   { bg: 'bg-gray-100 dark:bg-gray-700',       text: 'text-gray-600 dark:text-gray-400' }
+    };
+
+    // ============================================================
+    // State
+    // ============================================================
+    let allListas = [];
+    let currentListaId = null;
+    let currentListaItens = [];
+    let allHistorico = [];
+    let allNotas = [];
+    let conhecidosEstabelecimentos = new Set();
+
+    // ============================================================
+    // Utility helpers
+    // ============================================================
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function formatCurrency(value) {
+      const n = parseFloat(value) || 0;
+      return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    }
+
+    function formatDateTime(dateStr) {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) + ' ' +
+             d.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function todayISO() {
+      return new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+    }
+
+    function getCategoriaBadge(categoria) {
+      const cfg = CATEGORIAS_LISTA[categoria] || { label: categoria || 'Outro', color: 'gray' };
+      const c = COLOR_CLASSES[cfg.color] || COLOR_CLASSES.gray;
+      return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${c.bg} ${c.text}">${escapeHtml(cfg.label)}</span>`;
+    }
+
+    function getStatusBadge(status) {
+      const map = {
+        aberta:       { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', label: 'Aberta', icon: 'bi-check-circle' },
+        em_andamento: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-400', label: 'Em Andamento', icon: 'bi-hourglass-split' },
+        concluida:    { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-600 dark:text-gray-400', label: 'Concluida', icon: 'bi-archive' }
+      };
+      const s = map[status] || map.aberta;
+      return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${s.bg} ${s.text}"><i class="bi ${s.icon}"></i>${s.label}</span>`;
+    }
+
+    // ============================================================
+    // Tab switching
+    // ============================================================
+    function switchTab(tab) {
+      ['listas', 'historico', 'notas'].forEach(t => {
+        document.getElementById(`pane-${t}`).classList.add('hidden');
+        const btn = document.getElementById(`tab-${t}`);
+        btn.classList.remove('bg-white', 'dark:bg-gray-800', 'text-gray-800', 'dark:text-gray-100', 'shadow-sm');
+        btn.classList.add('text-gray-500', 'dark:text-gray-400', 'hover:text-gray-700', 'dark:hover:text-gray-200');
+      });
+
+      document.getElementById(`pane-${tab}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`tab-${tab}`);
+      activeBtn.classList.add('bg-white', 'dark:bg-gray-800', 'text-gray-800', 'dark:text-gray-100', 'shadow-sm');
+      activeBtn.classList.remove('text-gray-500', 'dark:text-gray-400', 'hover:text-gray-700', 'dark:hover:text-gray-200');
+
+      if (tab === 'historico' && allHistorico.length === 0) loadHistorico();
+      if (tab === 'notas' && allNotas.length === 0) loadNotas();
+    }
+
+    // ============================================================
+    // Tab 1: Listas
+    // ============================================================
+    async function loadListas() {
+      try {
+        const result = await Shared.api('/api/listas-compras');
+        allListas = result.data || [];
+        updateStatsListas();
+        renderListasGrid();
+      } catch (err) {
+        console.error('Erro ao carregar listas:', err);
+        document.getElementById('listas-grid').innerHTML = `
+          <div class="col-span-full text-center py-8 text-red-400">
+            <i class="bi bi-exclamation-circle text-3xl"></i>
+            <p class="mt-2">Erro ao carregar listas: ${escapeHtml(err.message)}</p>
+          </div>`;
+      }
+    }
+
+    function updateStatsListas() {
+      const ativas     = allListas.filter(l => l.status === 'aberta').length;
+      const andamento  = allListas.filter(l => l.status === 'em_andamento').length;
+      const concluidas = allListas.filter(l => l.status === 'concluida').length;
+      const totalItens = allListas.reduce((sum, l) => sum + (l.total_itens || 0), 0);
+
+      document.getElementById('stat-ativas').textContent     = ativas;
+      document.getElementById('stat-andamento').textContent  = andamento;
+      document.getElementById('stat-concluidas').textContent = concluidas;
+      document.getElementById('stat-total-itens').textContent = totalItens;
+    }
+
+    function renderListasGrid() {
+      const grid = document.getElementById('listas-grid');
+      if (allListas.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-12 text-gray-400">
+            <i class="bi bi-cart3 text-4xl mb-3 block"></i>
+            <p class="font-medium">Nenhuma lista de compras</p>
+            <p class="text-sm mt-1">Clique em "Nova Lista" para comecar</p>
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = allListas.map(lista => {
+        const total       = parseFloat(lista.total_gasto || 0);
+        const comprados   = parseInt(lista.itens_comprados || 0);
+        const totalItens  = parseInt(lista.total_itens || 0);
+        const pct         = totalItens > 0 ? Math.round((comprados / totalItens) * 100) : 0;
+        const barColor    = lista.status === 'concluida' ? 'bg-gray-400' : pct === 100 ? 'bg-green-500' : 'bg-blue-500';
+
+        return `
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="openListaDetail(${lista.id})">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center gap-2 flex-wrap">
+                ${getCategoriaBadge(lista.categoria)}
+                ${getStatusBadge(lista.status)}
+              </div>
+              <span class="text-xs text-gray-400">#${lista.id}</span>
+            </div>
+            <h3 class="font-semibold mb-1">${escapeHtml(lista.nome)}</h3>
+            <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3">
+              <span>${comprados} / ${totalItens} itens</span>
+              <span class="font-semibold text-green-600">${formatCurrency(total)}</span>
+            </div>
+            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mb-3">
+              <div class="${barColor} h-1.5 rounded-full transition-all" style="width: ${pct}%"></div>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-400">${formatDate(lista.created_at)}</span>
+              <div class="flex items-center gap-1" onclick="event.stopPropagation()">
+                <button onclick="shareListaWhatsAppById(${lista.id})" class="p-1.5 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 text-green-600 transition-colors" title="Compartilhar no WhatsApp">
+                  <i class="bi bi-whatsapp text-sm"></i>
+                </button>
+                <button onclick="openModalEditLista(${lista.id})" class="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 transition-colors" title="Editar">
+                  <i class="bi bi-pencil text-sm"></i>
+                </button>
+                <button onclick="deleteLista(${lista.id})" class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 transition-colors" title="Excluir">
+                  <i class="bi bi-trash text-sm"></i>
+                </button>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function openListaDetail(id) {
+      currentListaId = id;
+      const lista = allListas.find(l => l.id === id);
+      if (!lista) return;
+
+      // Switch views
+      document.getElementById('view-lista-cards').classList.add('hidden');
+      document.getElementById('view-lista-detail').classList.remove('hidden');
+
+      document.getElementById('detail-nome').textContent = lista.nome;
+      document.getElementById('detail-badges').innerHTML = getCategoriaBadge(lista.categoria) + ' ' + getStatusBadge(lista.status);
+
+      const btnConcluir = document.getElementById('btn-concluir-lista');
+      if (lista.status !== 'concluida') {
+        btnConcluir.classList.remove('hidden');
+      } else {
+        btnConcluir.classList.add('hidden');
+      }
+
+      await loadListaItens(id);
+    }
+
+    function backToListCards() {
+      currentListaId = null;
+      document.getElementById('view-lista-cards').classList.remove('hidden');
+      document.getElementById('view-lista-detail').classList.add('hidden');
+    }
+
+    async function loadListaItens(listaId) {
+      try {
+        const result = await Shared.api(`/api/listas-compras/${listaId}/itens`);
+        currentListaItens = result.data || [];
+        renderListaItens();
+        updateDetailProgress();
+      } catch (err) {
+        console.error('Erro ao carregar itens:', err);
+        showToast('Erro ao carregar itens: ' + err.message, 'error');
+      }
+    }
+
+    function renderListaItens() {
+      const tbody = document.getElementById('detail-itens-tbody');
+      if (currentListaItens.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">Nenhum item na lista. Adicione um item acima.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = currentListaItens.map(item => {
+        const comprado = item.comprado;
+        const rowClass = comprado ? 'opacity-60' : '';
+        return `
+          <tr class="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${rowClass}">
+            <td class="px-4 py-3">
+              <input type="checkbox" ${comprado ? 'checked' : ''} onchange="toggleItemComprado(${item.id}, this.checked)"
+                class="w-4 h-4 rounded border-gray-300 text-green-600 cursor-pointer focus:ring-green-500">
+            </td>
+            <td class="px-4 py-3">
+              <span class="${comprado ? 'line-through text-gray-400' : 'font-medium'}">${escapeHtml(item.nome)}</span>
+            </td>
+            <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">${item.quantidade} ${escapeHtml(item.unidade || 'un')}</td>
+            <td class="px-4 py-3">
+              <span class="inline-flex px-2 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">${escapeHtml(item.categoria || '-')}</span>
+            </td>
+            <td class="px-4 py-3 text-sm ${item.preco_pago ? 'text-green-600 font-medium' : 'text-gray-400'}">
+              ${item.preco_pago ? formatCurrency(item.preco_pago) : '-'}
+            </td>
+            <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">${escapeHtml(item.estabelecimento || '-')}</td>
+            <td class="px-4 py-3">
+              <button onclick="removeItemFromLista(${item.id})" class="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-red-400 hover:text-red-600 transition-colors">
+                <i class="bi bi-trash text-sm"></i>
+              </button>
+            </td>
+          </tr>`;
+      }).join('');
+    }
+
+    function updateDetailProgress() {
+      const total    = currentListaItens.length;
+      const comprados = currentListaItens.filter(i => i.comprado).length;
+      const pct      = total > 0 ? Math.round((comprados / total) * 100) : 0;
+      const totalGasto = currentListaItens.reduce((sum, i) => sum + (parseFloat(i.preco_pago) || 0), 0);
+
+      document.getElementById('detail-progress-text').textContent = `${comprados} / ${total} itens`;
+      document.getElementById('detail-progress-bar').style.width = pct + '%';
+      document.getElementById('detail-total').textContent = formatCurrency(totalGasto);
+    }
+
+    function toggleItemComprado(itemId, checked) {
+      if (checked) {
+        // Open modal to fill price/store
+        const item = currentListaItens.find(i => i.id === itemId);
+        openModalComprado(item);
+        // Revert the checkbox until confirmed
+        const cb = document.querySelector(`input[onchange="toggleItemComprado(${itemId}, this.checked)"]`);
+        if (cb) cb.checked = false;
+      } else {
+        // Unmark as bought
+        markItemNaoComprado(itemId);
+      }
+    }
+
+    function openModalComprado(item) {
+      document.getElementById('modal-comprado-item-id').value = item.id;
+      document.getElementById('modal-comprado-item-nome').textContent = `Item: ${item.nome} (${item.quantidade} ${item.unidade || 'un'})`;
+      document.getElementById('modal-comprado-preco').value = '';
+      document.getElementById('modal-comprado-estabelecimento').value = '';
+      document.getElementById('modal-comprado-data').value = todayISO();
+
+      // Populate datalist
+      const dl = document.getElementById('estabelecimentos-datalist');
+      dl.innerHTML = '';
+      conhecidosEstabelecimentos.forEach(e => {
+        const opt = document.createElement('option');
+        opt.value = e;
+        dl.appendChild(opt);
+      });
+
+      const modal = document.getElementById('modal-comprado');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      setTimeout(() => document.getElementById('modal-comprado-preco').focus(), 100);
+    }
+
+    function closeModalComprado() {
+      const modal = document.getElementById('modal-comprado');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function confirmarCompra() {
+      const itemId         = parseInt(document.getElementById('modal-comprado-item-id').value);
+      const preco          = parseFloat(document.getElementById('modal-comprado-preco').value);
+      const estabelecimento = document.getElementById('modal-comprado-estabelecimento').value.trim();
+      const dataCompra     = document.getElementById('modal-comprado-data').value;
+
+      if (!preco || preco <= 0) {
+        showToast('Informe o preco pago', 'error');
+        return;
+      }
+
+      try {
+        await Shared.api(`/api/listas-compras/itens/${itemId}/comprado`, {
+          method: 'PUT',
+          body: JSON.stringify({ preco_pago: preco, estabelecimento, data_compra: dataCompra })
+        });
+
+        if (estabelecimento) conhecidosEstabelecimentos.add(estabelecimento);
+        closeModalComprado();
+        showToast('Item marcado como comprado!', 'success');
+        await loadListaItens(currentListaId);
+        loadListas(); // refresh stats
+      } catch (err) {
+        showToast('Erro ao marcar item: ' + err.message, 'error');
+      }
+    }
+
+    async function markItemNaoComprado(itemId) {
+      try {
+        await Shared.api(`/api/listas-compras/itens/${itemId}/comprado`, {
+          method: 'PUT',
+          body: JSON.stringify({ comprado: false })
+        });
+        await loadListaItens(currentListaId);
+        loadListas();
+      } catch (err) {
+        showToast('Erro: ' + err.message, 'error');
+      }
+    }
+
+    async function addItemToLista() {
+      const nome     = document.getElementById('new-item-nome').value.trim();
+      const qtd      = parseFloat(document.getElementById('new-item-qtd').value) || 1;
+      const unidade  = document.getElementById('new-item-unidade').value;
+      const categoria = document.getElementById('new-item-categoria').value;
+
+      if (!nome) {
+        showToast('Informe o nome do item', 'error');
+        document.getElementById('new-item-nome').focus();
+        return;
+      }
+
+      try {
+        await Shared.api(`/api/listas-compras/${currentListaId}/itens`, {
+          method: 'POST',
+          body: JSON.stringify({ nome, quantidade: qtd, unidade, categoria })
+        });
+
+        document.getElementById('new-item-nome').value = '';
+        document.getElementById('new-item-qtd').value  = '1';
+        showToast('Item adicionado!', 'success');
+        await loadListaItens(currentListaId);
+        loadListas();
+      } catch (err) {
+        showToast('Erro ao adicionar item: ' + err.message, 'error');
+      }
+    }
+
+    async function removeItemFromLista(itemId) {
+      Shared.showConfirmModal('Remover este item da lista?', async () => {
+        try {
+          await Shared.api(`/api/listas-compras/itens/${itemId}`, { method: 'DELETE' });
+          showToast('Item removido!', 'success');
+          await loadListaItens(currentListaId);
+          loadListas();
+        } catch (err) {
+          showToast('Erro: ' + err.message, 'error');
+        }
+      });
+    }
+
+    async function concluirLista() {
+      Shared.showConfirmModal('Concluir esta lista de compras?', async () => {
+        try {
+          await Shared.api(`/api/listas-compras/${currentListaId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ status: 'concluida' })
+          });
+          showToast('Lista concluida!', 'success');
+          document.getElementById('btn-concluir-lista').classList.add('hidden');
+          await loadListas();
+          const lista = allListas.find(l => l.id === currentListaId);
+          if (lista) document.getElementById('detail-badges').innerHTML = getCategoriaBadge(lista.categoria) + ' ' + getStatusBadge(lista.status);
+        } catch (err) {
+          showToast('Erro: ' + err.message, 'error');
+        }
+      });
+    }
+
+    // Modal: nova/editar lista
+    function openModalNovaLista() {
+      document.getElementById('modal-lista-id').value       = '';
+      document.getElementById('modal-lista-nome').value     = '';
+      document.getElementById('modal-lista-categoria').value = 'mercado';
+      document.getElementById('modal-lista-obs').value      = '';
+      document.getElementById('modal-lista-title').textContent = 'Nova Lista';
+      const modal = document.getElementById('modal-lista');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      setTimeout(() => document.getElementById('modal-lista-nome').focus(), 100);
+    }
+
+    function openModalEditLista(id) {
+      const lista = allListas.find(l => l.id === id);
+      if (!lista) return;
+      document.getElementById('modal-lista-id').value       = lista.id;
+      document.getElementById('modal-lista-nome').value     = lista.nome;
+      document.getElementById('modal-lista-categoria').value = lista.categoria || 'mercado';
+      document.getElementById('modal-lista-obs').value      = lista.observacoes || '';
+      document.getElementById('modal-lista-title').textContent = 'Editar Lista';
+      const modal = document.getElementById('modal-lista');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeModalLista() {
+      const modal = document.getElementById('modal-lista');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function saveLista() {
+      const id        = document.getElementById('modal-lista-id').value;
+      const nome      = document.getElementById('modal-lista-nome').value.trim();
+      const categoria = document.getElementById('modal-lista-categoria').value;
+      const obs       = document.getElementById('modal-lista-obs').value.trim();
+
+      if (!nome) {
+        showToast('Informe o nome da lista', 'error');
+        document.getElementById('modal-lista-nome').focus();
+        return;
+      }
+
+      try {
+        const body = { nome, categoria, observacoes: obs };
+        if (id) {
+          await Shared.api(`/api/listas-compras/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+          showToast('Lista atualizada!', 'success');
+        } else {
+          await Shared.api('/api/listas-compras', { method: 'POST', body: JSON.stringify(body) });
+          showToast('Lista criada!', 'success');
+        }
+        closeModalLista();
+        await loadListas();
+      } catch (err) {
+        showToast('Erro: ' + err.message, 'error');
+      }
+    }
+
+    async function deleteLista(id) {
+      Shared.showConfirmModal('Excluir esta lista de compras? Esta acao nao pode ser desfeita.', async () => {
+        try {
+          await Shared.api(`/api/listas-compras/${id}`, { method: 'DELETE' });
+          showToast('Lista excluida!', 'success');
+          await loadListas();
+        } catch (err) {
+          showToast('Erro: ' + err.message, 'error');
+        }
+      });
+    }
+
+    function shareListaWhatsApp() {
+      if (currentListaId) shareListaWhatsAppById(currentListaId);
+    }
+
+    async function shareListaWhatsAppById(id) {
+      try {
+        await Shared.api(`/api/listas-compras/${id}/share-whatsapp`, { method: 'POST' });
+        showToast('Lista enviada via WhatsApp!', 'success');
+      } catch (err) {
+        showToast('Erro ao enviar: ' + err.message, 'error');
+      }
+    }
+
+    // ============================================================
+    // Tab 2: Historico de Precos
+    // ============================================================
+    async function loadHistorico() {
+      try {
+        const result = await Shared.api('/api/listas-compras/historico-precos');
+        allHistorico = result.data || [];
+        updateStatsHistorico(result);
+        renderHistoricoTable(allHistorico);
+      } catch (err) {
+        console.error('Erro ao carregar historico:', err);
+        document.getElementById('historico-tbody').innerHTML = `
+          <tr><td colspan="7" class="px-4 py-8 text-center text-red-400">
+            <i class="bi bi-exclamation-circle text-2xl block mb-2"></i>Erro ao carregar: ${escapeHtml(err.message)}
+          </td></tr>`;
+      }
+    }
+
+    function updateStatsHistorico(result) {
+      const economia     = result.economia_mes || 0;
+      const monitorados  = allHistorico.length;
+      const estabelecSet = new Set();
+      allHistorico.forEach(item => { if (item.melhor_estabelecimento) estabelecSet.add(item.melhor_estabelecimento); });
+
+      document.getElementById('stat-economia').textContent        = formatCurrency(economia);
+      document.getElementById('stat-itens-monitorados').textContent = monitorados;
+      document.getElementById('stat-estabelecimentos').textContent  = estabelecSet.size;
+    }
+
+    function renderHistoricoTable(data) {
+      const tbody = document.getElementById('historico-tbody');
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">
+          <i class="bi bi-graph-down text-3xl block mb-2"></i>Nenhum historico de precos disponivel</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.map(item => `
+        <tr class="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors" onclick="showHistoricoDetalhe(${JSON.stringify(item.nome).replace(/'/g, "&#39;")})">
+          <td class="px-4 py-3 font-medium">${escapeHtml(item.nome)}</td>
+          <td class="px-4 py-3 text-gray-700 dark:text-gray-300">${formatCurrency(item.ultimo_preco)}</td>
+          <td class="px-4 py-3 text-green-600 font-semibold">${formatCurrency(item.melhor_preco)}</td>
+          <td class="px-4 py-3 text-red-500">${formatCurrency(item.pior_preco)}</td>
+          <td class="px-4 py-3 text-gray-500 dark:text-gray-400">${escapeHtml(item.melhor_estabelecimento || '-')}</td>
+          <td class="px-4 py-3 text-gray-400 text-sm">${formatDate(item.ultima_compra)}</td>
+          <td class="px-4 py-3">
+            <i class="bi bi-chevron-down text-gray-400 text-sm"></i>
+          </td>
+        </tr>`).join('');
+    }
+
+    function filterHistorico() {
+      const q = document.getElementById('historico-search').value.toLowerCase();
+      const filtered = allHistorico.filter(i => i.nome.toLowerCase().includes(q));
+      renderHistoricoTable(filtered);
+    }
+
+    async function showHistoricoDetalhe(nomeItem) {
+      try {
+        const result = await Shared.api(`/api/listas-compras/historico-precos/${encodeURIComponent(nomeItem)}`);
+        const registros = result.data || [];
+
+        document.getElementById('historico-detalhe-nome').textContent = nomeItem;
+        const tbody = document.getElementById('historico-detalhe-tbody');
+
+        if (registros.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-4 text-center text-gray-400">Sem historico detalhado</td></tr>`;
+        } else {
+          tbody.innerHTML = registros.map(r => `
+            <tr class="border-t border-gray-100 dark:border-gray-700">
+              <td class="px-4 py-2 text-sm text-gray-500">${formatDate(r.data_compra || r.created_at)}</td>
+              <td class="px-4 py-2 font-medium ${r.preco_pago == result.melhor_preco ? 'text-green-600' : ''}">${formatCurrency(r.preco_pago)}</td>
+              <td class="px-4 py-2 text-sm text-gray-500">${escapeHtml(r.estabelecimento || '-')}</td>
+              <td class="px-4 py-2 text-sm text-gray-400">${escapeHtml(r.lista_nome || '-')}</td>
+            </tr>`).join('');
+        }
+
+        document.getElementById('historico-detalhe').classList.remove('hidden');
+        document.getElementById('historico-detalhe').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } catch (err) {
+        showToast('Erro ao carregar detalhe: ' + err.message, 'error');
+      }
+    }
+
+    // ============================================================
+    // Tab 3: Notas Fiscais
+    // ============================================================
+    async function loadNotas() {
+      try {
+        const result = await Shared.api('/api/listas-compras/notas-fiscais');
+        allNotas = result.data || [];
+        renderNotasGrid();
+      } catch (err) {
+        console.error('Erro ao carregar notas:', err);
+        document.getElementById('notas-grid').innerHTML = `
+          <div class="col-span-full text-center py-8 text-red-400">
+            <i class="bi bi-exclamation-circle text-3xl"></i>
+            <p class="mt-2">Erro ao carregar notas: ${escapeHtml(err.message)}</p>
+          </div>`;
+      }
+    }
+
+    function renderNotasGrid() {
+      const grid = document.getElementById('notas-grid');
+      if (allNotas.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-12 text-gray-400">
+            <i class="bi bi-receipt-cutoff text-4xl mb-3 block"></i>
+            <p class="font-medium">Nenhuma nota fiscal enviada</p>
+            <p class="text-sm mt-1">Clique em "Enviar Nota Fiscal" para comecar</p>
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = allNotas.map(nota => {
+        const isImg = nota.arquivo_path && /\.(jpg|jpeg|png|webp|gif)$/i.test(nota.arquivo_path);
+        const thumbHtml = isImg
+          ? `<img src="/${nota.arquivo_path}" class="w-full h-32 object-cover" alt="Nota fiscal">`
+          : `<div class="w-full h-32 bg-gray-100 dark:bg-gray-700 flex items-center justify-center"><i class="bi bi-file-earmark-text text-3xl text-gray-400"></i></div>`;
+
+        return `
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onclick="openModalNota(${nota.id})">
+            ${thumbHtml}
+            <div class="p-3">
+              <div class="text-sm font-medium mb-1">${escapeHtml(nota.estabelecimento || 'Estabelecimento desconhecido')}</div>
+              <div class="flex items-center justify-between text-xs text-gray-400">
+                <span>${formatDate(nota.data_nota || nota.created_at)}</span>
+                ${nota.total ? `<span class="font-semibold text-green-600">${formatCurrency(nota.total)}</span>` : ''}
+              </div>
+              ${nota.status_processamento === 'processando' ? `<div class="mt-2 text-xs text-yellow-600 flex items-center gap-1"><i class="bi bi-arrow-repeat animate-spin"></i> Processando...</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function uploadNotaFiscal(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      const progress = document.getElementById('nota-upload-progress');
+      progress.classList.remove('hidden');
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const token = localStorage.getItem('ponto_token') || localStorage.getItem('token');
+        const res = await fetch('/api/listas-compras/notas-fiscais/processar', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || `Erro ${res.status}`);
+        }
+
+        showToast('Nota fiscal enviada com sucesso!', 'success');
+        input.value = '';
+        await loadNotas();
+      } catch (err) {
+        showToast('Erro ao enviar nota: ' + err.message, 'error');
+      } finally {
+        progress.classList.add('hidden');
+      }
+    }
+
+    function openModalNota(id) {
+      const nota = allNotas.find(n => n.id === id);
+      if (!nota) return;
+
+      const isImg = nota.arquivo_path && /\.(jpg|jpeg|png|webp|gif)$/i.test(nota.arquivo_path);
+      const mediaHtml = isImg
+        ? `<img src="/${nota.arquivo_path}" class="w-full rounded-lg mb-4 border" alt="Nota fiscal">`
+        : `<div class="flex items-center gap-3 mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+             <i class="bi bi-file-earmark-text text-2xl text-gray-500"></i>
+             <span class="text-sm">${escapeHtml(nota.arquivo_original || 'nota_fiscal.pdf')}</span>
+           </div>`;
+
+      document.getElementById('modal-nota-title').textContent = `Nota Fiscal #${nota.id}`;
+      document.getElementById('modal-nota-body').innerHTML = `
+        ${mediaHtml}
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between"><span class="text-gray-500">Estabelecimento:</span><span class="font-medium">${escapeHtml(nota.estabelecimento || '-')}</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Data:</span><span>${formatDate(nota.data_nota || nota.created_at)}</span></div>
+          ${nota.total ? `<div class="flex justify-between"><span class="text-gray-500">Total:</span><span class="font-semibold text-green-600">${formatCurrency(nota.total)}</span></div>` : ''}
+          ${nota.dados_extraidos ? `<div class="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-xs text-gray-500"><strong>Dados Extraidos:</strong><br><pre class="mt-1 whitespace-pre-wrap">${escapeHtml(typeof nota.dados_extraidos === 'string' ? nota.dados_extraidos : JSON.stringify(nota.dados_extraidos, null, 2))}</pre></div>` : ''}
+        </div>
+        <div class="flex justify-end gap-2 mt-4">
+          <button onclick="deleteNota(${nota.id})" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors">
+            <i class="bi bi-trash"></i> Excluir
+          </button>
+          <button onclick="closeModalNota()" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Fechar</button>
+        </div>`;
+
+      const modal = document.getElementById('modal-nota');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeModalNota() {
+      const modal = document.getElementById('modal-nota');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function deleteNota(id) {
+      Shared.showConfirmModal('Excluir esta nota fiscal?', async () => {
+        try {
+          await Shared.api(`/api/listas-compras/notas-fiscais/${id}`, { method: 'DELETE' });
+          showToast('Nota excluida!', 'success');
+          closeModalNota();
+          await loadNotas();
+        } catch (err) {
+          showToast('Erro: ' + err.message, 'error');
+        }
+      });
+    }
+
+    // ============================================================
+    // Modal backdrop clicks
+    // ============================================================
+    document.getElementById('modal-lista').addEventListener('click', function(e) {
+      if (e.target === this) closeModalLista();
+    });
+    document.getElementById('modal-comprado').addEventListener('click', function(e) {
+      if (e.target === this) closeModalComprado();
+    });
+    document.getElementById('modal-nota').addEventListener('click', function(e) {
+      if (e.target === this) closeModalNota();
+    });
+
+    // Enter key on new item form
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('new-item-nome').addEventListener('keydown', e => {
+        if (e.key === 'Enter') addItemToLista();
+      });
+      document.getElementById('modal-comprado-preco').addEventListener('keydown', e => {
+        if (e.key === 'Enter') confirmarCompra();
+      });
+    });
+
+    // ============================================================
+    // Init
+    // ============================================================
+    window.onAuthReady = function() {
+      loadListas();
+    };
+  </script>
+</body>
+</html>

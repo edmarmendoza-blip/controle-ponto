@@ -1,4 +1,5 @@
 const express = require('express');
+const { param, validationResult } = require('express-validator');
 const Estoque = require('../models/Estoque');
 const { authenticateToken, requireGestor } = require('../middleware/auth');
 const AuditLog = require('../services/auditLog');
@@ -51,8 +52,10 @@ router.get('/movimentacoes', authenticateToken, (req, res) => {
 });
 
 // GET /api/estoque/:id - item detail
-router.get('/:id', authenticateToken, (req, res) => {
+router.get('/:id', authenticateToken, [param('id').isInt().withMessage('ID inválido')], (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
     const item = Estoque.findItemById(req.params.id);
     if (!item) return res.status(404).json({ success: false, error: 'Item não encontrado' });
     item.movimentacoes = Estoque.getMovimentacoes(item.id);
@@ -78,8 +81,10 @@ router.post('/', authenticateToken, requireGestor, (req, res) => {
 });
 
 // PUT /api/estoque/:id - update item
-router.put('/:id', authenticateToken, requireGestor, (req, res) => {
+router.put('/:id', authenticateToken, requireGestor, [param('id').isInt().withMessage('ID inválido')], (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
     Estoque.updateItem(req.params.id, req.body);
     AuditLog.log(req.user.id, 'update', 'estoque', parseInt(req.params.id), req.body, req.ip);
     res.json({ success: true });
@@ -90,8 +95,10 @@ router.put('/:id', authenticateToken, requireGestor, (req, res) => {
 });
 
 // DELETE /api/estoque/:id - soft delete
-router.delete('/:id', authenticateToken, requireGestor, (req, res) => {
+router.delete('/:id', authenticateToken, requireGestor, [param('id').isInt().withMessage('ID inválido')], (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
     Estoque.deleteItem(req.params.id);
     AuditLog.log(req.user.id, 'delete', 'estoque', parseInt(req.params.id), {}, req.ip);
     res.json({ success: true });
@@ -102,8 +109,10 @@ router.delete('/:id', authenticateToken, requireGestor, (req, res) => {
 });
 
 // POST /api/estoque/:id/movimentacao - register movement
-router.post('/:id/movimentacao', authenticateToken, (req, res) => {
+router.post('/:id/movimentacao', authenticateToken, requireGestor, [param('id').isInt().withMessage('ID inválido')], (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
     const { tipo, quantidade, observacao } = req.body;
     if (!tipo || !quantidade) return res.status(400).json({ success: false, error: 'Tipo e quantidade são obrigatórios' });
     if (!['entrada', 'saida', 'ajuste', 'compra'].includes(tipo)) {

@@ -1,4 +1,4 @@
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const QRCode = require('qrcode');
 const path = require('path');
@@ -7,6 +7,7 @@ const { db } = require('../config/database');
 const Registro = require('../models/Registro');
 const Funcionario = require('../models/Funcionario');
 const EmailService = require('./emailService');
+const elevenlabs = require('./elevenlabs');
 
 // Confirmation response patterns
 const SIM_PATTERNS = [/\bsim\b/i, /\bconfirm(?:o|ar|a)\b/i, /\bss\b/i, /\byes\b/i, /\bisso\b/i];
@@ -24,6 +25,71 @@ class WhatsAppService {
     this._maxRetries = 3;
     this._retryDelay = 30000; // 30s between retries
     this._retrying = false;
+    // Conversation memory per chat (key: chatId, value: array of {role, content, timestamp})
+    this._chatMemory = new Map();
+    this._memoryMaxAge = 10 * 60 * 1000; // 10 minutes
+    this._memoryMaxMessages = 10; // max messages per chat
+    // Anthropic SDK singleton (avoid creating new instance per message)
+    this._anthropicClient = null;
+    // Funcionarios cache (avoid querying DB on every message)
+    this._funcionariosCache = null;
+    this._funcionariosCacheTime = 0;
+    this._funcionariosCacheTTL = 5 * 60 * 1000; // 5 minutes
+  }
+
+  // Get Anthropic client (singleton)
+  _getAnthropicClient() {
+    if (!this._anthropicClient && process.env.ANTHROPIC_API_KEY) {
+      const Anthropic = require('@anthropic-ai/sdk');
+      this._anthropicClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    }
+    return this._anthropicClient;
+  }
+
+  // Get all funcionarios with cache
+  _getFuncionarios() {
+    const now = Date.now();
+    if (!this._funcionariosCache || (now - this._funcionariosCacheTime) > this._funcionariosCacheTTL) {
+      this._funcionariosCache = Funcionario.getAll();
+      this._funcionariosCacheTime = now;
+    }
+    return this._funcionariosCache;
+  }
+
+  // Add message to conversation memory
+  _addToMemory(chatId, role, content) {
+    if (!this._chatMemory.has(chatId)) this._chatMemory.set(chatId, []);
+    const history = this._chatMemory.get(chatId);
+    history.push({ role, content, timestamp: Date.now() });
+    // Trim old messages
+    const cutoff = Date.now() - this._memoryMaxAge;
+    while (history.length > 0 && (history[0].timestamp < cutoff || history.length > this._memoryMaxMessages)) {
+      history.shift();
+    }
+    // Periodic cleanup: remove stale chat entries from the Map
+    this._cleanupMemory();
+  }
+
+  // Remove empty/expired chat entries to prevent Map from growing indefinitely
+  _cleanupMemory() {
+    const now = Date.now();
+    if (this._lastMemoryCleanup && now - this._lastMemoryCleanup < 5 * 60 * 1000) return;
+    this._lastMemoryCleanup = now;
+    const cutoff = now - this._memoryMaxAge;
+    for (const [chatId, history] of this._chatMemory) {
+      // Remove entries where all messages are expired or array is empty
+      if (history.length === 0 || history[history.length - 1].timestamp < cutoff) {
+        this._chatMemory.delete(chatId);
+      }
+    }
+  }
+
+  // Get conversation history for AI context
+  _getMemory(chatId) {
+    if (!this._chatMemory.has(chatId)) return [];
+    const history = this._chatMemory.get(chatId);
+    const cutoff = Date.now() - this._memoryMaxAge;
+    return history.filter(m => m.timestamp >= cutoff);
   }
 
   async initialize() {
@@ -259,13 +325,31 @@ class WhatsAppService {
     const contact = await msg.getContact();
     const senderPhone = contact.number || '';
     const senderName = contact.pushname || contact.name || '';
-    const text = (msg.body || '').trim();
+    let text = (msg.body || '').trim();
 
-    // Download media if present
+    // Track if original message was audio (for audio response mode)
+    const isAudioMessage = msg.type === 'audio' || msg.type === 'ptt';
+    let audioTranscription = null;
+    let audioFilePath = null;
+
+    // Handle audio: transcribe with ElevenLabs before processing
+    if (isAudioMessage && process.env.ELEVENLABS_API_KEY) {
+      const transcription = await this.transcribeAudio(msg);
+      if (transcription) {
+        text = transcription.text;
+        audioTranscription = transcription.text;
+        audioFilePath = transcription.audioPath;
+        console.log(`[WhatsApp Audio] Group audio from ${senderName}: "${text.substring(0, 80)}"`);
+      } else {
+        return; // Transcription failed, error already sent to user
+      }
+    }
+
+    // Download media if present (skip for already-handled audio)
     let mediaType = null;
     let mediaPath = null;
     let visionAnalysis = null;
-    if (msg.hasMedia) {
+    if (msg.hasMedia && !isAudioMessage) {
       try {
         const media = await msg.downloadMedia();
         if (media) {
@@ -288,6 +372,9 @@ class WhatsAppService {
       } catch (err) {
         console.error('[WhatsApp] Error downloading media:', err.message);
       }
+    } else if (isAudioMessage) {
+      mediaType = 'audio';
+      mediaPath = audioFilePath;
     }
 
     // Skip messages with no text and no media
@@ -391,6 +478,30 @@ class WhatsAppService {
             return;
           }
 
+          // Handle sugestao confirmation (convert to task)
+          if (pending.tipo === 'sugestao') {
+            try {
+              const sugData = JSON.parse(pending.message_text);
+              const prioridadeMap = { alta: 'alta', media: 'media', baixa: 'baixa' };
+              const result = db.prepare(`
+                INSERT INTO tarefas (titulo, descricao, prioridade, criado_por, status, fonte, created_at)
+                VALUES (?, ?, ?, NULL, 'pendente', 'whatsapp', datetime('now','localtime'))
+              `).run(sugData.titulo, sugData.descricao || '', prioridadeMap[sugData.prioridade] || 'media');
+              const tarefaId = result.lastInsertRowid;
+              db.prepare(`
+                UPDATE sugestoes_melhoria SET status = 'convertida', convertida_tarefa_id = ?, updated_at = datetime('now','localtime')
+                WHERE id = ?
+              `).run(tarefaId, sugData.sugestao_id);
+              await this.sendGroupMessage(`✅ Tarefa #${tarefaId} criada: ${sugData.titulo}`);
+              console.log(`[WhatsApp] Suggestion #${sugData.sugestao_id} converted to task #${tarefaId}`);
+            } catch (err) {
+              console.error('[WhatsApp] Error converting suggestion to task:', err.message);
+              await this.sendGroupMessage(`❌ Erro ao criar tarefa: ${err.message}`);
+            }
+            this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, storedText, 'other', mediaType, mediaPath);
+            return;
+          }
+
           // Register with the adjusted time
           try {
             if (pending.tipo === 'entrada') {
@@ -476,6 +587,12 @@ class WhatsAppService {
             await this.sendGroupMessage(`📄 Documento ignorado.`);
           } else if (pending.tipo === 'entrega') {
             await this.sendGroupMessage(`📦 Entrega ignorada.`);
+          } else if (pending.tipo === 'sugestao') {
+            try {
+              const sugData = JSON.parse(pending.message_text);
+              db.prepare("UPDATE sugestoes_melhoria SET status = 'ignorada', updated_at = datetime('now','localtime') WHERE id = ?").run(sugData.sugestao_id);
+            } catch (e) { /* ignore */ }
+            await this.sendGroupMessage(`Ok, sugestão arquivada.`);
           } else {
             await this.sendGroupMessage(`❌ Ajuste cancelado para ${funcionario.nome}.`);
           }
@@ -491,23 +608,30 @@ class WhatsAppService {
       // Skip AI for very short non-alphanumeric messages (emoji, stickers)
       const alphanumCount = (text.match(/[a-zA-Z0-9\u00C0-\u024F]/g) || []).length;
       if (alphanumCount >= 2) {
-        const allFuncionarios = Funcionario.getAll();
+        const allFuncionarios = this._getFuncionarios();
         const aiResult = await this.parseMessageWithAI(text, senderName, allFuncionarios);
 
         if (aiResult && aiResult.tipo && aiResult.confianca >= 50) {
-          // If AI detected an explicit time (adjustment) -> ask for confirmation
+          // If AI detected an explicit time (adjustment)
           if (aiResult.horario && funcionario) {
-            const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
-            const tipoLabel = aiResult.tipo === 'entrada' ? 'entrada' : 'saída';
-            this.createPendingConfirmation(funcionario.id, aiResult.tipo, today, aiResult.horario, text);
-            await this.sendGroupMessage(
-              `${funcionario.nome}, deseja registrar ${tipoLabel} às ${aiResult.horario}? Responda *SIM* ou *NÃO*.`
-            );
-            this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, storedText, 'other', mediaType, mediaPath);
-            return;
-          }
-
-          if (aiResult.confianca >= 80) {
+            if (aiResult.confianca >= 90) {
+              // High confidence with explicit time -> auto register with that time
+              intent = aiResult.tipo;
+              // Override current time with the explicit time for registration
+              this._pendingExplicitTime = aiResult.horario;
+              console.log(`[WhatsApp] Auto-registro com horário explícito: ${funcionario.nome} ${aiResult.tipo} às ${aiResult.horario} (confiança ${aiResult.confianca}%)`);
+            } else {
+              // 50-89% confidence with explicit time -> ask for confirmation
+              const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+              const tipoLabel = aiResult.tipo === 'entrada' ? 'entrada' : 'saída';
+              this.createPendingConfirmation(funcionario.id, aiResult.tipo, today, aiResult.horario, text);
+              await this.sendGroupMessage(
+                `${funcionario.nome}, deseja registrar ${tipoLabel} às ${aiResult.horario}? Responda *SIM* ou *NÃO*.`
+              );
+              this.storeMessage(msg.id._serialized, senderPhone, senderName, funcionario?.id || null, storedText, 'other', mediaType, mediaPath);
+              return;
+            }
+          } else if (aiResult.confianca >= 80) {
             intent = aiResult.tipo; // High confidence -> auto register
           } else {
             // 50-79% confidence -> ask for confirmation with current time
@@ -582,7 +706,136 @@ class WhatsAppService {
       return; // Don't process further (prevent task/entrega creation)
     }
 
-    // PRIORITY 2: Ask for confirmation when AI detects a delivery photo
+    // PRIORITY 2: Nota fiscal detection (cupom fiscal with items/prices)
+    if (visionAnalysis?.is_nota_fiscal && mediaPath) {
+      try {
+        const nfData = visionAnalysis.nota_fiscal_data || {};
+        const items = nfData.items || [];
+        const establishment = nfData.establishment_name || 'Desconhecido';
+        const total = nfData.total || 0;
+        const nfDate = nfData.date || new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+
+        // Save items to historico_precos
+        const ListaCompras = require('../models/ListaCompras');
+        let savedCount = 0;
+        for (const item of items) {
+          if (item.name && item.unit_price) {
+            try {
+              ListaCompras.addPreco({
+                nome_item: item.name,
+                nome_normalizado: ListaCompras.normalizeName(item.name),
+                preco: item.unit_price,
+                estabelecimento: establishment,
+                categoria: 'outro',
+                fonte: 'whatsapp',
+                nota_fiscal_path: mediaPath,
+                data_compra: nfDate
+              });
+              savedCount++;
+            } catch (e) { /* ignore duplicate */ }
+          }
+        }
+
+        // Also create a despesa if total > 0
+        if (total > 0 && funcionario) {
+          const Despesa = require('../models/Despesa');
+          const despId = Despesa.create({
+            funcionario_id: funcionario.id,
+            descricao: `Nota fiscal - ${establishment}`,
+            valor: total,
+            categoria: 'mercado',
+            estabelecimento: establishment,
+            data_despesa: nfDate,
+            comprovante_path: mediaPath,
+            dados_extraidos: JSON.stringify(nfData),
+            fonte: 'whatsapp',
+            fonte_chat: 'grupo'
+          });
+          console.log(`[WhatsApp] Despesa #${despId} created from nota fiscal`);
+        }
+
+        // Try to match with active lista de compras
+        let matchedItems = 0;
+        try {
+          const listas = ListaCompras.getAllListas(false);
+          const activeList = listas.find(l => l.status === 'aberta' || l.status === 'em_andamento');
+          if (activeList) {
+            const listItems = ListaCompras.getItens(activeList.id);
+            for (const nfItem of items) {
+              const normalized = ListaCompras.normalizeName(nfItem.name);
+              const match = listItems.find(li => !li.comprado && ListaCompras.normalizeName(li.nome_item).includes(normalized));
+              if (match && nfItem.unit_price) {
+                ListaCompras.markAsBought(match.id, {
+                  preco_pago: nfItem.total_price || nfItem.unit_price,
+                  estabelecimento: establishment,
+                  data_compra: nfDate
+                });
+                matchedItems++;
+              }
+            }
+          }
+        } catch (e) { console.error('[WhatsApp] List matching error:', e.message); }
+
+        let respMsg = `🧾 Nota fiscal processada!\n📍 ${establishment}\n📅 ${nfDate}\n🛒 ${savedCount} itens extraídos`;
+        if (total > 0) respMsg += ` - Total: R$ ${total.toFixed(2)}`;
+        if (matchedItems > 0) respMsg += `\n✅ ${matchedItems} itens marcados na lista de compras`;
+        await this.sendGroupMessage(respMsg);
+        console.log(`[WhatsApp] Nota fiscal processed: ${savedCount} items from ${establishment}`);
+      } catch (err) {
+        console.error('[WhatsApp] Error processing nota fiscal:', err.message);
+      }
+      return;
+    }
+
+    // PRIORITY 3: Comprovante de pagamento (PIX, transfer receipt)
+    if (visionAnalysis?.is_comprovante && mediaPath) {
+      try {
+        const compData = visionAnalysis.comprovante_data || {};
+        const valor = compData.value || 0;
+        const descricao = compData.description || 'Pagamento';
+        const establishment = compData.establishment || compData.recipient || 'Desconhecido';
+        const compDate = compData.date || new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+
+        if (valor > 0 && funcionario) {
+          const Despesa = require('../models/Despesa');
+          const despId = Despesa.create({
+            funcionario_id: funcionario.id,
+            descricao: descricao,
+            valor: valor,
+            categoria: 'outro',
+            estabelecimento: establishment,
+            data_despesa: compDate,
+            comprovante_path: mediaPath,
+            dados_extraidos: JSON.stringify(compData),
+            fonte: 'whatsapp',
+            fonte_chat: 'grupo'
+          });
+
+          await this.sendGroupMessage(
+            `💸 Despesa registrada!\n📋 ${descricao}\n💰 R$ ${valor.toFixed(2)}\n📍 ${establishment}\n👤 ${funcionario.nome}\n\nAguardando aprovação do gestor.`
+          );
+
+          // Notify admin
+          try {
+            const admin = db.prepare("SELECT telefone FROM users WHERE role = 'admin' AND telefone IS NOT NULL LIMIT 1").get();
+            if (admin && admin.telefone) {
+              await this.sendPrivateMessage(admin.telefone,
+                `📩 Nova despesa para aprovar:\n💸 R$ ${valor.toFixed(2)} - ${descricao}\n👤 ${funcionario.nome}\n📍 ${establishment}`
+              );
+            }
+          } catch (e) { console.error('[WhatsApp] Admin notify error:', e.message); }
+
+          console.log(`[WhatsApp] Despesa #${despId} created from comprovante by ${funcionario.nome}`);
+        } else {
+          await this.sendGroupMessage(`💸 Comprovante recebido de ${senderName}, mas não foi possível extrair o valor ou identificar o funcionário.`);
+        }
+      } catch (err) {
+        console.error('[WhatsApp] Error processing comprovante:', err.message);
+      }
+      return;
+    }
+
+    // PRIORITY 4: Ask for confirmation when AI detects a delivery photo
     if (visionAnalysis?.is_entrega && mediaPath) {
       try {
         const entregaData = JSON.stringify({
@@ -632,9 +885,38 @@ class WhatsAppService {
 
     // If clock-in/out/lunch intent detected and employee found, register the punch
     if (intent && funcionario) {
-      await this.registerPunch(funcionario, intent, msg);
+      await this.registerPunch(funcionario, intent, msg, isAudioMessage);
     } else if (intent && !funcionario) {
       console.log(`[WhatsApp] Punch intent "${intent}" but could not create employee: ${senderName} (${senderPhone})`);
+    } else if (!intent && text && !visionAnalysis?.is_document && !visionAnalysis?.is_nota_fiscal && !visionAnalysis?.is_comprovante && !visionAnalysis?.is_entrega) {
+      // CATCH-ALL: No intent matched, no document/delivery — create suggestion
+      const alphanumCount = (text.match(/[a-zA-Z0-9\u00C0-\u024F]/g) || []).length;
+      if (alphanumCount >= 5) { // Only for meaningful messages (>= 5 alphanumeric chars)
+        const fonteTipo = isAudioMessage ? 'audio' : 'texto';
+        const suggestion = await this.createSuggestion(
+          text, senderName, senderPhone, fonteTipo,
+          mediaType === 'image' ? mediaPath : null,
+          isAudioMessage ? audioFilePath : null,
+          audioTranscription, msgDbId
+        );
+        if (suggestion) {
+          const prioridadeEmoji = { alta: '🔴', media: '🟡', baixa: '🟢' };
+          const responseText = `💡 Sugestão #${suggestion.id}:\n📋 ${suggestion.titulo}\n📝 ${suggestion.descricao}\n🏷️ Prioridade: ${prioridadeEmoji[suggestion.prioridade] || '🟡'} ${suggestion.prioridade}\n\nCriar como tarefa? Responda *SIM* ou *NÃO*.`;
+          // Create pending confirmation for suggestion->task conversion
+          this.createPendingConfirmation(
+            funcionario?.id || 0,
+            'sugestao',
+            new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' }),
+            '00:00',
+            JSON.stringify({ sugestao_id: suggestion.id, titulo: suggestion.titulo, descricao: suggestion.descricao, prioridade: suggestion.prioridade })
+          );
+          if (isAudioMessage) {
+            await this.sendAudioResponse(msg, responseText);
+          } else {
+            await this.sendGroupMessage(responseText);
+          }
+        }
+      }
     }
   }
 
@@ -652,8 +934,7 @@ class WhatsAppService {
     if (!process.env.ANTHROPIC_API_KEY) return null;
 
     try {
-      const Anthropic = require('@anthropic-ai/sdk');
-      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+      const client = this._getAnthropicClient();
 
       const now = new Date();
       const currentTime = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
@@ -725,15 +1006,18 @@ Mensagem: "${text}"`;
 
   createPendingConfirmation(funcionarioId, tipo, data, horario, messageText) {
     try {
-      // Cancel any existing pending for this employee
-      db.prepare(
-        "UPDATE pending_confirmations SET status = 'expired', resolved_at = datetime('now','localtime') WHERE funcionario_id = ? AND status = 'pending'"
-      ).run(funcionarioId);
+      const createConfirmation = db.transaction(() => {
+        // Cancel any existing pending for this employee
+        db.prepare(
+          "UPDATE pending_confirmations SET status = 'expired', resolved_at = datetime('now','localtime') WHERE funcionario_id = ? AND status = 'pending'"
+        ).run(funcionarioId);
 
-      const result = db.prepare(
-        'INSERT INTO pending_confirmations (funcionario_id, tipo, data, horario, message_text) VALUES (?, ?, ?, ?, ?)'
-      ).run(funcionarioId, tipo, data, horario, messageText || null);
-      return result.lastInsertRowid;
+        const result = db.prepare(
+          'INSERT INTO pending_confirmations (funcionario_id, tipo, data, horario, message_text) VALUES (?, ?, ?, ?, ?)'
+        ).run(funcionarioId, tipo, data, horario, messageText || null);
+        return result.lastInsertRowid;
+      });
+      return createConfirmation();
     } catch (err) {
       console.error('[WhatsApp] Error creating pending confirmation:', err.message);
       return null;
@@ -753,6 +1037,10 @@ Mensagem: "${text}"`;
   }
 
   expireOldConfirmations() {
+    // Throttle: run at most once every 5 minutes
+    const now = Date.now();
+    if (this._lastExpireRun && now - this._lastExpireRun < 5 * 60 * 1000) return;
+    this._lastExpireRun = now;
     // Expire confirmations older than 30 minutes
     db.prepare(
       "UPDATE pending_confirmations SET status = 'expired', resolved_at = datetime('now','localtime') WHERE status = 'pending' AND created_at < datetime('now', 'localtime', '-30 minutes')"
@@ -765,7 +1053,7 @@ Mensagem: "${text}"`;
   };
 
   matchEmployee(phone, pushName) {
-    const funcionarios = Funcionario.getAll();
+    const funcionarios = this._getFuncionarios();
 
     // 0. Check name aliases first
     if (pushName) {
@@ -879,12 +1167,19 @@ Mensagem: "${text}"`;
     }
   }
 
-  async registerPunch(funcionario, intent, msg) {
+  async registerPunch(funcionario, intent, msg, isAudioMessage = false) {
     const now = new Date();
     // If this is a missed message, use the original timestamp
     const effectiveTime = msg._originalTimestamp || now;
     const today = effectiveTime.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' }); // YYYY-MM-DD
-    const currentTime = effectiveTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }); // HH:MM
+    // Use explicit time from AI if available (e.g., "cheguei às 8:30" with high confidence)
+    let currentTime;
+    if (this._pendingExplicitTime) {
+      currentTime = this._pendingExplicitTime;
+      this._pendingExplicitTime = null;
+    } else {
+      currentTime = effectiveTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }); // HH:MM
+    }
 
     // For missed messages: ask confirmation (unless autoRegister mode)
     if (msg._isMissed && !msg._autoRegister) {
@@ -897,8 +1192,15 @@ Mensagem: "${text}"`;
       return;
     }
 
-    // Helper: only send group message if not in silent mode (batch import)
-    const notify = async (text) => { if (!msg._silent) await this.sendGroupMessage(text); };
+    // Helper: send response (audio if original was audio, text otherwise)
+    const notify = async (text) => {
+      if (msg._silent) return;
+      if (isAudioMessage && process.env.ELEVENLABS_API_KEY) {
+        await this.sendAudioResponse(msg, text);
+      } else {
+        await this.sendGroupMessage(text);
+      }
+    };
 
     try {
       if (intent === 'entrada') {
@@ -1008,27 +1310,30 @@ Mensagem: "${text}"`;
 
   async analyzeImage(base64Data, mimetype, senderName, captionText) {
     try {
-      const Anthropic = require('@anthropic-ai/sdk');
-      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+      const client = this._getAnthropicClient();
 
       const prompt = `Analise esta foto enviada por "${senderName}" no grupo de trabalho da residência "Lar Digital".
 ${captionText ? `Legenda da foto: "${captionText}"` : 'Sem legenda.'}
 
 Descreva brevemente o que aparece na foto em 2-3 frases curtas, em português.
 
-PRIORIDADE DE CLASSIFICAÇÃO (nesta ordem):
+PRIORIDADE DE CLASSIFICAÇÃO (nesta ordem EXATA):
 1. DOCUMENTO: Se é um documento brasileiro (CRLV, RG, CPF, CNH, apólice de seguro, IPVA, comprovante de endereço, contrato, holerite), extraia TODOS os dados legíveis.
-2. ENTREGA: Se é um pacote, encomenda, caixa, correspondência ou similar.
-3. OUTRO: Foto casual, selfie, serviço realizado, etc.
+2. NOTA FISCAL: Se é um cupom fiscal, nota fiscal, recibo de compra COM ITENS e preços (tem CNPJ, lista de produtos, valores). NÃO é documento pessoal.
+3. COMPROVANTE: Se é um comprovante de pagamento PIX, transferência bancária, recibo de pagamento (tem valor, destinatário, banco). NÃO tem lista de itens.
+4. ENTREGA: Se é um pacote, encomenda, caixa, correspondência ou similar.
+5. OUTRO: Foto casual, selfie, serviço realizado, etc.
 
 Ao final, inclua um bloco JSON:
 \`\`\`json
-{"is_document": true/false, "document_type": "crlv|rg|cpf|cnh|apolice|ipva|comprovante|contrato|holerite|outro", "extracted_data": {"placa": "", "marca": "", "modelo": "", "ano": "", "renavam": "", "chassi": "", "cor": "", "combustivel": "", "cpf": "", "nome": "", "rg": "", "data_nascimento": ""}, "suggested_entity": "veiculo|funcionario", "is_entrega": true/false, "destinatario": "nome ou null", "remetente": "empresa ou null", "transportadora": "empresa ou null"}
+{"classification": "DOCUMENTO|NOTA_FISCAL|COMPROVANTE|ENTREGA|OUTRO", "is_document": true/false, "document_type": "crlv|rg|cpf|cnh|apolice|ipva|comprovante_endereco|contrato|holerite|outro", "extracted_data": {"placa": "", "marca": "", "modelo": "", "ano": "", "renavam": "", "chassi": "", "cor": "", "combustivel": "", "cpf": "", "nome": "", "rg": "", "data_nascimento": ""}, "suggested_entity": "veiculo|funcionario", "is_nota_fiscal": true/false, "nota_fiscal_data": {"items": [{"name": "", "quantity": 1, "unit_price": 0, "total_price": 0}], "establishment_name": "", "cnpj": "", "total": 0, "date": ""}, "is_comprovante": true/false, "comprovante_data": {"value": 0, "date": "", "recipient": "", "description": "", "establishment": ""}, "is_entrega": true/false, "destinatario": "nome ou null", "remetente": "empresa ou null", "transportadora": "empresa ou null"}
 \`\`\`
+- classification: tipo principal (DOCUMENTO, NOTA_FISCAL, COMPROVANTE, ENTREGA, OUTRO)
 - is_document: true se for documento oficial (CRLV, RG, CPF, CNH, apólice, IPVA, etc.)
-- Se is_document=true: preencha document_type, extracted_data com dados legíveis, suggested_entity
-- is_entrega: true SOMENTE se NÃO for documento e for pacote/encomenda
-- Um item NÃO pode ser document=true E entrega=true ao mesmo tempo`;
+- is_nota_fiscal: true se for cupom/nota fiscal COM lista de itens e preços
+- is_comprovante: true se for comprovante PIX/transferência/pagamento SEM lista de itens
+- is_entrega: true SOMENTE se for pacote/encomenda
+- MUTUAMENTE EXCLUSIVOS: apenas UM dos is_ pode ser true por vez`;
 
       const response = await client.messages.create({
         model: 'claude-haiku-4-5-20251001',
@@ -1046,9 +1351,9 @@ Ao final, inclua um bloco JSON:
       console.log(`[WhatsApp] Vision analysis: ${analysis.substring(0, 100)}...`);
 
       // Parse structured JSON from end of response
-      let structured = { is_document: false, is_entrega: false, destinatario: null, remetente: null, transportadora: null };
+      let structured = { is_document: false, is_nota_fiscal: false, is_comprovante: false, is_entrega: false, destinatario: null, remetente: null, transportadora: null };
       try {
-        const jsonMatch = analysis.match(/```json\s*([\s\S]*?)```/) || analysis.match(/(\{[\s\S]*?"is_(?:document|entrega)"[\s\S]*?\})/);
+        const jsonMatch = analysis.match(/```json\s*([\s\S]*?)```/) || analysis.match(/(\{[\s\S]*?"(?:is_|classification)[\s\S]*?\})/);
         if (jsonMatch) {
           structured = JSON.parse(jsonMatch[1].trim());
         }
@@ -1060,13 +1365,25 @@ Ao final, inclua um bloco JSON:
       let descricao = analysis.replace(/```json[\s\S]*?```/, '').trim();
       if (!descricao) descricao = analysis;
 
+      // Ensure mutual exclusivity based on classification
+      const cls = (structured.classification || '').toUpperCase();
+      const isDoc = cls === 'DOCUMENTO' || !!structured.is_document;
+      const isNota = cls === 'NOTA_FISCAL' || (!!structured.is_nota_fiscal && !isDoc);
+      const isComprovante = cls === 'COMPROVANTE' || (!!structured.is_comprovante && !isDoc && !isNota);
+      const isEntrega = cls === 'ENTREGA' || (!!structured.is_entrega && !isDoc && !isNota && !isComprovante);
+
       return {
         descricao,
-        is_document: !!structured.is_document,
+        classification: cls || 'OUTRO',
+        is_document: isDoc,
         document_type: structured.document_type || null,
         extracted_data: structured.extracted_data || null,
         suggested_entity: structured.suggested_entity || null,
-        is_entrega: !!structured.is_entrega && !structured.is_document,
+        is_nota_fiscal: isNota,
+        nota_fiscal_data: structured.nota_fiscal_data || null,
+        is_comprovante: isComprovante,
+        comprovante_data: structured.comprovante_data || null,
+        is_entrega: isEntrega,
         destinatario: structured.destinatario || null,
         remetente: structured.remetente || null,
         transportadora: structured.transportadora || null
@@ -1145,8 +1462,7 @@ Ao final, inclua um bloco JSON:
             if (!pendingDoc) {
               // Analyze document with Vision AI
               if (process.env.ANTHROPIC_API_KEY) {
-                const Anthropic = require('@anthropic-ai/sdk');
-                const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+                const client = this._getAnthropicClient();
                 const resp = await client.messages.create({
                   model: 'claude-haiku-4-5-20251001',
                   max_tokens: 1500,
@@ -1233,7 +1549,42 @@ Retorne APENAS JSON válido.` }
                   console.log(`[WhatsApp] Document detected in private: ${docResult.type} from ${senderName}`);
                   return;
                 } else {
-                  console.log(`[WhatsApp] Image from ${senderName} is NOT a document, proceeding to task creation`);
+                  // Not a document — analyze image and respond conversationally
+                  console.log(`[WhatsApp] Image from ${senderName} is NOT a document, analyzing for suggestions`);
+                  try {
+                    const allFuncs = this._getFuncionarios();
+                    const funcNames = allFuncs.map(f => f.nome).join(', ');
+                    const today = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+                    const respSuggestion = await client.messages.create({
+                      model: 'claude-haiku-4-5-20251001',
+                      max_tokens: 500,
+                      messages: [{ role: 'user', content: [
+                        { type: 'image', source: { type: 'base64', media_type: media.mimetype, data: media.data } },
+                        { type: 'text', text: `Você é a assistente virtual do Lar Digital, chamada Lia. Seja sempre simpática, acolhedora e prestativa. Analise esta foto enviada pelo administrador da casa.
+Funcionários disponíveis: ${funcNames}. Hoje: ${today}.
+
+Descreva o que vê na foto de forma natural e amigável. Depois, sugira o que pode fazer para ajudar:
+- Criar tarefa para um funcionário
+- Registrar item no estoque
+- Agendar manutenção/revisão
+- Qualquer outra ação relevante
+
+SEMPRE termine perguntando se precisa de algo mais ou se quer que você tome alguma ação. Seja calorosa mas concisa.
+Use emojis com moderação. Responda em português brasileiro.
+Exemplo de tom: "Que lindo! Vi que é... Posso criar uma tarefa para... ou registrar no estoque. O que prefere? Precisa de mais alguma coisa? 😊"` }
+                      ]}]
+                    });
+                    const suggestion = respSuggestion.content[0]?.text || '';
+                    if (suggestion) {
+                      this._addToMemory(msg.from, 'user', '[Foto enviada: ' + (suggestion.substring(0, 100)) + '...]');
+                      this._addToMemory(msg.from, 'assistant', suggestion);
+                      await msg.reply(suggestion);
+                      console.log(`[WhatsApp] Image suggestion sent to ${senderName}`);
+                    }
+                  } catch (sugErr) {
+                    console.error('[WhatsApp] Image suggestion error:', sugErr.message);
+                  }
+                  return;
                 }
               }
             }
@@ -1340,39 +1691,59 @@ Retorne APENAS JSON válido.` }
         return;
       }
 
-      // Never create tasks from confirmation words
+      // Never create tasks from confirmation words or casual responses
       if (text && /^(sim|não|nao|s|n)$/i.test(text.trim())) return;
+      if (text && /^(n[aã]o\s+obrigad[oa]|obrigad[oa]|valeu|ok|beleza|blz|tá|ta|entendi|show|perfeito|legal|boa|top|tranquilo|certo|pode ser|tá bom|ta bom|ótimo|otimo|massa)[\s!.]*$/i.test(text.trim())) {
+        this._addToMemory(msg.from, 'user', text);
+        return;
+      }
 
       // Process task creation via AI
       if (!text && !msg.hasMedia) return;
 
+      // Save user message to conversation memory
+      if (text) {
+        this._addToMemory(msg.from, 'user', text);
+      }
+
       let taskContent = text;
       let fonte = 'whatsapp_texto';
 
-      // Handle audio: ask user to send as text (no transcription available yet)
+      // Handle audio: transcribe with ElevenLabs STT
       const isAudioMsg = msg.type === 'audio' || msg.type === 'ptt';
       if (isAudioMsg || (msg.hasMedia && !text)) {
-        const media = await msg.downloadMedia().catch(() => null);
+        const media = _downloadedMedia || await msg.downloadMedia().catch(() => null);
         if ((isAudioMsg) || (media && media.mimetype.startsWith('audio'))) {
-          // Save audio to dedicated folder
-          if (media) {
-            const audioDir = path.join(__dirname, '..', '..', 'public', 'uploads', 'whatsapp', 'audios');
-            fs.mkdirSync(audioDir, { recursive: true });
-            const ext = media.mimetype.split('/')[1]?.split(';')[0] || 'ogg';
-            const audioFilename = `${Date.now()}-${senderPhone}.${ext}`;
-            fs.writeFileSync(path.join(audioDir, audioFilename), Buffer.from(media.data, 'base64'));
-            console.log(`[WhatsApp] Audio saved: /uploads/whatsapp/audios/${audioFilename}`);
+          // Try ElevenLabs transcription
+          if (process.env.ELEVENLABS_API_KEY) {
+            const transcription = await this.transcribeAudio(msg);
+            if (transcription && transcription.text) {
+              taskContent = transcription.text;
+              fonte = 'whatsapp_audio';
+              this._addToMemory(msg.from, 'user', '[Áudio: ' + taskContent + ']');
+              console.log(`[WhatsApp] Private audio transcribed from ${senderName}: "${taskContent.substring(0, 80)}"`);
+            } else {
+              return; // Transcription failed, error already sent
+            }
+          } else {
+            // Fallback: ask for text
+            if (media) {
+              const audioDir = path.join(__dirname, '..', '..', 'public', 'uploads', 'whatsapp', 'audios');
+              fs.mkdirSync(audioDir, { recursive: true });
+              const ext = media.mimetype.split('/')[1]?.split(';')[0] || 'ogg';
+              const audioFilename = `${Date.now()}-${senderPhone}.${ext}`;
+              fs.writeFileSync(path.join(audioDir, audioFilename), Buffer.from(media.data, 'base64'));
+              console.log(`[WhatsApp] Audio saved: /uploads/whatsapp/audios/${audioFilename}`);
+            }
+            await msg.reply('🎤 Recebi seu áudio! Infelizmente ainda não consigo transcrever áudios automaticamente.\n\nPor favor, envie como *texto* para eu criar a tarefa.');
+            return;
           }
-          await msg.reply('🎤 Recebi seu áudio! Infelizmente ainda não consigo transcrever áudios automaticamente.\n\nPor favor, envie como *texto* para eu criar a tarefa. Exemplo:\n_"Pedir para Roberto limpar a piscina amanhã"_');
-          console.log(`[WhatsApp] Audio from ${senderName} - replied asking for text`);
-          return;
         } else if (media && media.mimetype.startsWith('image') && !_imageAnalyzedForDocs) {
           fonte = 'whatsapp_foto';
           // Use Vision API if available (only if doc detection was NOT already attempted)
           if (process.env.ANTHROPIC_API_KEY && media) {
             try {
-              const Anthropic = require('@anthropic-ai/sdk');
-              const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+              const client = this._getAnthropicClient();
               const resp = await client.messages.create({
                 model: 'claude-haiku-4-5-20251001',
                 max_tokens: 300,
@@ -1382,11 +1753,14 @@ Retorne APENAS JSON válido.` }
                 ]}]
               });
               taskContent = resp.content[0]?.text || 'Tarefa com foto';
+              this._addToMemory(msg.from, 'user', '[Foto: ' + taskContent + ']');
             } catch (e) {
               taskContent = 'Tarefa com foto anexada';
+              this._addToMemory(msg.from, 'user', '[Foto enviada]');
             }
           } else {
             taskContent = 'Tarefa com foto anexada';
+            this._addToMemory(msg.from, 'user', '[Foto enviada]');
           }
         }
       }
@@ -1399,21 +1773,43 @@ Retorne APENAS JSON válido.` }
         return;
       }
 
-      const allFuncionarios = Funcionario.getAll();
+      const allFuncionarios = this._getFuncionarios();
       const funcNames = allFuncionarios.map(f => f.nome).join(', ');
 
-      const Anthropic = require('@anthropic-ai/sdk');
-      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+      // Build conversation context from memory
+      const memory = this._getMemory(msg.from);
+      let conversationContext = '';
+      if (memory.length > 0) {
+        const memoryLines = memory.slice(0, -1).map(m => {
+          const label = m.role === 'user' ? 'Usuário' : 'Assistente';
+          return `${label}: ${m.content}`;
+        });
+        if (memoryLines.length > 0) {
+          conversationContext = `\n\nContexto da conversa recente:\n${memoryLines.join('\n')}\n`;
+        }
+      }
+
+      const client = this._getAnthropicClient();
       const resp = await client.messages.create({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 300,
-        messages: [{ role: 'user', content: `Interprete esta mensagem como uma tarefa doméstica. Funcionários disponíveis: ${funcNames}.
-Hoje é ${new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' })}.
+        max_tokens: 400,
+        messages: [{ role: 'user', content: `Você é a Lia, assistente virtual do Lar Digital. Seja sempre simpática, acolhedora e prestativa. Analise a mensagem e decida se é um pedido de tarefa ou uma conversa.
 
-Mensagem: "${taskContent}"
+Funcionários disponíveis: ${funcNames}.
+Hoje é ${new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' })}.${conversationContext}
+
+Mensagem atual: "${taskContent}"
+
+REGRAS:
+- Se é pedido claro de tarefa/ação (ex: "limpa a piscina", "pede pro Roberto consertar", "cria tarefa"), retorne JSON de tarefa.
+- Se NÃO é pedido de ação (conversa casual, agradecimento, recusa, pergunta, comentário), retorne JSON de conversa.
+- Na resposta conversacional, seja calorosa e sempre pergunte se precisa de mais alguma coisa. Use emojis com moderação.
+- Use o contexto da conversa (se houver) para dar continuidade natural ao assunto.
+- Exemplo de tom: "Entendido! 😊 Se precisar de qualquer coisa, é só me chamar!"
 
 Retorne APENAS JSON válido (sem markdown):
-{"titulo": "título curto da tarefa", "descricao": "descrição ou null", "funcionario": "nome do funcionário ou null", "prazo": "YYYY-MM-DD ou null", "prioridade": "alta|media|baixa"}` }]
+Para tarefa: {"is_task": true, "titulo": "título curto", "descricao": "descrição detalhada ou null", "funcionario": "nome ou null", "prazo": "YYYY-MM-DD ou null", "prioridade": "alta|media|baixa"}
+Para conversa: {"is_task": false, "reply": "resposta acolhedora com pergunta se precisa de algo mais"}` }]
       });
 
       let parsed;
@@ -1422,7 +1818,22 @@ Retorne APENAS JSON válido (sem markdown):
         const cleaned = raw.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
         parsed = JSON.parse(cleaned);
       } catch (e) {
-        await msg.reply('Não consegui interpretar a tarefa. Tente ser mais específico.');
+        await msg.reply('Não consegui interpretar a mensagem. Tente ser mais específico.');
+        return;
+      }
+
+      // Handle conversational (non-task) responses
+      if (parsed.is_task === false) {
+        const reply = parsed.reply || '';
+        if (reply) {
+          if (isAudioMsg && process.env.ELEVENLABS_API_KEY) {
+            await this.sendAudioResponse(msg, reply);
+          } else {
+            await msg.reply(reply);
+          }
+          this._addToMemory(msg.from, 'assistant', reply);
+          console.log(`[WhatsApp] Conversational reply to ${senderName}: ${reply.substring(0, 50)}...`);
+        }
         return;
       }
 
@@ -1449,7 +1860,11 @@ Retorne APENAS JSON válido (sem markdown):
 
       const funcLabel = assignedFunc ? assignedFunc.nome : 'Ninguém atribuído';
       const prazoLabel = parsed.prazo ? parsed.prazo.split('-').reverse().join('/') : 'Sem prazo';
-      await msg.reply(`✅ Tarefa #${tarefaId} criada:\n📋 ${parsed.titulo}\n👤 ${funcLabel}\n📅 ${prazoLabel}`);
+      const taskReply = `✅ Tarefa #${tarefaId} criada:\n📋 ${parsed.titulo}\n👤 ${funcLabel}\n📅 ${prazoLabel}`;
+      await msg.reply(taskReply);
+
+      // Save bot response to memory
+      this._addToMemory(msg.from, 'assistant', taskReply);
 
       // Notify assigned employee
       if (assignedFunc && assignedFunc.telefone) {
@@ -1544,6 +1959,170 @@ Retorne APENAS JSON válido (sem markdown):
     } catch (err) {
       console.error('[WhatsApp] Error sending message:', err.message);
       return false;
+    }
+  }
+
+  /**
+   * Send response as audio + text when original message was audio
+   * Falls back to text-only if TTS fails
+   */
+  async sendAudioResponse(msg, text) {
+    try {
+      const audioPath = await elevenlabs.synthesize(text);
+      const media = MessageMedia.fromFilePath(audioPath);
+      await msg.reply(media);
+      // Also send text for accessibility
+      await msg.reply(text);
+      // Cleanup temp file
+      try { fs.unlinkSync(audioPath); } catch (e) { /* ignore */ }
+      // Audit log
+      try {
+        db.prepare(`INSERT INTO audit_log (user_id, acao, detalhes, ip, created_at)
+          VALUES (NULL, 'whatsapp_audio', ?, NULL, datetime('now','localtime'))`)
+          .run(JSON.stringify({ direction: 'sent', text: text.substring(0, 200) }));
+      } catch (e) { /* ignore */ }
+    } catch (err) {
+      console.error('[WhatsApp Audio TTS] Error:', err.message);
+      // Fallback to text only
+      await msg.reply(text);
+    }
+  }
+
+  /**
+   * Send a private (DM) message to a phone number
+   * @param {string} phone - Phone number (just digits, with or without 55 prefix)
+   * @param {string} text - Message text
+   * @returns {boolean}
+   */
+  async sendPrivateMessage(phone, text) {
+    if (!this.ready || !this.client) {
+      console.log('[WhatsApp] Cannot send private message - not connected.');
+      return false;
+    }
+    try {
+      const cleanPhone = phone.replace(/\D/g, '');
+      const chatId = cleanPhone.startsWith('55') ? cleanPhone + '@c.us' : '55' + cleanPhone + '@c.us';
+      await this.client.sendMessage(chatId, text);
+      return true;
+    } catch (err) {
+      console.error('[WhatsApp] Error sending private message:', err.message);
+      return false;
+    }
+  }
+
+  /**
+   * Transcribe audio message using ElevenLabs STT
+   * @returns {Promise<{text: string, duration: number|null, audioPath: string}|null>}
+   */
+  async transcribeAudio(msg) {
+    try {
+      const media = await msg.downloadMedia().catch(() => null);
+      if (!media) return null;
+
+      // Save audio to temp file
+      const ext = media.mimetype.split('/')[1]?.split(';')[0] || 'ogg';
+      const audioDir = path.join(__dirname, '..', '..', 'public', 'uploads', 'whatsapp', 'audios');
+      fs.mkdirSync(audioDir, { recursive: true });
+      const audioFilename = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const audioPath = path.join(audioDir, audioFilename);
+      fs.writeFileSync(audioPath, Buffer.from(media.data, 'base64'));
+      console.log(`[WhatsApp Audio] Saved: /uploads/whatsapp/audios/${audioFilename}`);
+
+      // Check duration (approximate: audio file size / bitrate)
+      const stats = fs.statSync(audioPath);
+      const approxDurationSec = stats.size / 4000; // rough estimate for ogg/opus
+      if (approxDurationSec > 300) { // 5 min
+        await msg.reply('Áudio muito longo (máx 5 minutos). Pode resumir em uma mensagem mais curta?');
+        return null;
+      }
+
+      // Transcribe
+      const result = await elevenlabs.transcribe(audioPath);
+      console.log(`[WhatsApp Audio] Transcription: "${(result.text || '').substring(0, 100)}"`);
+
+      // Audit log
+      try {
+        const contact = await msg.getContact().catch(() => null);
+        db.prepare(`INSERT INTO audit_log (user_id, acao, detalhes, ip, created_at)
+          VALUES (NULL, 'whatsapp_audio', ?, NULL, datetime('now','localtime'))`)
+          .run(JSON.stringify({
+            direction: 'received',
+            transcription: (result.text || '').substring(0, 200),
+            duration_seconds: result.duration || Math.round(approxDurationSec),
+            funcionario_nome: contact?.pushname || contact?.name || 'desconhecido'
+          }));
+      } catch (e) { /* ignore */ }
+
+      return { text: result.text || '', duration: result.duration, audioPath: `/uploads/whatsapp/audios/${audioFilename}` };
+    } catch (err) {
+      console.error('[WhatsApp Audio STT] Error:', err.message);
+      if (err.message.includes('Rate limit')) {
+        await msg.reply('Limite de transcrições por hora atingido. Por favor, envie como texto.');
+      } else {
+        await msg.reply('Não consegui entender o áudio. Pode enviar por texto?');
+      }
+      return null;
+    }
+  }
+
+  /**
+   * Create a suggestion from an unmatched WhatsApp message
+   */
+  async createSuggestion(text, senderName, senderPhone, fonteTipo, imagemPath, audioPath, transcricao, msgDbId) {
+    if (!process.env.ANTHROPIC_API_KEY) return null;
+
+    try {
+      const client = this._getAnthropicClient();
+      const response = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 300,
+        messages: [{ role: 'user', content: `A household employee sent this via WhatsApp. It doesn't match time clock, delivery, or document patterns. Analyze and suggest what action might be needed. Respond in JSON only (no markdown):
+{"title": "short title in Portuguese", "description": "what needs to be done in Portuguese", "priority": "alta|media|baixa", "category": "manutencao|compras|limpeza|seguranca|financeiro|outro"}
+
+Message from ${senderName}: "${text}"` }]
+      });
+
+      const responseText = (response.content[0]?.text || '').trim();
+      let parsed;
+      try {
+        let jsonStr = responseText;
+        const codeBlockMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (codeBlockMatch) jsonStr = codeBlockMatch[1].trim();
+        parsed = JSON.parse(jsonStr);
+      } catch (e) {
+        parsed = { title: text.substring(0, 80), description: text, priority: 'media', category: 'outro' };
+      }
+
+      const result = db.prepare(`
+        INSERT INTO sugestoes_melhoria (titulo, descricao, prioridade, categoria, fonte, fonte_tipo, imagem_path, audio_path, transcricao, whatsapp_mensagem_id, remetente_nome, remetente_telefone)
+        VALUES (?, ?, ?, ?, 'whatsapp', ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        parsed.title || text.substring(0, 80),
+        parsed.description || text,
+        ['alta', 'media', 'baixa'].includes(parsed.priority) ? parsed.priority : 'media',
+        parsed.category || 'outro',
+        fonteTipo,
+        imagemPath || null,
+        audioPath || null,
+        transcricao || null,
+        msgDbId || null,
+        senderName || null,
+        senderPhone || null
+      );
+
+      const sugestaoId = result.lastInsertRowid;
+      console.log(`[WhatsApp] Suggestion #${sugestaoId} created: "${parsed.title}"`);
+
+      return {
+        id: sugestaoId,
+        titulo: parsed.title,
+        descricao: parsed.description,
+        prioridade: parsed.priority,
+        categoria: parsed.category
+      };
+    } catch (err) {
+      console.error('[WhatsApp Suggestion] Error:', err.message);
+      return null;
     }
   }
 }

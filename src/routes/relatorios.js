@@ -151,13 +151,14 @@ router.get('/folha', authenticateToken, [
       funcionarios = Funcionario.getAll();
     }
 
+    // Pre-load all cargos in a single query to avoid N+1
+    const allCargos = {};
+    db.prepare('SELECT * FROM cargos').all().forEach(c => { allCargos[c.id] = c; });
+
     const resultados = [];
     for (const func of funcionarios) {
       // Get cargo config for conditional calculations
-      let cargo = null;
-      if (func.cargo_id) {
-        cargo = db.prepare('SELECT * FROM cargos WHERE id = ?').get(func.cargo_id);
-      }
+      const cargo = func.cargo_id ? (allCargos[func.cargo_id] || null) : null;
 
       // Skip cargos that should not appear in reports
       const cargoNome = (func.cargo_nome || func.cargo || '').toLowerCase();

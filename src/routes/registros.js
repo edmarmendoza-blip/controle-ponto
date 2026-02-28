@@ -3,7 +3,7 @@ const { body, param, query, validationResult } = require('express-validator');
 const Registro = require('../models/Registro');
 const Funcionario = require('../models/Funcionario');
 const HorasExtrasService = require('../services/horasExtras');
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { authenticateToken, requireAdmin, requireGestor } = require('../middleware/auth');
 const AuditLog = require('../services/auditLog');
 
 const router = express.Router();
@@ -34,10 +34,10 @@ router.get('/dashboard', authenticateToken, (req, res) => {
 
 // GET /api/registros
 router.get('/', authenticateToken, [
-  query('data').optional().isDate().withMessage('Data inválida'),
-  query('dataInicio').optional().isDate().withMessage('Data início inválida'),
-  query('dataFim').optional().isDate().withMessage('Data fim inválida'),
-  query('funcionarioId').optional().isInt().withMessage('ID funcionário inválido')
+  query('data').optional({ values: 'falsy' }).isDate().withMessage('Data inválida'),
+  query('dataInicio').optional({ values: 'falsy' }).isDate().withMessage('Data início inválida'),
+  query('dataFim').optional({ values: 'falsy' }).isDate().withMessage('Data fim inválida'),
+  query('funcionarioId').optional({ values: 'falsy' }).isInt().withMessage('ID funcionário inválido')
 ], (req, res) => {
   try {
     const errors = validationResult(req);
@@ -85,7 +85,7 @@ router.get('/:id', authenticateToken, [
 });
 
 // POST /api/registros
-router.post('/', authenticateToken, [
+router.post('/', authenticateToken, requireGestor, [
   body('funcionario_id').isInt().withMessage('Funcionário obrigatório'),
   body('data').isDate().withMessage('Data inválida'),
   body('entrada').optional({ nullable: true }).matches(/^([01]\d|2[0-3]):[0-5]\d$/).withMessage('Hora de entrada inválida (HH:MM)'),
@@ -112,8 +112,8 @@ router.post('/', authenticateToken, [
     AuditLog.log(req.user.id, 'create', 'registro', id, { funcionario_id: req.body.funcionario_id, data: req.body.data }, req.ip);
     res.status(201).json({ id, message: 'Registro criado com sucesso' });
   } catch (err) {
-    if (err.message.includes('Já existe')) {
-      return res.status(409).json({ error: err.message });
+    if (err.message && err.message.includes('Já existe')) {
+      return res.status(409).json({ error: 'Já existe um registro similar para este funcionário neste horário' });
     }
     console.error('Create registro error:', err);
     res.status(500).json({ error: 'Erro interno do servidor' });
@@ -121,7 +121,7 @@ router.post('/', authenticateToken, [
 });
 
 // PUT /api/registros/:id
-router.put('/:id', authenticateToken, [
+router.put('/:id', authenticateToken, requireGestor, [
   param('id').isInt().withMessage('ID inválido'),
   body('entrada').optional({ nullable: true }).matches(/^([01]\d|2[0-3]):[0-5]\d$/).withMessage('Hora de entrada inválida (HH:MM)'),
   body('saida').optional({ nullable: true }).matches(/^([01]\d|2[0-3]):[0-5]\d$/).withMessage('Hora de saída inválida (HH:MM)'),

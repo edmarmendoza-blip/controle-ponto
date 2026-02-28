@@ -13,7 +13,8 @@ function initializeDatabase() {
     // Migrate audit_log table if old schema (has 'tabela' column instead of 'entity_type')
     const auditInfo = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='audit_log'").get();
     if (auditInfo && auditInfo.sql.includes('tabela')) {
-      db.exec('DROP TABLE audit_log');
+      db.exec('ALTER TABLE audit_log RENAME TO audit_log_old');
+      console.log('[Migration] Renamed audit_log → audit_log_old for schema migration');
     }
 
     // Add 'gestor' role support - recreate users table constraint
@@ -36,43 +37,44 @@ function initializeDatabase() {
       `);
     }
 
+    // Cache PRAGMA table_info results to avoid repeated calls (was 17 calls, now 1 per table)
+    const _funcCols = db.prepare("PRAGMA table_info(funcionarios)").all().map(c => c.name);
+    const _regCols = db.prepare("PRAGMA table_info(registros)").all().map(c => c.name);
+    const _wmCols = db.prepare("PRAGMA table_info(whatsapp_mensagens)").all().map(c => c.name);
+    const _ferCols = db.prepare("PRAGMA table_info(feriados)").all().map(c => c.name);
+    const _userCols = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
+
     // Add geolocation columns to registros
-    const regCols = db.prepare("PRAGMA table_info(registros)").all().map(c => c.name);
-    if (regCols.length > 0 && !regCols.includes('latitude')) {
+    if (_regCols.length > 0 && !_regCols.includes('latitude')) {
       db.exec('ALTER TABLE registros ADD COLUMN latitude REAL DEFAULT NULL');
       db.exec('ALTER TABLE registros ADD COLUMN longitude REAL DEFAULT NULL');
     }
 
     // Add horario_entrada to funcionarios
-    const funcCols = db.prepare("PRAGMA table_info(funcionarios)").all().map(c => c.name);
-    if (funcCols.length > 0 && !funcCols.includes('horario_entrada')) {
+    if (_funcCols.length > 0 && !_funcCols.includes('horario_entrada')) {
       db.exec("ALTER TABLE funcionarios ADD COLUMN horario_entrada TEXT DEFAULT '08:00'");
     }
 
     // Add media columns to whatsapp_mensagens
-    const wmCols = db.prepare("PRAGMA table_info(whatsapp_mensagens)").all().map(c => c.name);
-    if (wmCols.length > 0 && !wmCols.includes('media_type')) {
+    if (_wmCols.length > 0 && !_wmCols.includes('media_type')) {
       db.exec('ALTER TABLE whatsapp_mensagens ADD COLUMN media_type TEXT DEFAULT NULL');
       db.exec('ALTER TABLE whatsapp_mensagens ADD COLUMN media_path TEXT DEFAULT NULL');
     }
 
     // Add payroll columns to funcionarios
-    const funcColsPayroll = db.prepare("PRAGMA table_info(funcionarios)").all().map(c => c.name);
-    if (funcColsPayroll.length > 0 && !funcColsPayroll.includes('valor_hora_extra')) {
+    if (_funcCols.length > 0 && !_funcCols.includes('valor_hora_extra')) {
       db.exec('ALTER TABLE funcionarios ADD COLUMN valor_hora_extra REAL DEFAULT 43.25');
       db.exec('ALTER TABLE funcionarios ADD COLUMN valor_dia_especial REAL DEFAULT 320.00');
       db.exec('ALTER TABLE funcionarios ADD COLUMN jornada_diaria REAL DEFAULT 9.8');
     }
 
     // Add recorrente column to feriados
-    const ferCols = db.prepare("PRAGMA table_info(feriados)").all().map(c => c.name);
-    if (ferCols.length > 0 && !ferCols.includes('recorrente')) {
+    if (_ferCols.length > 0 && !_ferCols.includes('recorrente')) {
       db.exec('ALTER TABLE feriados ADD COLUMN recorrente INTEGER DEFAULT 1');
     }
 
     // Add manual column to feriados (manual edits prevail over sync)
-    const ferColsManual = db.prepare("PRAGMA table_info(feriados)").all().map(c => c.name);
-    if (ferColsManual.length > 0 && !ferColsManual.includes('manual')) {
+    if (_ferCols.length > 0 && !_ferCols.includes('manual')) {
       db.exec('ALTER TABLE feriados ADD COLUMN manual INTEGER DEFAULT 0');
     }
 
@@ -82,8 +84,7 @@ function initializeDatabase() {
     } catch (e) { /* ignore */ }
 
     // Part 2: Add complete employee registration fields
-    const funcColsFull = db.prepare("PRAGMA table_info(funcionarios)").all().map(c => c.name);
-    if (funcColsFull.length > 0 && !funcColsFull.includes('classificacao')) {
+    if (_funcCols.length > 0 && !_funcCols.includes('classificacao')) {
       const newCols = [
         // Classificação e Status
         "classificacao TEXT DEFAULT 'operacional'",
@@ -122,8 +123,7 @@ function initializeDatabase() {
       }
     }
     // Add personal/document/address fields to funcionarios
-    const funcColsPersonal = db.prepare("PRAGMA table_info(funcionarios)").all().map(c => c.name);
-    if (funcColsPersonal.length > 0 && !funcColsPersonal.includes('cpf')) {
+    if (_funcCols.length > 0 && !_funcCols.includes('cpf')) {
       const personalCols = [
         "cpf TEXT",
         "rg TEXT",
@@ -148,37 +148,32 @@ function initializeDatabase() {
       }
     }
     // Add combustivel columns if missing
-    const funcColsComb = db.prepare("PRAGMA table_info(funcionarios)").all().map(c => c.name);
-    if (!funcColsComb.includes('recebe_ajuda_combustivel')) {
+    if (!_funcCols.includes('recebe_ajuda_combustivel')) {
       try { db.exec("ALTER TABLE funcionarios ADD COLUMN recebe_ajuda_combustivel INTEGER DEFAULT 0"); } catch(e) {}
       try { db.exec("ALTER TABLE funcionarios ADD COLUMN valor_ajuda_combustivel REAL DEFAULT 0"); } catch(e) {}
     }
 
     // Add 2FA columns to users
-    const userCols2FA = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
-    if (userCols2FA.length > 0 && !userCols2FA.includes('totp_secret')) {
+    if (_userCols.length > 0 && !_userCols.includes('totp_secret')) {
       try { db.exec('ALTER TABLE users ADD COLUMN totp_secret TEXT DEFAULT NULL'); } catch (e) { /* ignore */ }
       try { db.exec('ALTER TABLE users ADD COLUMN totp_enabled INTEGER DEFAULT 0'); } catch (e) { /* ignore */ }
     }
 
     // Add password reset columns to users
-    const userColsReset = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
-    if (userColsReset.length > 0 && !userColsReset.includes('reset_code')) {
+    if (_userCols.length > 0 && !_userCols.includes('reset_code')) {
       try { db.exec('ALTER TABLE users ADD COLUMN reset_code TEXT DEFAULT NULL'); } catch (e) { /* ignore */ }
       try { db.exec('ALTER TABLE users ADD COLUMN reset_code_expires DATETIME DEFAULT NULL'); } catch (e) { /* ignore */ }
     }
 
     // Add task permission columns to users
-    const userColsTask = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
-    if (userColsTask.length > 0 && !userColsTask.includes('pode_criar_tarefas')) {
+    if (_userCols.length > 0 && !_userCols.includes('pode_criar_tarefas')) {
       try { db.exec('ALTER TABLE users ADD COLUMN pode_criar_tarefas INTEGER DEFAULT 0'); } catch (e) { /* ignore */ }
       try { db.exec('ALTER TABLE users ADD COLUMN pode_criar_tarefas_whatsapp INTEGER DEFAULT 0'); } catch (e) { /* ignore */ }
       try { db.exec('ALTER TABLE users ADD COLUMN telefone TEXT DEFAULT NULL'); } catch (e) { /* ignore */ }
     }
 
     // Add cargo_id to funcionarios
-    const funcColsCargo = db.prepare("PRAGMA table_info(funcionarios)").all().map(c => c.name);
-    if (funcColsCargo.length > 0 && !funcColsCargo.includes('cargo_id')) {
+    if (_funcCols.length > 0 && !_funcCols.includes('cargo_id')) {
       try { db.exec('ALTER TABLE funcionarios ADD COLUMN cargo_id INTEGER REFERENCES cargos(id)'); } catch (e) { /* ignore */ }
     }
 
@@ -186,32 +181,35 @@ function initializeDatabase() {
     try {
       const cargoCheck = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='cargos'").get();
       if (cargoCheck && cargoCheck.sql && cargoCheck.sql.includes("CHECK(tipo_dias_dormida IN ('semana', 'mes', 'escala'))")) {
-        db.exec(`
-          CREATE TABLE cargos_new (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT NOT NULL UNIQUE,
-            precisa_bater_ponto INTEGER DEFAULT 1,
-            permite_hora_extra INTEGER DEFAULT 1,
-            permite_dia_extra INTEGER DEFAULT 0,
-            valor_hora_extra REAL DEFAULT 0,
-            valor_dia_extra REAL DEFAULT 0,
-            recebe_vale_transporte INTEGER DEFAULT 1,
-            valor_vale_transporte REAL DEFAULT 0,
-            recebe_vale_refeicao INTEGER DEFAULT 0,
-            valor_vale_refeicao REAL DEFAULT 0,
-            recebe_ajuda_combustivel INTEGER DEFAULT 0,
-            valor_ajuda_combustivel REAL DEFAULT 0,
-            dorme_no_local INTEGER DEFAULT 0,
-            dias_dormida INTEGER DEFAULT 0,
-            tipo_dias_dormida TEXT DEFAULT 'uteis',
-            ativo INTEGER DEFAULT 1,
-            created_at DATETIME DEFAULT (datetime('now','localtime')),
-            updated_at DATETIME DEFAULT (datetime('now','localtime'))
-          );
-          INSERT INTO cargos_new SELECT * FROM cargos;
-          DROP TABLE cargos;
-          ALTER TABLE cargos_new RENAME TO cargos;
-        `);
+        const migrateCargos = db.transaction(() => {
+          db.exec(`
+            CREATE TABLE cargos_new (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              nome TEXT NOT NULL UNIQUE,
+              precisa_bater_ponto INTEGER DEFAULT 1,
+              permite_hora_extra INTEGER DEFAULT 1,
+              permite_dia_extra INTEGER DEFAULT 0,
+              valor_hora_extra REAL DEFAULT 0,
+              valor_dia_extra REAL DEFAULT 0,
+              recebe_vale_transporte INTEGER DEFAULT 1,
+              valor_vale_transporte REAL DEFAULT 0,
+              recebe_vale_refeicao INTEGER DEFAULT 0,
+              valor_vale_refeicao REAL DEFAULT 0,
+              recebe_ajuda_combustivel INTEGER DEFAULT 0,
+              valor_ajuda_combustivel REAL DEFAULT 0,
+              dorme_no_local INTEGER DEFAULT 0,
+              dias_dormida INTEGER DEFAULT 0,
+              tipo_dias_dormida TEXT DEFAULT 'uteis',
+              ativo INTEGER DEFAULT 1,
+              created_at DATETIME DEFAULT (datetime('now','localtime')),
+              updated_at DATETIME DEFAULT (datetime('now','localtime'))
+            );
+            INSERT INTO cargos_new SELECT * FROM cargos;
+            DROP TABLE cargos;
+            ALTER TABLE cargos_new RENAME TO cargos;
+          `);
+        });
+        migrateCargos();
         console.log('[Migration] Removed CHECK constraint on cargos.tipo_dias_dormida');
       }
     } catch (e) { console.error('[Migration] cargos CHECK removal:', e.message); }
@@ -453,6 +451,26 @@ function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS idx_audit_log_entity ON audit_log(entity_type, entity_id);
     CREATE INDEX IF NOT EXISTS idx_audit_log_user ON audit_log(user_id);
     CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at);
+  `);
+
+  // Migrate data from old audit_log if it was renamed
+  try {
+    const oldAuditExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='audit_log_old'").get();
+    if (oldAuditExists) {
+      // Get old columns to build a safe migration query
+      const oldCols = db.prepare("PRAGMA table_info(audit_log_old)").all().map(c => c.name);
+      const hasAction = oldCols.includes('action');
+      const hasAcao = oldCols.includes('acao');
+      const actionCol = hasAction ? 'action' : hasAcao ? 'acao' : "'unknown'";
+      const entityCol = oldCols.includes('entity_type') ? 'entity_type' : oldCols.includes('tabela') ? 'tabela' : "'unknown'";
+      db.exec(`INSERT OR IGNORE INTO audit_log (user_id, action, entity_type, entity_id, details, ip_address, created_at)
+        SELECT user_id, COALESCE(${actionCol}, 'unknown'), COALESCE(${entityCol}, 'unknown'), entity_id, details, ip_address, created_at FROM audit_log_old`);
+      db.exec('DROP TABLE audit_log_old');
+      console.log('[Migration] Migrated audit_log_old data → audit_log');
+    }
+  } catch (e) { console.error('[Migration] audit_log data migration:', e.message); }
+
+  db.exec(`
     CREATE TABLE IF NOT EXISTS insights_ia (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       data DATE NOT NULL UNIQUE,
@@ -627,7 +645,7 @@ function initializeDatabase() {
         CREATE TABLE pending_confirmations_mig2 (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           funcionario_id INTEGER,
-          tipo TEXT NOT NULL CHECK(tipo IN ('entrada', 'saida', 'saida_almoco', 'retorno_almoco', 'entrega', 'documento_upload')),
+          tipo TEXT NOT NULL CHECK(tipo IN ('entrada', 'saida', 'saida_almoco', 'retorno_almoco', 'entrega', 'documento_upload', 'despesa_aprovacao', 'nota_fiscal')),
           data TEXT,
           horario TEXT,
           message_text TEXT,
@@ -646,6 +664,34 @@ function initializeDatabase() {
     }
   } catch (e) { console.error('[Migration] pending_confirmations upgrade:', e.message); }
 
+  // Add despesa_aprovacao and nota_fiscal to pending_confirmations tipo CHECK if needed
+  try {
+    const pcInfo3 = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='pending_confirmations'").get();
+    if (pcInfo3 && pcInfo3.sql && !pcInfo3.sql.includes("'despesa_aprovacao'")) {
+      try { db.exec('DROP TABLE IF EXISTS pending_confirmations_mig3'); } catch(e) {}
+      db.exec(`
+        CREATE TABLE pending_confirmations_mig3 (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          funcionario_id INTEGER,
+          tipo TEXT NOT NULL CHECK(tipo IN ('entrada', 'saida', 'saida_almoco', 'retorno_almoco', 'entrega', 'documento_upload', 'despesa_aprovacao', 'nota_fiscal')),
+          data TEXT,
+          horario TEXT,
+          message_text TEXT,
+          status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'confirmed', 'denied', 'expired', 'rejected')),
+          created_at DATETIME DEFAULT (datetime('now','localtime')),
+          resolved_at DATETIME,
+          whatsapp_chat_id TEXT,
+          FOREIGN KEY (funcionario_id) REFERENCES funcionarios(id)
+        );
+        INSERT INTO pending_confirmations_mig3 (id, funcionario_id, tipo, data, horario, message_text, status, created_at, resolved_at, whatsapp_chat_id) SELECT id, funcionario_id, tipo, data, horario, message_text, status, created_at, resolved_at, whatsapp_chat_id FROM pending_confirmations;
+        DROP TABLE pending_confirmations;
+        ALTER TABLE pending_confirmations_mig3 RENAME TO pending_confirmations;
+        CREATE INDEX IF NOT EXISTS idx_pending_confirmations_status ON pending_confirmations(funcionario_id, status);
+      `);
+      console.log('[Migration] pending_confirmations: added despesa_aprovacao, nota_fiscal to tipo CHECK');
+    }
+  } catch (e) { console.error('[Migration] pending_confirmations despesa/nota_fiscal:', e.message); }
+
   // Migration: cargos.aparece_relatorios
   try {
     const cols = db.prepare("PRAGMA table_info(cargos)").all();
@@ -659,12 +705,9 @@ function initializeDatabase() {
 
   // Migration: funcionarios.bigdatacorp_data
   try {
-    const cols = db.prepare("PRAGMA table_info(funcionarios)").all();
-    if (!cols.find(c => c.name === 'bigdatacorp_data')) {
-      db.exec("ALTER TABLE funcionarios ADD COLUMN bigdatacorp_data TEXT");
-      console.log('[Migration] funcionarios: added bigdatacorp_data');
-    }
-  } catch (e) { console.error('[Migration] funcionarios bigdatacorp_data:', e.message); }
+    db.exec("ALTER TABLE funcionarios ADD COLUMN bigdatacorp_data TEXT");
+    console.log('[Migration] funcionarios: added bigdatacorp_data');
+  } catch (e) { /* column already exists */ }
 
   // Migration: estoque tables
   try {
@@ -692,6 +735,128 @@ function initializeDatabase() {
       );
     `);
   } catch (e) { console.error('[Migration] estoque tables:', e.message); }
+
+  // Refresh tokens table
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS refresh_tokens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        token TEXT UNIQUE NOT NULL,
+        expires_at DATETIME NOT NULL,
+        created_at DATETIME DEFAULT (datetime('now','localtime'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token);
+      CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
+    `);
+  } catch (e) { console.error('[Migration] refresh_tokens table:', e.message); }
+
+  // Sugestoes de melhoria table
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS sugestoes_melhoria (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        titulo TEXT NOT NULL,
+        descricao TEXT,
+        prioridade TEXT DEFAULT 'media' CHECK(prioridade IN ('alta','media','baixa')),
+        categoria TEXT DEFAULT 'outro',
+        fonte TEXT DEFAULT 'whatsapp',
+        fonte_tipo TEXT DEFAULT 'texto',
+        imagem_path TEXT,
+        audio_path TEXT,
+        transcricao TEXT,
+        whatsapp_mensagem_id INTEGER,
+        remetente_nome TEXT,
+        remetente_telefone TEXT,
+        status TEXT DEFAULT 'pendente' CHECK(status IN ('pendente','em_analise','convertida','ignorada')),
+        convertida_tarefa_id INTEGER REFERENCES tarefas(id),
+        created_at TEXT DEFAULT (datetime('now','localtime')),
+        updated_at TEXT DEFAULT (datetime('now','localtime'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_sugestoes_status ON sugestoes_melhoria(status);
+    `);
+  } catch (e) { console.error('[Migration] sugestoes_melhoria table:', e.message); }
+
+  // Lista de Compras + Historico de Precos tables
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS listas_compras (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        categoria TEXT DEFAULT 'mercado',
+        status TEXT DEFAULT 'aberta',
+        criado_por TEXT,
+        observacoes TEXT,
+        created_at TEXT DEFAULT (datetime('now','localtime')),
+        updated_at TEXT DEFAULT (datetime('now','localtime'))
+      );
+      CREATE TABLE IF NOT EXISTS lista_compras_itens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        lista_id INTEGER REFERENCES listas_compras(id) ON DELETE CASCADE,
+        nome_item TEXT NOT NULL,
+        quantidade REAL DEFAULT 1,
+        unidade TEXT DEFAULT 'un',
+        categoria_item TEXT DEFAULT 'outro',
+        comprado INTEGER DEFAULT 0,
+        preco_pago REAL,
+        estabelecimento TEXT,
+        data_compra TEXT,
+        nota_fiscal_path TEXT,
+        observacao TEXT,
+        created_at TEXT DEFAULT (datetime('now','localtime'))
+      );
+      CREATE TABLE IF NOT EXISTS historico_precos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome_item TEXT NOT NULL,
+        nome_normalizado TEXT NOT NULL,
+        preco REAL NOT NULL,
+        estabelecimento TEXT,
+        categoria TEXT,
+        fonte TEXT DEFAULT 'manual',
+        nota_fiscal_path TEXT,
+        data_compra TEXT DEFAULT (datetime('now','localtime')),
+        created_at TEXT DEFAULT (datetime('now','localtime'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_listas_compras_status ON listas_compras(status);
+      CREATE INDEX IF NOT EXISTS idx_lista_itens_lista ON lista_compras_itens(lista_id);
+      CREATE INDEX IF NOT EXISTS idx_historico_precos_nome ON historico_precos(nome_normalizado);
+      CREATE INDEX IF NOT EXISTS idx_historico_precos_data ON historico_precos(data_compra);
+    `);
+  } catch (e) { console.error('[Migration] listas_compras tables:', e.message); }
+
+  // Despesas table
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS despesas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        funcionario_id INTEGER REFERENCES funcionarios(id),
+        descricao TEXT NOT NULL,
+        valor REAL NOT NULL,
+        categoria TEXT DEFAULT 'outro',
+        estabelecimento TEXT,
+        data_despesa TEXT,
+        comprovante_path TEXT,
+        dados_extraidos TEXT,
+        fonte TEXT DEFAULT 'whatsapp',
+        fonte_chat TEXT,
+        status TEXT DEFAULT 'pendente',
+        aprovado_por TEXT,
+        data_aprovacao TEXT,
+        data_reembolso TEXT,
+        observacao TEXT,
+        created_at TEXT DEFAULT (datetime('now','localtime')),
+        updated_at TEXT DEFAULT (datetime('now','localtime'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_despesas_status ON despesas(status);
+      CREATE INDEX IF NOT EXISTS idx_despesas_funcionario ON despesas(funcionario_id);
+      CREATE INDEX IF NOT EXISTS idx_despesas_data ON despesas(data_despesa);
+    `);
+  } catch (e) { console.error('[Migration] despesas table:', e.message); }
+
+  // Cleanup expired refresh tokens
+  try {
+    db.prepare("DELETE FROM refresh_tokens WHERE expires_at < datetime('now','localtime')").run();
+  } catch (e) { /* table may not exist yet */ }
 
   // Default configs
   const configs = [

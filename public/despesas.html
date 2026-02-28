@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>Despesas e Reembolsos - Lar Digital</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+    }
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen bg-blue-800 text-white transition-transform -translate-x-full md:translate-x-0">
+    <div class="p-4 border-b border-blue-700">
+      <a href="/dashboard.html" class="flex items-center gap-2">
+        <i class="bi bi-clock-history text-2xl"></i>
+        <span class="text-xl font-bold">Lar Digital</span>
+      </a>
+      <p class="text-blue-200 text-xs mt-1">Gestão da Casa</p>
+    </div>
+    <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-180px)]">
+      <a href="/dashboard.html" data-page="dashboard" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+      </a>
+      <a href="/funcionarios.html" data-page="funcionarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-people"></i><span>Funcionários</span>
+      </a>
+      <a href="/cargos.html" data-page="cargos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-briefcase"></i><span>Cargos</span>
+      </a>
+      <a href="/registros.html" data-page="registros" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-clock"></i><span>Registros</span>
+      </a>
+      <a href="/relatorios.html" data-page="relatorios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-file-earmark-text"></i><span>Relatórios</span>
+      </a>
+      <a href="/relatorios-graficos.html" data-page="relatorios-graficos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-bar-chart-line"></i><span>Gráficos</span>
+      </a>
+      <a href="/presenca.html" data-page="presenca" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-calendar-check"></i><span>Presença</span>
+      </a>
+      <a href="/entregas.html" data-page="entregas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-box-seam"></i><span>Entregas</span>
+      </a>
+      <a href="/compras.html" data-page="compras" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-cart3"></i><span>Compras</span>
+      </a>
+      <a href="/despesas.html" data-page="despesas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-receipt-cutoff"></i><span>Despesas</span>
+      </a>
+      <a href="/holerites.html" data-page="holerites" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-receipt"></i><span>Holerites</span>
+      </a>
+      <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-calendar-heart"></i><span>Férias</span>
+      </a>
+      <a href="/sugestoes.html" data-page="sugestoes" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-lightbulb"></i><span>Sugestões</span>
+      </a>
+      <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-shield-lock"></i><span>Usuários</span>
+      </a>
+      <a href="/feriados.html" data-page="feriados" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-calendar-event"></i><span>Feriados</span>
+      </a>
+      <a href="/insights.html" data-page="insights" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-stars"></i><span>Insights IA</span>
+      </a>
+      <a href="/whatsapp.html" data-page="whatsapp" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
+      </a>
+      <a href="/audit-log.html" data-page="audit-log" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-journal-text"></i><span>Audit Log</span>
+      </a>
+      <hr class="border-blue-700 my-2">
+      <a href="/ajuda.html" data-page="ajuda" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-chat-left-dots"></i><span>Ajuda</span>
+      </a>
+      <a href="/perfil.html" data-page="perfil" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-person-gear"></i><span>Perfil</span>
+      </a>
+    </nav>
+    <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-blue-700 bg-blue-800">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2 text-sm">
+          <i class="bi bi-person-circle"></i>
+          <div>
+            <div id="user-name" class="font-medium">-</div>
+            <div id="user-role" class="text-blue-300 text-xs">-</div>
+          </div>
+        </div>
+        <button id="theme-toggle" class="p-1.5 rounded-lg hover:bg-blue-700 transition-colors">
+          <i id="theme-icon" class="bi bi-moon-fill"></i>
+        </button>
+      </div>
+      <button id="logout-btn" class="w-full py-1.5 text-sm bg-blue-700 hover:bg-blue-600 rounded-lg transition-colors">Sair</button>
+    </div>
+  </aside>
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+
+  <!-- Main Content -->
+  <main class="md:ml-64 min-h-screen">
+    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+      <div class="flex items-center gap-3">
+        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300">
+          <i class="bi bi-list text-xl"></i>
+        </button>
+        <h1 class="text-xl font-semibold">Despesas e Reembolsos</h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
+        <button onclick="openNewDespesaModal()" class="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+          <i class="bi bi-plus-lg"></i><span class="hidden sm:inline">Nova Despesa</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="p-4 md:p-6" id="page-content">
+
+      <!-- Stats Row -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div class="flex items-center gap-2 mb-1">
+            <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+            <span class="text-xs text-gray-500 dark:text-gray-400">Pendentes</span>
+          </div>
+          <div class="text-xl font-bold text-yellow-600" id="stat-pendentes">R$ 0,00</div>
+          <div class="text-xs text-gray-400 mt-0.5" id="stat-pendentes-count">0 despesas</div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div class="flex items-center gap-2 mb-1">
+            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+            <span class="text-xs text-gray-500 dark:text-gray-400">Aprovadas</span>
+          </div>
+          <div class="text-xl font-bold text-green-600" id="stat-aprovadas">R$ 0,00</div>
+          <div class="text-xs text-gray-400 mt-0.5" id="stat-aprovadas-count">0 despesas</div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div class="flex items-center gap-2 mb-1">
+            <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+            <span class="text-xs text-gray-500 dark:text-gray-400">Reembolsadas</span>
+          </div>
+          <div class="text-xl font-bold text-blue-600" id="stat-reembolsadas">R$ 0,00</div>
+          <div class="text-xs text-gray-400 mt-0.5" id="stat-reembolsadas-count">0 despesas</div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div class="flex items-center gap-2 mb-1">
+            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+            <span class="text-xs text-gray-500 dark:text-gray-400">Rejeitadas</span>
+          </div>
+          <div class="text-xl font-bold text-red-600" id="stat-rejeitadas">R$ 0,00</div>
+          <div class="text-xs text-gray-400 mt-0.5" id="stat-rejeitadas-count">0 despesas</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 w-fit">
+        <button onclick="switchTab('todas')" id="tab-todas" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 shadow-sm">
+          Todas
+        </button>
+        <button onclick="switchTab('pendentes')" id="tab-pendentes" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+          Pendentes
+        </button>
+        <button onclick="switchTab('relatorio')" id="tab-relatorio" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+          Relatório
+        </button>
+      </div>
+
+      <!-- Tab: Todas -->
+      <div id="tab-content-todas">
+        <!-- Filters -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-4">
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div>
+              <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Status</label>
+              <select id="filter-status" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+                <option value="">Todos</option>
+                <option value="pendente">Pendente</option>
+                <option value="aprovado">Aprovado</option>
+                <option value="reembolsado">Reembolsado</option>
+                <option value="rejeitado">Rejeitado</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Funcionário</label>
+              <select id="filter-funcionario" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Categoria</label>
+              <select id="filter-categoria" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+                <option value="">Todas</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Data Início</label>
+              <input type="date" id="filter-data-inicio" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            </div>
+            <div>
+              <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Data Fim</label>
+              <input type="date" id="filter-data-fim" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            </div>
+            <div class="flex items-end">
+              <button onclick="loadDespesas()" class="w-full px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                <i class="bi bi-funnel"></i><span>Buscar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Count & Table -->
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-sm text-gray-500 dark:text-gray-400"><span id="despesas-count">0</span> despesas encontradas</span>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-4">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50 dark:bg-gray-700/50">
+                <tr>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Data</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Funcionário</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Descrição</th>
+                  <th class="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Valor</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Categoria</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Status</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Comprovante</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="despesas-tbody">
+                <tr>
+                  <td colspan="8" class="text-center py-10 text-gray-400">
+                    <i class="bi bi-arrow-repeat animate-spin text-2xl"></i>
+                    <p class="mt-2">Carregando...</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex items-center justify-between" id="pagination-todas">
+          <span class="text-sm text-gray-500" id="pagination-info"></span>
+          <div class="flex gap-2" id="pagination-btns"></div>
+        </div>
+      </div>
+
+      <!-- Tab: Pendentes -->
+      <div id="tab-content-pendentes" class="hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-4">
+          <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+            <span class="font-medium text-sm">Despesas Aguardando Aprovação</span>
+            <span class="text-xs text-gray-400" id="pendentes-count-label">0 itens</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50 dark:bg-gray-700/50">
+                <tr>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Data</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Funcionário</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Descrição</th>
+                  <th class="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Valor</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Categoria</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Comprovante</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Ações Rápidas</th>
+                </tr>
+              </thead>
+              <tbody id="pendentes-tbody">
+                <tr>
+                  <td colspan="7" class="text-center py-10 text-gray-400">
+                    <i class="bi bi-arrow-repeat animate-spin text-2xl"></i>
+                    <p class="mt-2">Carregando...</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Relatório -->
+      <div id="tab-content-relatorio" class="hidden">
+        <!-- Period Selector -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-6">
+          <div class="flex flex-col sm:flex-row items-start sm:items-end gap-3">
+            <div>
+              <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Mês</label>
+              <select id="relatorio-mes" class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none">
+                <option value="1">Janeiro</option>
+                <option value="2">Fevereiro</option>
+                <option value="3">Março</option>
+                <option value="4">Abril</option>
+                <option value="5">Maio</option>
+                <option value="6">Junho</option>
+                <option value="7">Julho</option>
+                <option value="8">Agosto</option>
+                <option value="9">Setembro</option>
+                <option value="10">Outubro</option>
+                <option value="11">Novembro</option>
+                <option value="12">Dezembro</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Ano</label>
+              <select id="relatorio-ano" class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none">
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026" selected>2026</option>
+              </select>
+            </div>
+            <button onclick="loadRelatorio()" class="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+              <i class="bi bi-search"></i><span>Gerar Relatório</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Relatorio Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Pendente</div>
+            <div class="text-xl font-bold text-yellow-600" id="rel-stat-pendente">R$ 0,00</div>
+          </div>
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Aprovado</div>
+            <div class="text-xl font-bold text-green-600" id="rel-stat-aprovado">R$ 0,00</div>
+          </div>
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Reembolsado</div>
+            <div class="text-xl font-bold text-blue-600" id="rel-stat-reembolsado">R$ 0,00</div>
+          </div>
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Rejeitado</div>
+            <div class="text-xl font-bold text-red-600" id="rel-stat-rejeitado">R$ 0,00</div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+            <h3 class="font-semibold text-sm mb-4">Por Categoria</h3>
+            <div class="relative h-52">
+              <canvas id="chart-categoria"></canvas>
+            </div>
+          </div>
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+            <h3 class="font-semibold text-sm mb-4">Por Funcionário</h3>
+            <div class="relative h-52">
+              <canvas id="chart-funcionario"></canvas>
+            </div>
+          </div>
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+            <h3 class="font-semibold text-sm mb-4">Evolução Mensal (6 meses)</h3>
+            <div class="relative h-52">
+              <canvas id="chart-evolucao"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary Table -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+            <h3 class="font-semibold text-sm">Resumo por Funcionário</h3>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50 dark:bg-gray-700/50">
+                <tr>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Funcionário</th>
+                  <th class="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Total (R$)</th>
+                  <th class="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Qtd. Despesas</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Último Status</th>
+                </tr>
+              </thead>
+              <tbody id="relatorio-tbody">
+                <tr>
+                  <td colspan="4" class="text-center py-8 text-gray-400">
+                    <i class="bi bi-bar-chart text-2xl"></i>
+                    <p class="mt-2 text-sm">Selecione o período e clique em Gerar Relatório</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+  <!-- Modal: Detail/View -->
+  <div id="modal-detail" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+        <h3 class="text-lg font-semibold" id="detail-title">Despesa</h3>
+        <button onclick="closeModal('modal-detail')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+          <i class="bi bi-x-lg text-xl"></i>
+        </button>
+      </div>
+      <div class="p-5" id="detail-body"></div>
+      <div class="flex justify-end gap-3 p-5 border-t border-gray-100 dark:border-gray-700" id="detail-actions"></div>
+    </div>
+  </div>
+
+  <!-- Modal: New Despesa -->
+  <div id="modal-new" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+        <h3 class="text-lg font-semibold">Nova Despesa</h3>
+        <button onclick="closeModal('modal-new')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+          <i class="bi bi-x-lg text-xl"></i>
+        </button>
+      </div>
+      <form id="form-new" class="p-5 space-y-4" onsubmit="submitNewDespesa(event)">
+        <div>
+          <label class="block text-sm font-medium mb-1">Funcionário <span class="text-red-500">*</span></label>
+          <select id="new-funcionario" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            <option value="">Selecionar funcionário...</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Descrição <span class="text-red-500">*</span></label>
+          <input type="text" id="new-descricao" required placeholder="Ex: Compras no supermercado..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Valor (R$) <span class="text-red-500">*</span></label>
+            <input type="number" id="new-valor" required min="0.01" step="0.01" placeholder="0,00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Data <span class="text-red-500">*</span></label>
+            <input type="date" id="new-data" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Categoria <span class="text-red-500">*</span></label>
+            <select id="new-categoria" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+              <option value="">Selecionar...</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Estabelecimento</label>
+            <input type="text" id="new-estabelecimento" placeholder="Nome do local..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Comprovante (foto/PDF)</label>
+          <div class="flex items-center gap-3">
+            <label for="new-comprovante" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 hover:border-primary cursor-pointer text-sm text-gray-500 dark:text-gray-400 transition-colors">
+              <i class="bi bi-upload"></i><span id="comprovante-label">Selecionar arquivo</span>
+            </label>
+            <input type="file" id="new-comprovante" accept="image/*,.pdf" class="hidden" onchange="updateComprovanteLabel(this)">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Observação</label>
+          <textarea id="new-observacao" rows="2" placeholder="Informações adicionais..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition resize-none"></textarea>
+        </div>
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="button" onclick="closeModal('modal-new')" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm transition-colors">Cancelar</button>
+          <button type="submit" id="btn-submit-new" class="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+            <i class="bi bi-plus-circle"></i> Criar Despesa
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Reject -->
+  <div id="modal-reject" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+        <h3 class="text-lg font-semibold text-red-600">Rejeitar Despesa</h3>
+        <button onclick="closeModal('modal-reject')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+          <i class="bi bi-x-lg text-xl"></i>
+        </button>
+      </div>
+      <div class="p-5 space-y-4">
+        <p class="text-sm text-gray-600 dark:text-gray-400">Informe o motivo da rejeição. Essa informação será registrada.</p>
+        <div>
+          <label class="block text-sm font-medium mb-1">Motivo da Rejeição</label>
+          <textarea id="reject-observacao" rows="3" placeholder="Descreva o motivo..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition resize-none"></textarea>
+        </div>
+        <div class="flex justify-end gap-3">
+          <button onclick="closeModal('modal-reject')" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm transition-colors">Cancelar</button>
+          <button onclick="confirmRejeitar()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+            <i class="bi bi-x-circle"></i> Rejeitar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/utils.js?v=1"></script>
+  <script src="/js/shared.js"></script>
+  <script>
+    // ─── Constants ────────────────────────────────────────────────────────────
+
+    const CATEGORIAS_DESPESA = {
+      mercado:            { label: 'Supermercado', color: 'blue' },
+      padaria:            { label: 'Padaria',      color: 'yellow' },
+      hortifruti:         { label: 'Hortifruti',   color: 'green' },
+      farmacia:           { label: 'Farmácia',     color: 'pink' },
+      transporte:         { label: 'Transporte',   color: 'indigo' },
+      material_construcao:{ label: 'Material',     color: 'gray' },
+      limpeza:            { label: 'Limpeza',      color: 'purple' },
+      pet:                { label: 'Pet',          color: 'orange' },
+      manutencao:         { label: 'Manutenção',   color: 'amber' },
+      outro:              { label: 'Outro',        color: 'gray' }
+    };
+
+    const CATEGORIA_COLORS_HEX = {
+      blue: '#3b82f6', yellow: '#f59e0b', green: '#22c55e', pink: '#ec4899',
+      indigo: '#6366f1', gray: '#6b7280', purple: '#a855f7', orange: '#f97316',
+      amber: '#f59e0b'
+    };
+
+    // ─── State ────────────────────────────────────────────────────────────────
+
+    let currentPage = 1;
+    const pageSize = 20;
+    let totalDespesas = 0;
+    let allDespesas = [];
+    let pendenteDespesas = [];
+    let rejectTargetId = null;
+    let chartCategoria = null;
+    let chartFuncionario = null;
+    let chartEvolucao = null;
+    let funcionariosList = [];
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function formatCurrency(val) {
+      const n = parseFloat(val) || 0;
+      return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    }
+
+    function formatDateTime(dateStr) {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) + ' ' +
+             d.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function getCategoriaBadge(cat) {
+      const info = CATEGORIAS_DESPESA[cat] || { label: cat || 'Outro', color: 'gray' };
+      const colorMap = {
+        blue:   'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+        yellow: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+        green:  'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+        pink:   'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400',
+        indigo: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+        gray:   'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400',
+        purple: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+        orange: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+        amber:  'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+      };
+      const cls = colorMap[info.color] || colorMap.gray;
+      return `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${cls}">${escapeHtml(info.label)}</span>`;
+    }
+
+    function getStatusBadge(status) {
+      const map = {
+        pendente:    { cls: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400', icon: 'bi-hourglass-split', label: 'Pendente' },
+        aprovado:    { cls: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',   icon: 'bi-check-circle',    label: 'Aprovado' },
+        reembolsado: { cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',       icon: 'bi-arrow-return-left', label: 'Reembolsado' },
+        rejeitado:   { cls: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',           icon: 'bi-x-circle',        label: 'Rejeitado' }
+      };
+      const s = map[status] || map.pendente;
+      return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${s.cls}"><i class="bi ${s.icon}"></i>${s.label}</span>`;
+    }
+
+    function getActionButtons(d) {
+      const btns = [];
+      if (d.status === 'pendente') {
+        btns.push(`<button onclick="aprovarDespesa(${d.id})" title="Aprovar" class="p-1.5 rounded bg-green-100 hover:bg-green-200 text-green-700 transition-colors"><i class="bi bi-check-lg"></i></button>`);
+        btns.push(`<button onclick="abrirRejeitar(${d.id})" title="Rejeitar" class="p-1.5 rounded bg-red-100 hover:bg-red-200 text-red-700 transition-colors"><i class="bi bi-x-lg"></i></button>`);
+      }
+      if (d.status === 'aprovado') {
+        btns.push(`<button onclick="reembolsarDespesa(${d.id})" title="Marcar Reembolsado" class="p-1.5 rounded bg-blue-100 hover:bg-blue-200 text-blue-700 transition-colors"><i class="bi bi-arrow-return-left"></i></button>`);
+      }
+      btns.push(`<button onclick="openDetail(${d.id})" title="Ver Detalhes" class="p-1.5 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 transition-colors"><i class="bi bi-eye"></i></button>`);
+      btns.push(`<button onclick="deleteDespesa(${d.id})" title="Excluir" class="p-1.5 rounded bg-gray-100 hover:bg-red-100 dark:bg-gray-700 dark:hover:bg-red-900/30 text-gray-500 hover:text-red-600 transition-colors"><i class="bi bi-trash"></i></button>`);
+      return `<div class="flex items-center gap-1">${btns.join('')}</div>`;
+    }
+
+    function getThumbHtml(d, size = '40') {
+      if (!d.comprovante_path) return `<span class="text-xs text-gray-400">-</span>`;
+      const src = `/${d.comprovante_path}`;
+      return `<img src="${src}" class="w-${size === '40' ? '10' : '14'} h-${size === '40' ? '10' : '14'} object-cover rounded cursor-pointer border border-gray-200 dark:border-gray-600" onclick="openImageModal('${src}')" alt="Comprovante">`;
+    }
+
+    // ─── Tab Switching ────────────────────────────────────────────────────────
+
+    let activeTab = 'todas';
+
+    function switchTab(tab) {
+      activeTab = tab;
+      ['todas', 'pendentes', 'relatorio'].forEach(t => {
+        document.getElementById(`tab-content-${t}`).classList.toggle('hidden', t !== tab);
+        const btn = document.getElementById(`tab-${t}`);
+        if (t === tab) {
+          btn.classList.add('bg-white', 'dark:bg-gray-700', 'text-gray-800', 'dark:text-gray-100', 'shadow-sm');
+          btn.classList.remove('text-gray-600', 'dark:text-gray-400');
+        } else {
+          btn.classList.remove('bg-white', 'dark:bg-gray-700', 'text-gray-800', 'dark:text-gray-100', 'shadow-sm');
+          btn.classList.add('text-gray-600', 'dark:text-gray-400');
+        }
+      });
+      if (tab === 'pendentes') loadPendentes();
+      if (tab === 'relatorio') loadRelatorio();
+    }
+
+    // ─── Load Funcionarios ────────────────────────────────────────────────────
+
+    async function loadFuncionarios() {
+      try {
+        const result = await Shared.api('/api/funcionarios');
+        funcionariosList = (result.data || result || []).filter(f => f.status === 'ativo');
+
+        // Populate filter dropdown
+        const filterSel = document.getElementById('filter-funcionario');
+        filterSel.innerHTML = '<option value="">Todos</option>';
+        funcionariosList.forEach(f => {
+          filterSel.appendChild(new Option(f.nome, f.id));
+        });
+
+        // Populate new despesa dropdown
+        const newSel = document.getElementById('new-funcionario');
+        newSel.innerHTML = '<option value="">Selecionar funcionário...</option>';
+        funcionariosList.forEach(f => {
+          newSel.appendChild(new Option(f.nome, f.id));
+        });
+      } catch (err) {
+        console.error('Erro ao carregar funcionários:', err);
+      }
+    }
+
+    function populateCategoriaDropdowns() {
+      const selects = ['filter-categoria', 'new-categoria'];
+      selects.forEach(id => {
+        const sel = document.getElementById(id);
+        const isFilter = id === 'filter-categoria';
+        sel.innerHTML = isFilter ? '<option value="">Todas</option>' : '<option value="">Selecionar...</option>';
+        Object.entries(CATEGORIAS_DESPESA).forEach(([key, val]) => {
+          sel.appendChild(new Option(val.label, key));
+        });
+      });
+    }
+
+    // ─── Load Despesas (Tab: Todas) ───────────────────────────────────────────
+
+    async function loadDespesas(page = 1) {
+      currentPage = page;
+      try {
+        const params = new URLSearchParams();
+        const status = document.getElementById('filter-status').value;
+        const funcId = document.getElementById('filter-funcionario').value;
+        const cat = document.getElementById('filter-categoria').value;
+        const di = document.getElementById('filter-data-inicio').value;
+        const df = document.getElementById('filter-data-fim').value;
+        if (status) params.set('status', status);
+        if (funcId) params.set('funcionario_id', funcId);
+        if (cat) params.set('categoria', cat);
+        if (di) params.set('data_inicio', di);
+        if (df) params.set('data_fim', df);
+        params.set('page', page);
+        params.set('limit', pageSize);
+
+        const result = await Shared.api(`/api/despesas?${params.toString()}`);
+        allDespesas = result.data || [];
+        totalDespesas = result.total || allDespesas.length;
+
+        renderTabelaTodas();
+        renderPagination();
+        updateGlobalStats(result.stats || null);
+        document.getElementById('despesas-count').textContent = totalDespesas;
+      } catch (err) {
+        console.error(err);
+        document.getElementById('despesas-tbody').innerHTML = `
+          <tr><td colspan="8" class="text-center py-10 text-red-400">
+            <i class="bi bi-exclamation-circle text-2xl"></i>
+            <p class="mt-2">Erro ao carregar despesas</p>
+          </td></tr>`;
+      }
+    }
+
+    function renderTabelaTodas() {
+      const tbody = document.getElementById('despesas-tbody');
+      if (!allDespesas.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-gray-400">
+          <i class="bi bi-receipt-cutoff text-3xl"></i>
+          <p class="mt-2">Nenhuma despesa encontrada</p>
+        </td></tr>`;
+        return;
+      }
+      tbody.innerHTML = allDespesas.map(d => `
+        <tr class="border-t border-gray-50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer" onclick="openDetail(${d.id})">
+          <td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">${formatDate(d.data)}</td>
+          <td class="px-4 py-3 font-medium">${escapeHtml(d.funcionario_nome || '-')}</td>
+          <td class="px-4 py-3 text-gray-600 dark:text-gray-400 max-w-xs truncate">${escapeHtml(d.descricao)}</td>
+          <td class="px-4 py-3 text-right font-semibold text-gray-800 dark:text-gray-200 whitespace-nowrap">${formatCurrency(d.valor)}</td>
+          <td class="px-4 py-3">${getCategoriaBadge(d.categoria)}</td>
+          <td class="px-4 py-3">${getStatusBadge(d.status)}</td>
+          <td class="px-4 py-3" onclick="event.stopPropagation()">${getThumbHtml(d, '40')}</td>
+          <td class="px-4 py-3" onclick="event.stopPropagation()">${getActionButtons(d)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderPagination() {
+      const totalPages = Math.ceil(totalDespesas / pageSize);
+      const info = document.getElementById('pagination-info');
+      const btns = document.getElementById('pagination-btns');
+      if (totalPages <= 1) { info.textContent = ''; btns.innerHTML = ''; return; }
+      const from = (currentPage - 1) * pageSize + 1;
+      const to = Math.min(currentPage * pageSize, totalDespesas);
+      info.textContent = `Exibindo ${from}–${to} de ${totalDespesas}`;
+      let html = '';
+      if (currentPage > 1) html += `<button onclick="loadDespesas(${currentPage-1})" class="px-3 py-1.5 rounded border border-gray-300 dark:border-gray-600 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"><i class="bi bi-chevron-left"></i></button>`;
+      for (let p = Math.max(1, currentPage-2); p <= Math.min(totalPages, currentPage+2); p++) {
+        const active = p === currentPage ? 'bg-primary text-white border-primary' : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700';
+        html += `<button onclick="loadDespesas(${p})" class="px-3 py-1.5 rounded border text-sm ${active}">${p}</button>`;
+      }
+      if (currentPage < totalPages) html += `<button onclick="loadDespesas(${currentPage+1})" class="px-3 py-1.5 rounded border border-gray-300 dark:border-gray-600 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"><i class="bi bi-chevron-right"></i></button>`;
+      btns.innerHTML = html;
+    }
+
+    // ─── Global Stats ─────────────────────────────────────────────────────────
+
+    async function loadGlobalStats() {
+      try {
+        const result = await Shared.api('/api/despesas?limit=1000');
+        updateGlobalStats(result.stats || null, result.data || []);
+      } catch (err) { console.error(err); }
+    }
+
+    function updateGlobalStats(stats, data) {
+      const src = stats || (data ? buildStats(data) : null);
+      if (!src) return;
+      const setEl = (id, val, count) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = formatCurrency(val);
+        const cel = document.getElementById(id + '-count');
+        if (cel && count !== undefined) cel.textContent = `${count} despesa${count !== 1 ? 's' : ''}`;
+      };
+      setEl('stat-pendentes',    src.total_pendente || 0,    src.count_pendente || 0);
+      setEl('stat-aprovadas',    src.total_aprovado || 0,    src.count_aprovado || 0);
+      setEl('stat-reembolsadas', src.total_reembolsado || 0, src.count_reembolsado || 0);
+      setEl('stat-rejeitadas',   src.total_rejeitado || 0,   src.count_rejeitado || 0);
+    }
+
+    function buildStats(data) {
+      const s = { total_pendente:0, count_pendente:0, total_aprovado:0, count_aprovado:0, total_reembolsado:0, count_reembolsado:0, total_rejeitado:0, count_rejeitado:0 };
+      data.forEach(d => {
+        const v = parseFloat(d.valor) || 0;
+        if (d.status === 'pendente')    { s.total_pendente += v;    s.count_pendente++; }
+        if (d.status === 'aprovado')    { s.total_aprovado += v;    s.count_aprovado++; }
+        if (d.status === 'reembolsado') { s.total_reembolsado += v; s.count_reembolsado++; }
+        if (d.status === 'rejeitado')   { s.total_rejeitado += v;   s.count_rejeitado++; }
+      });
+      return s;
+    }
+
+    // ─── Load Pendentes (Tab: Pendentes) ──────────────────────────────────────
+
+    async function loadPendentes() {
+      try {
+        const result = await Shared.api('/api/despesas?status=pendente&limit=100');
+        pendenteDespesas = result.data || [];
+        renderTabelaPendentes();
+      } catch (err) {
+        console.error(err);
+        document.getElementById('pendentes-tbody').innerHTML = `
+          <tr><td colspan="7" class="text-center py-10 text-red-400">Erro ao carregar</td></tr>`;
+      }
+    }
+
+    function renderTabelaPendentes() {
+      const tbody = document.getElementById('pendentes-tbody');
+      document.getElementById('pendentes-count-label').textContent = `${pendenteDespesas.length} itens`;
+      if (!pendenteDespesas.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-gray-400">
+          <i class="bi bi-check2-all text-3xl text-green-400"></i>
+          <p class="mt-2">Nenhuma despesa pendente</p>
+        </td></tr>`;
+        return;
+      }
+      tbody.innerHTML = pendenteDespesas.map(d => `
+        <tr class="border-t border-gray-50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30">
+          <td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap text-sm">${formatDate(d.data)}</td>
+          <td class="px-4 py-3 font-medium text-sm">${escapeHtml(d.funcionario_nome || '-')}</td>
+          <td class="px-4 py-3 text-gray-600 dark:text-gray-400 text-sm max-w-xs">
+            <div class="truncate">${escapeHtml(d.descricao)}</div>
+            ${d.estabelecimento ? `<div class="text-xs text-gray-400">${escapeHtml(d.estabelecimento)}</div>` : ''}
+          </td>
+          <td class="px-4 py-3 text-right font-bold text-gray-800 dark:text-gray-200 whitespace-nowrap">${formatCurrency(d.valor)}</td>
+          <td class="px-4 py-3">${getCategoriaBadge(d.categoria)}</td>
+          <td class="px-4 py-3">${getThumbHtml(d, '60')}</td>
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-2">
+              <button onclick="aprovarDespesa(${d.id})" class="px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-medium transition-colors flex items-center gap-1">
+                <i class="bi bi-check-lg"></i> Aprovar
+              </button>
+              <button onclick="abrirRejeitar(${d.id})" class="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-medium transition-colors flex items-center gap-1">
+                <i class="bi bi-x-lg"></i> Rejeitar
+              </button>
+              <button onclick="openDetail(${d.id}, true)" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 text-xs font-medium transition-colors">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // ─── Detail Modal ─────────────────────────────────────────────────────────
+
+    let currentDetailId = null;
+
+    async function openDetail(id, fromPendentes = false) {
+      currentDetailId = id;
+      // Try to find in loaded data first
+      let d = allDespesas.find(x => x.id === id) || pendenteDespesas.find(x => x.id === id);
+      if (!d) {
+        try {
+          const result = await Shared.api(`/api/despesas/${id}`);
+          d = result.data || result;
+        } catch (err) {
+          showToast('Erro ao carregar despesa', 'error'); return;
+        }
+      }
+
+      document.getElementById('detail-title').textContent = `Despesa #${d.id}`;
+
+      const comprovanteHtml = d.comprovante_path
+        ? `<div class="mt-3">
+             <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Comprovante</p>
+             <img src="/${d.comprovante_path}" class="max-h-64 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer" onclick="openImageModal('/${d.comprovante_path}')" alt="Comprovante">
+           </div>`
+        : '';
+
+      document.getElementById('detail-body').innerHTML = `
+        <div class="flex items-center gap-2 flex-wrap mb-4">
+          ${getStatusBadge(d.status)}
+          ${getCategoriaBadge(d.categoria)}
+        </div>
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Funcionário</p>
+            <p class="font-medium">${escapeHtml(d.funcionario_nome || '-')}</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Data</p>
+            <p class="font-medium">${formatDate(d.data)}</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Valor</p>
+            <p class="font-bold text-lg text-green-600">${formatCurrency(d.valor)}</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Estabelecimento</p>
+            <p class="font-medium">${escapeHtml(d.estabelecimento || '-')}</p>
+          </div>
+        </div>
+        <div class="mb-4">
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Descrição</p>
+          <p class="text-sm bg-gray-50 dark:bg-gray-700 rounded-lg p-3">${escapeHtml(d.descricao)}</p>
+        </div>
+        ${d.observacao ? `<div class="mb-4">
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Observação</p>
+          <p class="text-sm bg-gray-50 dark:bg-gray-700 rounded-lg p-3">${escapeHtml(d.observacao)}</p>
+        </div>` : ''}
+        ${d.motivo_rejeicao ? `<div class="mb-4">
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Motivo da Rejeição</p>
+          <p class="text-sm bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg p-3">${escapeHtml(d.motivo_rejeicao)}</p>
+        </div>` : ''}
+        ${comprovanteHtml}
+        <div class="mt-4 text-xs text-gray-400 space-y-1">
+          <p><i class="bi bi-calendar3"></i> Registrada em: ${formatDateTime(d.created_at)}</p>
+          ${d.aprovado_em ? `<p><i class="bi bi-check-circle text-green-500"></i> Aprovada em: ${formatDateTime(d.aprovado_em)}</p>` : ''}
+          ${d.reembolsado_em ? `<p><i class="bi bi-arrow-return-left text-blue-500"></i> Reembolsada em: ${formatDateTime(d.reembolsado_em)}</p>` : ''}
+        </div>
+      `;
+
+      let actions = `<button onclick="closeModal('modal-detail')" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm">Fechar</button>`;
+      if (d.status === 'pendente') {
+        actions = `
+          <button onclick="aprovarDespesa(${d.id}, true)" class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors flex items-center gap-2">
+            <i class="bi bi-check-lg"></i> Aprovar
+          </button>
+          <button onclick="abrirRejeitar(${d.id}, true)" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors flex items-center gap-2">
+            <i class="bi bi-x-lg"></i> Rejeitar
+          </button>` + actions;
+      } else if (d.status === 'aprovado') {
+        actions = `
+          <button onclick="reembolsarDespesa(${d.id}, true)" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors flex items-center gap-2">
+            <i class="bi bi-arrow-return-left"></i> Reembolsar
+          </button>` + actions;
+      }
+
+      document.getElementById('detail-actions').innerHTML = actions;
+      openModal('modal-detail');
+    }
+
+    // ─── Actions ──────────────────────────────────────────────────────────────
+
+    async function aprovarDespesa(id, fromDetail = false) {
+      try {
+        await Shared.api(`/api/despesas/${id}/aprovar`, { method: 'POST' });
+        showToast('Despesa aprovada!', 'success');
+        if (fromDetail) closeModal('modal-detail');
+        refreshAll();
+      } catch (err) { showToast(err.message || 'Erro ao aprovar', 'error'); }
+    }
+
+    let rejectFromDetail = false;
+    function abrirRejeitar(id, fromDetail = false) {
+      rejectTargetId = id;
+      rejectFromDetail = fromDetail;
+      document.getElementById('reject-observacao').value = '';
+      openModal('modal-reject');
+    }
+
+    async function confirmRejeitar() {
+      if (!rejectTargetId) return;
+      const obs = document.getElementById('reject-observacao').value.trim();
+      try {
+        await Shared.api(`/api/despesas/${rejectTargetId}/rejeitar`, {
+          method: 'POST',
+          body: JSON.stringify({ observacao: obs })
+        });
+        showToast('Despesa rejeitada!', 'success');
+        closeModal('modal-reject');
+        if (rejectFromDetail) closeModal('modal-detail');
+        refreshAll();
+      } catch (err) { showToast(err.message || 'Erro ao rejeitar', 'error'); }
+    }
+
+    async function reembolsarDespesa(id, fromDetail = false) {
+      Shared.showConfirmModal('Confirmar reembolso desta despesa?', async () => {
+        try {
+          await Shared.api(`/api/despesas/${id}/reembolsar`, { method: 'POST' });
+          showToast('Reembolso registrado!', 'success');
+          if (fromDetail) closeModal('modal-detail');
+          refreshAll();
+        } catch (err) { showToast(err.message || 'Erro ao reembolsar', 'error'); }
+      });
+    }
+
+    async function deleteDespesa(id) {
+      Shared.showConfirmModal('Deseja realmente excluir esta despesa? Esta ação não pode ser desfeita.', async () => {
+        try {
+          await Shared.api(`/api/despesas/${id}`, { method: 'DELETE' });
+          showToast('Despesa excluída!', 'success');
+          refreshAll();
+        } catch (err) { showToast(err.message || 'Erro ao excluir', 'error'); }
+      });
+    }
+
+    function refreshAll() {
+      loadDespesas(currentPage);
+      loadGlobalStats();
+      if (activeTab === 'pendentes') loadPendentes();
+    }
+
+    // ─── New Despesa Modal ────────────────────────────────────────────────────
+
+    function openNewDespesaModal() {
+      document.getElementById('form-new').reset();
+      document.getElementById('comprovante-label').textContent = 'Selecionar arquivo';
+      // Set today's date
+      const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+      document.getElementById('new-data').value = today;
+      openModal('modal-new');
+    }
+
+    function updateComprovanteLabel(input) {
+      const label = document.getElementById('comprovante-label');
+      label.textContent = input.files[0] ? input.files[0].name : 'Selecionar arquivo';
+    }
+
+    async function submitNewDespesa(event) {
+      event.preventDefault();
+      const btn = document.getElementById('btn-submit-new');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Salvando...';
+      try {
+        const formData = new FormData();
+        formData.append('funcionario_id', document.getElementById('new-funcionario').value);
+        formData.append('descricao', document.getElementById('new-descricao').value);
+        formData.append('valor', document.getElementById('new-valor').value);
+        formData.append('data', document.getElementById('new-data').value);
+        formData.append('categoria', document.getElementById('new-categoria').value);
+        formData.append('estabelecimento', document.getElementById('new-estabelecimento').value);
+        formData.append('observacao', document.getElementById('new-observacao').value);
+        const fileInput = document.getElementById('new-comprovante');
+        if (fileInput.files[0]) formData.append('comprovante', fileInput.files[0]);
+
+        const token = localStorage.getItem('ponto_token');
+        const response = await fetch('/api/despesas', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Erro ao criar despesa');
+
+        showToast('Despesa criada com sucesso!', 'success');
+        closeModal('modal-new');
+        refreshAll();
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-plus-circle"></i> Criar Despesa';
+      }
+    }
+
+    // ─── Relatório (Tab: Relatório) ───────────────────────────────────────────
+
+    async function loadRelatorio() {
+      const mes = document.getElementById('relatorio-mes').value;
+      const ano = document.getElementById('relatorio-ano').value;
+      try {
+        const result = await Shared.api(`/api/despesas/relatorio?mes=${mes}&ano=${ano}`);
+        const data = result.data || result;
+
+        // Update stats
+        document.getElementById('rel-stat-pendente').textContent   = formatCurrency(data.totais?.pendente || 0);
+        document.getElementById('rel-stat-aprovado').textContent   = formatCurrency(data.totais?.aprovado || 0);
+        document.getElementById('rel-stat-reembolsado').textContent = formatCurrency(data.totais?.reembolsado || 0);
+        document.getElementById('rel-stat-rejeitado').textContent  = formatCurrency(data.totais?.rejeitado || 0);
+
+        renderCharts(data);
+        renderRelatorioTabela(data.por_funcionario || []);
+      } catch (err) {
+        console.error(err);
+        // Render fallback charts with empty data
+        renderCharts({ por_categoria: [], por_funcionario: [], evolucao: [] });
+        showToast('Erro ao gerar relatório', 'error');
+      }
+    }
+
+    function renderCharts(data) {
+      const isDark = document.documentElement.classList.contains('dark');
+      const textColor = isDark ? '#9ca3af' : '#6b7280';
+      const gridColor = isDark ? '#374151' : '#f3f4f6';
+
+      // Doughnut: por categoria
+      const catData = data.por_categoria || [];
+      if (chartCategoria) chartCategoria.destroy();
+      const ctxCat = document.getElementById('chart-categoria').getContext('2d');
+      chartCategoria = new Chart(ctxCat, {
+        type: 'doughnut',
+        data: {
+          labels: catData.map(c => CATEGORIAS_DESPESA[c.categoria]?.label || c.categoria || 'Outro'),
+          datasets: [{
+            data: catData.map(c => parseFloat(c.total) || 0),
+            backgroundColor: catData.map(c => CATEGORIA_COLORS_HEX[CATEGORIAS_DESPESA[c.categoria]?.color || 'gray']),
+            borderWidth: 2,
+            borderColor: isDark ? '#1f2937' : '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '65%',
+          plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 11 }, padding: 8, boxWidth: 12 } } }
+        }
+      });
+
+      // Bar: por funcionário
+      const funcData = data.por_funcionario || [];
+      if (chartFuncionario) chartFuncionario.destroy();
+      const ctxFunc = document.getElementById('chart-funcionario').getContext('2d');
+      chartFuncionario = new Chart(ctxFunc, {
+        type: 'bar',
+        data: {
+          labels: funcData.map(f => f.funcionario_nome || 'Desconhecido'),
+          datasets: [{
+            label: 'Total (R$)',
+            data: funcData.map(f => parseFloat(f.total) || 0),
+            backgroundColor: '#3b82f6',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor } },
+            y: { ticks: { color: textColor, font: { size: 10 }, callback: v => 'R$ ' + v.toLocaleString('pt-BR') }, grid: { color: gridColor } }
+          }
+        }
+      });
+
+      // Line: evolução mensal
+      const evolucao = data.evolucao || [];
+      if (chartEvolucao) chartEvolucao.destroy();
+      const ctxEvol = document.getElementById('chart-evolucao').getContext('2d');
+      chartEvolucao = new Chart(ctxEvol, {
+        type: 'line',
+        data: {
+          labels: evolucao.map(e => e.periodo || e.label || ''),
+          datasets: [{
+            label: 'Total (R$)',
+            data: evolucao.map(e => parseFloat(e.total) || 0),
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99,102,241,0.1)',
+            tension: 0.4, fill: true,
+            pointBackgroundColor: '#6366f1', pointRadius: 4
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor } },
+            y: { ticks: { color: textColor, font: { size: 10 }, callback: v => 'R$ ' + v.toLocaleString('pt-BR') }, grid: { color: gridColor } }
+          }
+        }
+      });
+    }
+
+    function renderRelatorioTabela(funcData) {
+      const tbody = document.getElementById('relatorio-tbody');
+      if (!funcData.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-gray-400">Nenhum dado para o período</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = funcData.map(f => `
+        <tr class="border-t border-gray-50 dark:border-gray-700/50">
+          <td class="px-4 py-3 font-medium">${escapeHtml(f.funcionario_nome || '-')}</td>
+          <td class="px-4 py-3 text-right font-semibold">${formatCurrency(f.total)}</td>
+          <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-400">${f.count || 0}</td>
+          <td class="px-4 py-3">${getStatusBadge(f.ultimo_status || 'pendente')}</td>
+        </tr>
+      `).join('');
+    }
+
+    // ─── Modal Helpers ────────────────────────────────────────────────────────
+
+    function openModal(id) {
+      const el = document.getElementById(id);
+      el.classList.remove('hidden');
+      el.classList.add('flex');
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      el.classList.add('hidden');
+      el.classList.remove('flex');
+    }
+
+    function openImageModal(src) {
+      const overlay = document.createElement('div');
+      overlay.className = 'fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4 cursor-zoom-out';
+      overlay.onclick = () => document.body.removeChild(overlay);
+      overlay.innerHTML = `<img src="${src}" class="max-w-full max-h-full rounded-xl shadow-2xl" onclick="event.stopPropagation()">`;
+      document.body.appendChild(overlay);
+    }
+
+    // Close modals on backdrop click
+    ['modal-detail', 'modal-new', 'modal-reject'].forEach(id => {
+      document.getElementById(id).addEventListener('click', function(e) {
+        if (e.target === this) closeModal(id);
+      });
+    });
+
+    // ─── Init ─────────────────────────────────────────────────────────────────
+
+    window.onAuthReady = function() {
+      // Set current month/year in relatório selectors
+      const now = new Date();
+      document.getElementById('relatorio-mes').value = now.getMonth() + 1;
+      document.getElementById('relatorio-ano').value = now.getFullYear();
+
+      populateCategoriaDropdowns();
+      loadFuncionarios();
+      loadGlobalStats();
+      loadDespesas();
+    };
+  </script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 const express = require('express');
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { authenticateToken, requireAdmin, requireGestor } = require('../middleware/auth');
 const whatsappService = require('../services/whatsapp');
 const { db } = require('../config/database');
 
@@ -15,8 +15,8 @@ router.get('/status', authenticateToken, (req, res) => {
   });
 });
 
-// GET /api/whatsapp/qr - Show QR code page (no auth required for easy phone scanning)
-router.get('/qr', (req, res) => {
+// GET /api/whatsapp/qr - Show QR code page (admin only)
+router.get('/qr', authenticateToken, requireAdmin, (req, res) => {
   const status = whatsappService.status;
 
   if (status === 'connected') {
@@ -65,7 +65,7 @@ router.post('/enable', authenticateToken, requireAdmin, (req, res) => {
     db.prepare("UPDATE configuracoes SET valor = ? WHERE chave = 'whatsapp_enabled'").run(val);
     res.json({ success: true, enabled: !!enabled, message: enabled ? 'WhatsApp habilitado. Use /reconnect para iniciar.' : 'WhatsApp desabilitado.' });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: 'Erro ao atualizar configuração' });
   }
 });
 
@@ -78,7 +78,7 @@ router.post('/reconnect', authenticateToken, requireAdmin, async (req, res) => {
       res.status(400).json({ success: false, error: result.message });
     }
   } catch (err) {
-    res.status(500).json({ success: false, error: 'Erro ao reconectar: ' + err.message });
+    res.status(500).json({ success: false, error: 'Erro ao reconectar' });
   }
 });
 
@@ -103,7 +103,7 @@ router.post('/fetch-missed', authenticateToken, requireAdmin, async (req, res) =
     const result = await whatsappService.fetchMissedMessages(limit, { autoRegister });
     res.json(result);
   } catch (err) {
-    res.status(500).json({ success: false, error: 'Erro ao buscar mensagens: ' + err.message });
+    res.status(500).json({ success: false, error: 'Erro ao buscar mensagens' });
   }
 });
 
@@ -249,7 +249,7 @@ Retorne APENAS JSON válido (sem markdown):
     res.json({ success: true, entrega: entregaInfo });
   } catch (err) {
     console.error('[WhatsApp] Analyze entrega error:', err.message);
-    res.status(500).json({ error: 'Erro ao analisar entrega: ' + err.message });
+    res.status(500).json({ error: 'Erro ao analisar entrega' });
   }
 });
 
@@ -258,7 +258,7 @@ Retorne APENAS JSON válido (sem markdown):
 // ============================================================
 
 // GET /api/whatsapp/chat/:funcionario_id - Get chat history
-router.get('/chat/:funcionario_id', authenticateToken, (req, res) => {
+router.get('/chat/:funcionario_id', authenticateToken, requireGestor, (req, res) => {
   try {
     const funcId = parseInt(req.params.funcionario_id);
     const limit = parseInt(req.query.limit) || 50;
@@ -281,7 +281,7 @@ router.get('/chat/:funcionario_id', authenticateToken, (req, res) => {
 });
 
 // POST /api/whatsapp/chat/:funcionario_id/send - Send text message
-router.post('/chat/:funcionario_id/send', authenticateToken, async (req, res) => {
+router.post('/chat/:funcionario_id/send', authenticateToken, requireGestor, async (req, res) => {
   try {
     const funcId = parseInt(req.params.funcionario_id);
     const { message } = req.body;
@@ -316,23 +316,37 @@ router.post('/chat/:funcionario_id/send', authenticateToken, async (req, res) =>
     res.json({ success: true, id: result.lastInsertRowid, message: 'Mensagem enviada' });
   } catch (err) {
     console.error('[WhatsApp Chat] Send error:', err.message);
-    res.status(500).json({ error: 'Erro ao enviar mensagem: ' + err.message });
+    res.status(500).json({ error: 'Erro ao enviar mensagem' });
   }
 });
 
 // POST /api/whatsapp/chat/:funcionario_id/send-media - Send photo/file
-router.post('/chat/:funcionario_id/send-media', authenticateToken, (req, res) => {
+router.post('/chat/:funcionario_id/send-media', authenticateToken, requireGestor, (req, res) => {
   const multer = require('multer');
   const path = require('path');
   const fs = require('fs');
 
   const upload = multer({
     dest: path.join(__dirname, '../../public/uploads/chat/'),
-    limits: { fileSize: 10 * 1024 * 1024 }
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+      const allowed = /^(image|video|audio)\//;
+      if (allowed.test(file.mimetype) || file.mimetype === 'application/pdf') {
+        cb(null, true);
+      } else {
+        cb(new Error('Tipo de arquivo não permitido. Apenas imagens, vídeos, áudios e PDFs.'));
+      }
+    }
   }).single('media');
 
   upload(req, res, async (err) => {
-    if (err) return res.status(400).json({ error: err.message });
+    if (err) {
+      console.error('[WhatsApp Chat] Upload error:', err.message);
+      const msg = err.code === 'LIMIT_FILE_SIZE' ? 'Arquivo muito grande (máx 10MB)'
+        : err.message && err.message.includes('Tipo de arquivo') ? err.message
+        : 'Erro no upload do arquivo';
+      return res.status(400).json({ error: msg });
+    }
     if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado' });
 
     try {
@@ -373,7 +387,7 @@ router.post('/chat/:funcionario_id/send-media', authenticateToken, (req, res) =>
       res.json({ success: true, id: result.lastInsertRowid, media_path: mediaPath });
     } catch (err) {
       console.error('[WhatsApp Chat] Send media error:', err.message);
-      res.status(500).json({ error: 'Erro ao enviar mídia: ' + err.message });
+      res.status(500).json({ error: 'Erro ao enviar mídia' });
     }
   });
 });

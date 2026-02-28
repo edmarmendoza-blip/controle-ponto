@@ -178,8 +178,21 @@ APP_NAME=Lar Digital
 - JWT + bcrypt | 3 roles: admin, gestor, viewer
 - Admin: edmarmbull@gmail.com / Admin@2026!
 - 2FA via speakeasy (opcional)
+- Senha mínima: 8 caracteres (backend + frontend)
 - Esqueci senha: botão no login → email com código → reset (rate limit: 5min entre envios, countdown 60s no frontend)
 - Reenviar senha: botão na pág. usuários (admin) → gera temporária → email
+- **Refresh Tokens**: access token JWT (24h) + refresh token opaco (30 dias)
+  - Tabela: `refresh_tokens` (id, user_id, token, expires_at, created_at)
+  - POST /api/auth/refresh: valida refresh token, gera novo access + novo refresh (rotação)
+  - Máximo 5 refresh tokens ativos por usuário
+  - Frontend: auto-refresh transparente no `api()` ao receber 401
+  - Logout: limpa refresh token do banco
+  - Login.html: salva refresh token em localStorage (`ponto_refresh_token`)
+- **Rate Limiters** (src/middleware/rateLimiter.js):
+  - `loginLimiter`: 10 req/15min por IP
+  - `apiLimiter`: 100 req/min por IP
+  - `paidApiLimiter`: 20 req/hora por usuário — aplicado em enrich-cpf, analyze-crlv, buscar-placa
+- **Segurança de erros**: rotas NUNCA expõem err.message ao cliente (apenas console.error no servidor)
 
 ## PÁGINAS DO SISTEMA (sidebar - ordem exata)
 1. **Dashboard** - Resumo do dia, presentes/ausentes, últimos registros
@@ -195,12 +208,16 @@ APP_NAME=Lar Digital
 11. **Documentos** - Upload, análise Vision AI, vinculação a funcionário/veículo, via WhatsApp
 12. **Entregas** - Cards com thumbnail, upload manual com foto, confirmação WhatsApp (SIM/NÃO)
 13. **Estoque** - CRUD itens, movimentações (entrada/saída/ajuste), alertas estoque baixo, categorias
-14. **Tarefas** - CRUD, multi-assign funcionários, prioridade/prazo, integração WhatsApp
-15. **Insights IA** - Operacional + Melhorias (admin only)
-16. **Usuários** - CRUD, roles, permissões tarefas, excluir com confirmação, reenviar senha (admin only)
-17. **Audit Log** - Log de ações (admin only)
-18. **Log de Acessos** - Login/logout/falhas com IP e navegador (admin only, bi-door-open)
-19. **Perfil** - Editar dados, trocar senha, 2FA
+14. **Compras** - Listas de compras, histórico de preços, notas fiscais, economia mensal (admin only, bi-cart4)
+15. **Despesas** - Reembolso de despesas, aprovação/rejeição, comprovantes, relatório com gráficos (admin only, bi-receipt)
+16. **Tarefas** - CRUD, multi-assign funcionários, prioridade/prazo, integração WhatsApp
+17. **Insights IA** - Operacional + Melhorias (admin only)
+18. **Sugestões** - Sugestões de melhoria geradas automaticamente do WhatsApp, converter em tarefa (admin only)
+19. **Usuários** - CRUD, roles, permissões tarefas, excluir com confirmação, reenviar senha (admin only)
+20. **Audit Log** - Log de ações (admin only)
+21. **Log de Acessos** - Login/logout/falhas com IP e navegador (admin only, bi-door-open)
+22. **Ajuda** - Chat com IA para dúvidas sobre o sistema (todos os usuários, bi-chat-left-dots)
+23. **Perfil** - Editar dados, trocar senha, 2FA
 
 ## CADASTRO DE CARGOS
 nome, precisa_bater_ponto, permite_hora_extra, permite_dia_extra,
@@ -245,7 +262,8 @@ users, funcionarios, cargos, registros, feriados (com manual boolean),
 funcionario_transportes, entregas, holerites, email_logs,
 audit_log, access_log, ferias, pending_confirmations,
 tarefas, tarefa_funcionarios, whatsapp_chats, veiculos, documentos,
-estoque_itens, estoque_movimentacoes
+estoque_itens, estoque_movimentacoes, refresh_tokens,
+listas_compras, lista_compras_itens, historico_precos, despesas
 
 ## ENTREGAS - FLUXO COMPLETO
 ### Via WhatsApp (automático com confirmação):
@@ -400,9 +418,13 @@ NÃO usar parser manual de palavras-chave. Usar IA para interpretar.
 1. Mensagem chega no grupo WhatsApp
 2. Enviar para API Claude com prompt de interpretação
 3. API retorna JSON: {tipo, funcionario, horario, ajuste, confianca}
-4. Se confiança > 80%: registrar automaticamente
-5. Se confiança 50-80%: pedir confirmação SIM/NÃO no WhatsApp
-6. Se confiança < 50%: ignorar
+4. **Com horário explícito** (ex: "cheguei às 8:30"):
+   - Confiança >= 90%: registrar automaticamente com o horário mencionado
+   - Confiança 50-89%: pedir confirmação SIM/NÃO no WhatsApp
+5. **Sem horário explícito** (ex: "cheguei", "voltando do almoço"):
+   - Confiança >= 80%: registrar automaticamente com horário atual
+   - Confiança 50-79%: pedir confirmação SIM/NÃO no WhatsApp
+6. Confiança < 50%: ignorar (criar sugestão se msg >= 5 chars alfanuméricos)
 
 ### Config API:
 - Endpoint: https://api.anthropic.com/v1/messages
@@ -429,12 +451,24 @@ NÃO usar parser manual de palavras-chave. Usar IA para interpretar.
 - Verificar com: `pm2 logs lardigital-sandbox --lines 50`
 
 ## CRON JOBS
-- 20min: Health check WhatsApp → email se offline (schedulers.js)
+- 20min: Health check WhatsApp → email se offline (schedulers.js, produção only)
 - 30min: IMAP holerites
 - Dia 01 08:00: Email fechamento mês
 - Dia 05 08:00: Email holerites pendentes
 - Mensal: Sync feriados via Google Calendar (respeitar manual=true)
-- Diário: Alertas férias
+- Diário 08:00: Alertas férias
+- Diário 09:30: Alerta de ausência — verifica funcionários sem registro de entrada (WhatsApp DM / email)
+- Sexta 18:00: Resumo semanal via WhatsApp DM para admin (fallback email)
+
+## ALERTA DE AUSÊNCIA (G3)
+- Scheduler diário às 09:30 (src/services/schedulers.js → checkAbsences)
+- Filtra funcionários com cargo.precisa_bater_ponto=1 e cargo.aparece_relatorios=1
+- Verifica se funcionário tem horario_entrada definido
+- Ignora: fins de semana, feriados, funcionários de férias, quem já registrou entrada
+- Tolerância: 15 minutos após horário esperado
+- Alerta via WhatsApp DM para admin (fallback: email)
+- Mensagem lista cada funcionário ausente com horário esperado e tempo de atraso
+- Endpoint manual: POST /api/dashboard/presenca/check-ausencias (admin only)
 
 ## FERIADOS - SYNC GOOGLE CALENDAR
 - Sincronizar feriados do Google Calendar API (calendário público brasileiro)
@@ -450,7 +484,7 @@ NÃO usar parser manual de palavras-chave. Usar IA para interpretar.
 - Endpoint: GET `/api/version` (retorna {version, date, env})
 - Exibida no rodapé do index.html (canto inferior direito) e no copyright do login.html
 - Formato de exibição: "v2.0.0 | Sandbox | 24/02/2026" (versão | ambiente capitalizado | data DD/MM/YYYY)
-- Versão atual: 2.5.0
+- Versão atual: 2.6.0
 
 ## REGISTROS DE PONTO - FILTROS
 - Filtro por mês/ano (dropdown) ou período manual (data início/fim)
@@ -580,6 +614,93 @@ un, kg, g, L, ml, cx, pct, rolo, par, kit
 - Histórico de movimentações em modal modal-lg
 - Toggle inativos (mesmo padrão)
 
+## COMPRAS - LISTA DE COMPRAS
+### Frontend: public/compras.html
+- Sidebar: bi-cart4, após Entregas (admin only)
+- 3 Tabs: Listas (cards com progresso), Histórico de Preços (busca + comparativo), Notas Fiscais (upload + grid)
+- Modal nova/editar lista: nome, categoria, observações
+- Modal marcar comprado: preço pago, estabelecimento, data
+
+### Model: src/models/ListaCompras.js
+- `normalizeName(name)` - lowercase, remove accents, trim, collapse spaces
+- `getAllListas(includeCompleted)` / `findListaById(id)` / `createLista` / `updateLista` / `deleteLista`
+- `getItens` / `addItem` / `updateItem` / `deleteItem` / `markAsBought` (insere em historico_precos)
+- `searchPrecos(query)` / `getPrecoHistory(nome)` / `getComparativo(mes, ano)` / `addPreco`
+
+### API: src/routes/listasCompras.js (montado em /api/listas-compras)
+- GET / — listar (query: includeCompleted)
+- GET /:id — detalhes com itens
+- POST / — criar lista (requireGestor)
+- PUT /:id — atualizar (requireGestor)
+- DELETE /:id — excluir (requireGestor, cascade itens)
+- GET /:id/itens — itens da lista
+- POST /:id/itens — adicionar item (requireGestor)
+- PUT /itens/:itemId — atualizar item (requireGestor)
+- DELETE /itens/:itemId — excluir item (requireGestor)
+- PUT /itens/:itemId/comprado — marcar comprado (requireGestor, preco_pago + estabelecimento)
+- GET /historico-precos/search — buscar preços (query: q=termo)
+- GET /historico-precos/comparativo — economia mensal (query: mes, ano)
+- POST /notas-fiscais/processar — upload nota fiscal (multer, max 10MB)
+
+### Tabelas
+- `listas_compras` (id, nome, categoria, status [aberta|em_andamento|concluida], criado_por, observacoes, created_at, updated_at)
+- `lista_compras_itens` (id, lista_id FK CASCADE, nome_item, quantidade, unidade, categoria_item, comprado, preco_pago, estabelecimento, data_compra, nota_fiscal_path, observacao, created_at)
+- `historico_precos` (id, nome_item, nome_normalizado, preco, estabelecimento, categoria, fonte, nota_fiscal_path, data_compra, created_at)
+
+### Categorias listas: mercado, padaria, hortifruti, acougue, limpeza, pet, farmacia, material_construcao, outro
+### Categorias itens: alimento, bebida, limpeza, higiene, pet, hortifruti, carne, padaria, frios, congelados, outro
+### Status: aberta → em_andamento → concluida
+
+### WhatsApp Integration
+- Nota fiscal (foto) → Vision AI extrai itens → salva em historico_precos → match com lista ativa → cria despesa
+- "lista de compras" ou "enviar lista" → envia lista ativa formatada no grupo
+- "adicionar na lista: X" → adiciona item à lista ativa
+- "comprei X R$Y no Z" → marca item como comprado + registra preço
+
+## DESPESAS E REEMBOLSOS
+### Frontend: public/despesas.html
+- Sidebar: bi-receipt-cutoff, após Compras (admin only)
+- 3 Tabs: Todas (tabela paginada + filtros), Pendentes (aprovação rápida), Relatório (Chart.js)
+- Stats: 4 cards (Pendentes/Aprovadas/Reembolsadas/Rejeitadas com valor R$)
+- Charts: doughnut por categoria, bar por funcionário, line evolução 6 meses
+- Modal detalhe: todos os campos + comprovante tamanho completo
+- Modal nova despesa: funcionário, descrição, valor, categoria, estabelecimento, comprovante upload
+- Modal rejeição: textarea para motivo
+- Upload via FormData nativo (multipart)
+
+### Model: src/models/Despesa.js
+- `getAll(filters)` — paginado com JOIN funcionarios (status, funcionario_id, categoria, data_inicio, data_fim)
+- `findById(id)` / `create(data)` / `update(id, data)` / `delete(id)`
+- `approve(id, aprovadoPor)` / `reject(id, aprovadoPor, obs)` / `markReimbursed(id)`
+- `getRelatorio(mes, ano)` — totais por status, porCategoria, porFuncionario, evolucaoMensal
+
+### API: src/routes/despesas.js (montado em /api/despesas)
+- GET / — listar com filtros (status, funcionario_id, categoria, data_inicio, data_fim, page, limit)
+- GET /relatorio — relatório mensal (query: mes, ano)
+- GET /:id — detalhes
+- POST / — criar com comprovante (upload.single, requireGestor)
+- PUT /:id — atualizar (requireGestor)
+- POST /:id/aprovar — aprovar (requireGestor)
+- POST /:id/rejeitar — rejeitar com observação (requireGestor)
+- POST /:id/reembolsar — marcar reembolsado (requireGestor)
+- DELETE /:id — excluir (requireGestor)
+
+### Tabela: despesas
+id, funcionario_id FK, descricao, valor, categoria, estabelecimento, data_despesa,
+comprovante_path, dados_extraidos JSON, fonte (whatsapp|manual), fonte_chat,
+status (pendente|aprovado|rejeitado|reembolsado), aprovado_por, data_aprovacao,
+data_reembolso, observacao, created_at, updated_at
+
+### Categorias: mercado, padaria, hortifruti, farmacia, transporte, material_construcao, limpeza, pet, manutencao, outro
+### Fluxo de status: pendente → aprovado → reembolsado | pendente → rejeitado
+### Regras: só pendente pode aprovar/rejeitar, só aprovado pode reembolsar, hard delete (sem soft delete)
+### Storage: /public/uploads/comprovantes/comprovante-{timestamp}.{ext}
+
+### WhatsApp Integration
+- Comprovante PIX/pagamento (foto) → Vision AI extrai valor → cria despesa → notifica admin
+- Nota fiscal (foto) → extrai itens + total → cria despesa + registra preços
+- Admin aprovação via DM: responde com "aprovar" ou "rejeitar"
+
 ## APARECE_RELATORIOS - FILTRO POR CARGO
 - Campo `aparece_relatorios INTEGER DEFAULT 1` na tabela cargos
 - Cargos com aparece_relatorios=0 são excluídos de: Dashboard Presença, Relatórios, Folha, Gráficos
@@ -602,6 +723,26 @@ un, kg, g, L, ml, cx, pct, rolo, par, kit
 - Confirmação "SIM": cria entidade + salva documento vinculado
 - Confirmação "NÃO": rejeita sem criar
 
+## CENTRAL DE AJUDA (Chat IA)
+### Rota: src/routes/ajuda.js
+- POST /api/ajuda/ask — envia pergunta ao Claude Haiku, retorna resposta
+- Body: `{ pergunta: "texto" }` (max 500 caracteres)
+- Response: `{ success: true, answer: "..." }`
+- Model: claude-haiku-4-5-20251001 (rápido e barato)
+- Rate limit: 30 req/hora por usuário
+- Auth: qualquer usuário logado (admin, gestor, viewer)
+- System prompt: descrição completa das funcionalidades do Lar Digital
+- Sem histórico no banco — chat client-side apenas (perdido ao sair da página)
+
+### Frontend: public/ajuda.html
+- Página Tailwind standalone com chat IA
+- Sidebar: bi-chat-left-dots, visível para TODOS os usuários, antes de Perfil
+- 6 sugestões rápidas: registrar ponto, gerar relatório, adicionar funcionário, ver presença, cadastrar veículo, trocar senha
+- Bolhas de mensagem: user (azul, direita), bot (branco/cinza, esquerda com ícone robot)
+- Indicador "digitando..." com animação bounce
+- Dark mode completo, responsivo
+- Formatação markdown básica na resposta (bold, code, listas)
+
 ## HEALTH CHECK
 - Endpoint: GET /api/health (público, sem auth)
 - Retorna: status, version, env, timestamp, services (database, whatsapp, last_whatsapp_message, uptime)
@@ -616,10 +757,13 @@ un, kg, g, L, ml, cx, pct, rolo, par, kit
 ## WHATSAPP — DETECÇÃO DE FOTOS (PRIORIDADE)
 Quando uma foto é recebida no grupo, a ordem de processamento é:
 1. **Documento** (CRLV, RG, CPF, CNH, apólice): detecta via Vision AI → pede confirmação → cria/vincula veículo ou funcionário
-2. **Entrega** (pacote, encomenda): detecta via Vision AI → pede confirmação SIM/NÃO → registra entrega
-3. **Outros** (selfie, serviço, etc): armazena sem ação especial
-- Documento e Entrega são mutuamente exclusivos (is_document=true → is_entrega=false)
+2. **Nota Fiscal** (cupom fiscal com itens e preços, CNPJ): extrai itens → salva em historico_precos → tenta match com lista de compras ativa → cria despesa
+3. **Comprovante** (PIX, transferência bancária, recibo de pagamento): extrai valor → cria despesa → notifica admin para aprovação
+4. **Entrega** (pacote, encomenda): detecta via Vision AI → pede confirmação SIM/NÃO → registra entrega
+5. **Outros** (selfie, serviço, etc): cria sugestão de melhoria se texto >= 5 chars
+- Classificações são MUTUAMENTE EXCLUSIVAS (apenas um tipo por foto)
 - Fotos NUNCA criam tarefas automaticamente (tarefas só por texto ou mensagem privada)
+- Vision AI prompt classifica: DOCUMENTO | NOTA_FISCAL | COMPROVANTE | ENTREGA | OUTRO
 
 ## WHATSAPP — FETCH MISSED MESSAGES
 - Endpoint: POST /api/whatsapp/fetch-missed (admin, body: {limit: N})
@@ -628,6 +772,57 @@ Quando uma foto é recebida no grupo, a ordem de processamento é:
 - Pede confirmação SIM/NÃO para registros de ponto retroativos
 - Mensagens já armazenadas no DB são ignoradas (INSERT OR IGNORE)
 
+
+## ELEVENLABS — ÁUDIO NO WHATSAPP
+- Serviço: src/services/elevenlabs.js
+- Env: ELEVENLABS_API_KEY no .env
+- **STT (Speech-to-Text)**: POST https://api.elevenlabs.io/v1/speech-to-text
+  - Modelo: scribe_v1, idioma: por (português)
+  - Rate limit: 20 transcrições/hora
+  - Duração máxima: 5 minutos
+- **TTS (Text-to-Speech)**: POST https://api.elevenlabs.io/v1/text-to-speech/{voiceId}
+  - Modelo: eleven_multilingual_v2
+  - Voice padrão: ThT5KcBeYPX3keUQqHPh (Dorothy)
+  - Limite: 500 caracteres
+  - Output: MP3 em /public/uploads/whatsapp/tts/
+- **Fluxo grupo**: áudio recebido → transcreve → processa como texto → responde com áudio + texto
+- **Fluxo privado**: áudio recebido → transcreve → processa como tarefa/conversa → responde com áudio + texto
+- **Fallback**: sem API key → salva áudio, pede envio por texto
+
+## SUGESTÕES DE MELHORIA
+### Tabela: sugestoes_melhoria
+id, titulo, descricao, prioridade (alta|media|baixa), categoria, fonte, fonte_tipo (texto|audio|imagem),
+imagem_path, audio_path, transcricao, whatsapp_mensagem_id, remetente_nome, remetente_telefone,
+status (pendente|em_analise|convertida|ignorada), convertida_tarefa_id FK→tarefas, created_at, updated_at
+
+### API Endpoints
+- GET /api/sugestoes — lista com filtros (status, categoria, dataInicio, dataFim)
+- PUT /api/sugestoes/:id — atualizar (gestor)
+- POST /api/sugestoes/:id/converter-tarefa — converte em tarefa (gestor)
+- DELETE /api/sugestoes/:id — excluir (gestor)
+
+### Criação automática via WhatsApp
+- Mensagens que NÃO são: ponto, documento, entrega, tarefa → geradas como sugestão
+- Claude Haiku interpreta mensagem → gera título, descrição, categoria, prioridade
+- Bot responde com detalhes e pergunta "Criar como tarefa? (Sim/Não)"
+- Sim → pending_confirmation → converte em tarefa
+- Não → descarta confirmação
+
+### Frontend (sugestoes.html)
+- Sidebar: bi-lightbulb, após Férias (admin-only)
+- Cards com status, prioridade, categoria, remetente, data
+- Stats: pendentes, em análise, convertidas, total
+- Filtros: status, categoria
+- Modal de detalhe com edição de título/descrição/prioridade/status
+- Botões: Converter em Tarefa, Salvar, Excluir
+
+## RESUMO SEMANAL (WhatsApp)
+- **Scheduler**: sexta-feira às 18:00 (schedulers.js, `_scheduleWeekly`)
+- **Destinatário**: admin (DM privada via `sendPrivateMessage`)
+- **Fallback**: se WhatsApp offline, envia por email
+- **Conteúdo**: presença da semana (seg-sex), horas por funcionário, entregas, estoque baixo, tarefas concluídas, confirmações expiradas
+- **Método**: `Schedulers.sendWeeklySummary()` em src/services/schedulers.js
+- **WhatsApp DM**: `whatsappService.sendPrivateMessage(phone, text)` — novo método genérico para enviar mensagem privada a qualquer número
 
 ## COMANDOS ÚTEIS
 ```bash

@@ -8,7 +8,7 @@ class Documento {
     if (filters.entidade_tipo) { where.push('d.entidade_tipo = ?'); params.push(filters.entidade_tipo); }
     if (filters.entidade_id) { where.push('d.entidade_id = ?'); params.push(filters.entidade_id); }
     if (filters.dataInicio) { where.push('d.created_at >= ?'); params.push(filters.dataInicio); }
-    if (filters.dataFim) { where.push('d.created_at <= ? || " 23:59:59"'); params.push(filters.dataFim); }
+    if (filters.dataFim) { where.push('d.created_at <= ?'); params.push(filters.dataFim + ' 23:59:59'); }
     const whereClause = where.length > 0 ? 'WHERE ' + where.join(' AND ') : '';
     return db.prepare(`
       SELECT d.*,

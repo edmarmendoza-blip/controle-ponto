@@ -1,5 +1,19 @@
 const { db } = require('../config/database');
 
+const BASE_SELECT_COLUMNS = `
+  r.*, f.nome as funcionario_nome, COALESCE(c.nome, f.cargo) as cargo,
+  COALESCE(NULLIF(f.salario_hora, 0), c.valor_hora_extra, 0) as salario_hora,
+  COALESCE(NULLIF(f.valor_hora_extra, 0), c.valor_hora_extra, 0) as func_valor_hora_extra,
+  f.cargo_id, f.contabiliza_hora_extra,
+  c.precisa_bater_ponto as cargo_precisa_bater_ponto,
+  c.permite_hora_extra as cargo_permite_hora_extra,
+  c.permite_dia_extra as cargo_permite_dia_extra`;
+
+const BASE_JOIN = `
+  FROM registros r
+  JOIN funcionarios f ON r.funcionario_id = f.id
+  LEFT JOIN cargos c ON f.cargo_id = c.id`;
+
 class Registro {
   static findById(id) {
     return db.prepare(`
@@ -11,19 +25,7 @@ class Registro {
   }
 
   static getByDate(data, funcionarioId = null) {
-    let query = `
-      SELECT r.*, f.nome as funcionario_nome, COALESCE(c.nome, f.cargo) as cargo,
-        COALESCE(NULLIF(f.salario_hora, 0), c.valor_hora_extra, 0) as salario_hora,
-        COALESCE(NULLIF(f.valor_hora_extra, 0), c.valor_hora_extra, 0) as func_valor_hora_extra,
-        f.cargo_id, f.contabiliza_hora_extra,
-        c.precisa_bater_ponto as cargo_precisa_bater_ponto,
-        c.permite_hora_extra as cargo_permite_hora_extra,
-        c.permite_dia_extra as cargo_permite_dia_extra
-      FROM registros r
-      JOIN funcionarios f ON r.funcionario_id = f.id
-      LEFT JOIN cargos c ON f.cargo_id = c.id
-      WHERE r.data = ?
-    `;
+    let query = `SELECT ${BASE_SELECT_COLUMNS} ${BASE_JOIN} WHERE r.data = ?`;
     const params = [data];
     if (funcionarioId) {
       query += ' AND r.funcionario_id = ?';
@@ -34,19 +36,7 @@ class Registro {
   }
 
   static getByPeriod(dataInicio, dataFim, funcionarioId = null) {
-    let query = `
-      SELECT r.*, f.nome as funcionario_nome, COALESCE(c.nome, f.cargo) as cargo,
-        COALESCE(NULLIF(f.salario_hora, 0), c.valor_hora_extra, 0) as salario_hora,
-        COALESCE(NULLIF(f.valor_hora_extra, 0), c.valor_hora_extra, 0) as func_valor_hora_extra,
-        f.cargo_id, f.contabiliza_hora_extra,
-        c.precisa_bater_ponto as cargo_precisa_bater_ponto,
-        c.permite_hora_extra as cargo_permite_hora_extra,
-        c.permite_dia_extra as cargo_permite_dia_extra
-      FROM registros r
-      JOIN funcionarios f ON r.funcionario_id = f.id
-      LEFT JOIN cargos c ON f.cargo_id = c.id
-      WHERE r.data BETWEEN ? AND ?
-    `;
+    let query = `SELECT ${BASE_SELECT_COLUMNS} ${BASE_JOIN} WHERE r.data BETWEEN ? AND ?`;
     const params = [dataInicio, dataFim];
     if (funcionarioId) {
       query += ' AND r.funcionario_id = ?';
@@ -99,19 +89,7 @@ class Registro {
     const lastDay = new Date(ano, mes, 0).getDate();
     const dataFim = `${ano}-${String(mes).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
 
-    let query = `
-      SELECT r.*, f.nome as funcionario_nome, COALESCE(c.nome, f.cargo) as cargo,
-        COALESCE(NULLIF(f.salario_hora, 0), c.valor_hora_extra, 0) as salario_hora,
-        COALESCE(NULLIF(f.valor_hora_extra, 0), c.valor_hora_extra, 0) as func_valor_hora_extra,
-        f.cargo_id, f.contabiliza_hora_extra,
-        c.precisa_bater_ponto as cargo_precisa_bater_ponto,
-        c.permite_hora_extra as cargo_permite_hora_extra,
-        c.permite_dia_extra as cargo_permite_dia_extra
-      FROM registros r
-      JOIN funcionarios f ON r.funcionario_id = f.id
-      LEFT JOIN cargos c ON f.cargo_id = c.id
-      WHERE r.data BETWEEN ? AND ?
-    `;
+    let query = `SELECT ${BASE_SELECT_COLUMNS} ${BASE_JOIN} WHERE r.data BETWEEN ? AND ?`;
     const params = [dataInicio, dataFim];
     if (funcionarioId) {
       query += ' AND r.funcionario_id = ?';

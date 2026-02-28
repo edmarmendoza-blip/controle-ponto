@@ -19,7 +19,7 @@ router.post('/sync', authenticateToken, requireAdmin, async (req, res) => {
     });
   } catch (err) {
     console.error('Sync holidays error:', err);
-    res.status(500).json({ error: 'Erro ao sincronizar feriados: ' + err.message });
+    res.status(500).json({ error: 'Erro ao sincronizar feriados' });
   }
 });
 

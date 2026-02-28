@@ -1,12 +1,44 @@
 const jwt = require('jsonwebtoken');
 const { db } = require('../config/database');
 
+// In-memory token blacklist (for logout invalidation)
+// Map<token, expiryTimestamp> — auto-cleaned every 30 min
+const _tokenBlacklist = new Map();
+let _lastBlacklistCleanup = 0;
+
+function blacklistToken(token) {
+  try {
+    const decoded = jwt.decode(token);
+    const exp = decoded && decoded.exp ? decoded.exp * 1000 : Date.now() + 24 * 60 * 60 * 1000;
+    _tokenBlacklist.set(token, exp);
+  } catch (e) {
+    // If decode fails, blacklist with 24h expiry
+    _tokenBlacklist.set(token, Date.now() + 24 * 60 * 60 * 1000);
+  }
+}
+
+function isTokenBlacklisted(token) {
+  // Periodic cleanup (every 30 min)
+  const now = Date.now();
+  if (now - _lastBlacklistCleanup > 30 * 60 * 1000) {
+    _lastBlacklistCleanup = now;
+    for (const [t, exp] of _tokenBlacklist) {
+      if (exp < now) _tokenBlacklist.delete(t);
+    }
+  }
+  return _tokenBlacklist.has(token);
+}
+
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
     return res.status(401).json({ error: 'Token de acesso não fornecido' });
+  }
+
+  if (isTokenBlacklisted(token)) {
+    return res.status(401).json({ error: 'Token invalidado (logout)' });
   }
 
   try {
@@ -41,4 +73,4 @@ function requireGestor(req, res, next) {
   next();
 }
 
-module.exports = { authenticateToken, requireAdmin, requireGestor };
+module.exports = { authenticateToken, requireAdmin, requireGestor, blacklistToken };

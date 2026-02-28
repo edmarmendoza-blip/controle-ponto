@@ -3,11 +3,22 @@ const { body, param, validationResult } = require('express-validator');
 const Veiculo = require('../models/Veiculo');
 const { authenticateToken, requireGestor } = require('../middleware/auth');
 const AuditLog = require('../services/auditLog');
+const { paidApiLimiter } = require('../middleware/rateLimiter');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
 const router = express.Router();
+
+// Anthropic SDK singleton for Vision AI
+let _anthropicClient = null;
+function getAnthropicClient() {
+  if (!_anthropicClient && process.env.ANTHROPIC_API_KEY) {
+    const Anthropic = require('@anthropic-ai/sdk');
+    _anthropicClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  }
+  return _anthropicClient;
+}
 
 // Multer for CRLV photo upload
 const storage = multer.diskStorage({
@@ -66,8 +77,14 @@ router.get('/:id', authenticateToken, [
 });
 
 // POST /api/veiculos
-router.post('/', authenticateToken, requireGestor, (req, res) => {
+router.post('/', authenticateToken, requireGestor, [
+  body('placa').optional().trim().isLength({ min: 7, max: 8 }).withMessage('Placa inválida'),
+  body('marca').optional().trim(),
+  body('modelo').optional().trim(),
+], (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
     const id = Veiculo.create(req.body);
     AuditLog.log(req.user.id, 'create', 'veiculo', id, { placa: req.body.placa, modelo: req.body.modelo }, req.ip);
     res.status(201).json({ id, message: 'Veículo cadastrado com sucesso' });
@@ -90,7 +107,9 @@ router.put('/:id', authenticateToken, requireGestor, [
     const veiculo = Veiculo.findById(req.params.id);
     if (!veiculo) return res.status(404).json({ error: 'Veículo não encontrado' });
     Veiculo.update(req.params.id, req.body);
-    AuditLog.log(req.user.id, 'update', 'veiculo', parseInt(req.params.id), req.body, req.ip);
+    const safeBody = { ...req.body };
+    ['chassi', 'renavam'].forEach(f => { if (safeBody[f]) safeBody[f] = '***'; });
+    AuditLog.log(req.user.id, 'update', 'veiculo', parseInt(req.params.id), safeBody, req.ip);
     res.json({ message: 'Veículo atualizado com sucesso' });
   } catch (err) {
     if (err.message && err.message.includes('UNIQUE')) {
@@ -135,13 +154,11 @@ router.post('/:id/crlv', authenticateToken, requireGestor, upload.single('foto')
 });
 
 // POST /api/veiculos/analyze-crlv - Vision AI to extract data from CRLV photo
-router.post('/analyze-crlv', authenticateToken, requireGestor, upload.single('foto'), async (req, res) => {
+router.post('/analyze-crlv', authenticateToken, requireGestor, paidApiLimiter, upload.single('foto'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'Nenhuma foto enviada' });
-    if (!process.env.ANTHROPIC_API_KEY) return res.status(500).json({ error: 'ANTHROPIC_API_KEY não configurada' });
-
-    const Anthropic = require('@anthropic-ai/sdk');
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const client = getAnthropicClient();
+    if (!client) return res.status(500).json({ error: 'ANTHROPIC_API_KEY não configurada' });
     const imageData = fs.readFileSync(req.file.path);
     const base64 = imageData.toString('base64');
     const mimeType = req.file.mimetype || 'image/jpeg';
@@ -175,12 +192,12 @@ router.post('/analyze-crlv', authenticateToken, requireGestor, upload.single('fo
     res.json({ success: true, data });
   } catch (err) {
     console.error('Analyze CRLV error:', err);
-    res.status(500).json({ error: 'Erro ao analisar documento: ' + err.message });
+    res.status(500).json({ error: 'Erro ao analisar documento' });
   }
 });
 
 // POST /api/veiculos/buscar-placa - BigDataCorp vehicle lookup
-router.post('/buscar-placa', authenticateToken, async (req, res) => {
+router.post('/buscar-placa', authenticateToken, paidApiLimiter, async (req, res) => {
   try {
     const { placa } = req.body;
     if (!placa) return res.status(400).json({ error: 'Placa obrigatória' });
@@ -274,7 +291,7 @@ router.post('/buscar-placa', authenticateToken, async (req, res) => {
     res.json({ success: true, data: vehicleData });
   } catch (err) {
     console.error('Buscar placa error:', err);
-    res.status(500).json({ error: 'Erro ao buscar placa: ' + err.message });
+    res.status(500).json({ error: 'Erro ao buscar placa' });
   }
 });
 

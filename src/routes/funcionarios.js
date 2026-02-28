@@ -7,6 +7,7 @@ const { db } = require('../config/database');
 const { authenticateToken, requireAdmin, requireGestor } = require('../middleware/auth');
 const AuditLog = require('../services/auditLog');
 const EmailService = require('../services/emailService');
+const { paidApiLimiter } = require('../middleware/rateLimiter');
 
 const router = express.Router();
 
@@ -99,12 +100,12 @@ Dias da semana: "seg", "ter", "qua", "qui", "sex", "sab", "dom".`
     res.json({ jornada: parsed, texto_original: texto });
   } catch (err) {
     console.error('Parse jornada error:', err);
-    res.status(500).json({ error: 'Erro ao processar jornada: ' + err.message });
+    res.status(500).json({ error: 'Erro ao processar jornada' });
   }
 });
 
 // POST /api/funcionarios/enrich-cpf - BigDataCorp CPF lookup
-router.post('/enrich-cpf', authenticateToken, requireGestor, async (req, res) => {
+router.post('/enrich-cpf', authenticateToken, requireGestor, paidApiLimiter, async (req, res) => {
   try {
     const { cpf } = req.body;
     if (!cpf) return res.status(400).json({ error: 'CPF obrigatório' });
@@ -233,7 +234,7 @@ router.post('/enrich-cpf', authenticateToken, requireGestor, async (req, res) =>
     res.json({ success: true, data: personData, raw: result });
   } catch (err) {
     console.error('Enrich CPF error:', err);
-    res.status(500).json({ error: 'Erro ao consultar CPF: ' + err.message });
+    res.status(500).json({ error: 'Erro ao consultar CPF' });
   }
 });
 
@@ -327,7 +328,11 @@ router.put('/:id', authenticateToken, requireGestor, [
     }
     const oldFeriasStatus = funcionario.ferias_status;
     Funcionario.update(req.params.id, req.body);
-    AuditLog.log(req.user.id, 'update', 'funcionario', parseInt(req.params.id), req.body, req.ip);
+    // Sanitize sensitive fields before logging
+    const safeBody = { ...req.body };
+    const sensitiveFields = ['cpf', 'rg', 'pix_chave', 'pix_tipo', 'pix_banco', 'bigdatacorp_data', 'telefone_emergencia'];
+    sensitiveFields.forEach(f => { if (safeBody[f]) safeBody[f] = '***'; });
+    AuditLog.log(req.user.id, 'update', 'funcionario', parseInt(req.params.id), safeBody, req.ip);
 
     // Send vacation notification if status changed to approved
     if (req.body.ferias_status && req.body.ferias_status !== oldFeriasStatus) {
@@ -438,7 +443,11 @@ router.delete('/transportes/:transporteId', authenticateToken, requireGestor, [
 router.post('/:id/foto', authenticateToken, requireGestor, (req, res) => {
   fotoUpload.single('foto')(req, res, (err) => {
     if (err) {
-      return res.status(400).json({ error: err.message || 'Erro no upload' });
+      console.error('[Funcionario] Upload foto error:', err.message);
+      const msg = err.code === 'LIMIT_FILE_SIZE' ? 'Arquivo muito grande (máx 10MB)'
+        : err.message && err.message.includes('Apenas imagens') ? err.message
+        : 'Erro no upload da foto';
+      return res.status(400).json({ error: msg });
     }
     if (!req.file) {
       return res.status(400).json({ error: 'Nenhuma foto enviada' });

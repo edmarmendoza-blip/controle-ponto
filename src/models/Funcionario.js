@@ -116,9 +116,11 @@ class Funcionario {
   }
 
   static search(query) {
+    // Escape LIKE special characters to prevent wildcard matching
+    const escaped = query.replace(/[%_\\]/g, '\\$&');
     return db.prepare(
-      "SELECT * FROM funcionarios WHERE nome LIKE ? AND status = 'ativo' ORDER BY nome"
-    ).all(`%${query}%`);
+      "SELECT * FROM funcionarios WHERE nome LIKE ? ESCAPE '\\' AND status = 'ativo' ORDER BY nome"
+    ).all(`%${escaped}%`);
   }
 
   // --- Transportes sub-table ---
@@ -137,10 +139,13 @@ class Funcionario {
   }
 
   static replaceTransportes(funcionarioId, transportes) {
-    db.prepare('DELETE FROM funcionario_transportes WHERE funcionario_id = ?').run(funcionarioId);
-    for (const t of transportes) {
-      this.addTransporte(funcionarioId, t);
-    }
+    const replaceAll = db.transaction(() => {
+      db.prepare('DELETE FROM funcionario_transportes WHERE funcionario_id = ?').run(funcionarioId);
+      for (const t of transportes) {
+        this.addTransporte(funcionarioId, t);
+      }
+    });
+    replaceAll();
   }
 
   static calcularVT(funcionarioId, diasTrabalhados) {

@@ -1,5 +1,10 @@
 const Feriado = require('../models/Feriado');
 
+// In-memory cache for getDayType() — avoids repeated DB queries for the same date
+const _dayTypeCache = new Map();
+let _dayTypeCacheTime = 0;
+const _dayTypeCacheTTL = 5 * 60 * 1000; // 5 minutes
+
 class FeriadosService {
   static isHoliday(data) {
     return Feriado.isHoliday(data);
@@ -15,18 +20,38 @@ class FeriadosService {
     return date.getDay() === 6;
   }
 
+  // Invalidate cache (call when feriados are edited)
+  static clearCache() {
+    _dayTypeCache.clear();
+    _dayTypeCacheTime = 0;
+  }
+
   static getDayType(data) {
+    // Reset cache if TTL expired
+    const now = Date.now();
+    if ((now - _dayTypeCacheTime) > _dayTypeCacheTTL) {
+      _dayTypeCache.clear();
+      _dayTypeCacheTime = now;
+    }
+
+    if (_dayTypeCache.has(data)) {
+      return _dayTypeCache.get(data);
+    }
+
+    let result;
     const feriado = this.isHoliday(data);
     if (feriado) {
-      return { tipo: 'feriado', descricao: feriado.descricao, feriadoTipo: feriado.tipo };
+      result = { tipo: 'feriado', descricao: feriado.descricao, feriadoTipo: feriado.tipo };
+    } else if (this.isDomingo(data)) {
+      result = { tipo: 'domingo', descricao: 'Domingo' };
+    } else if (this.isSabado(data)) {
+      result = { tipo: 'sabado', descricao: 'Sábado' };
+    } else {
+      result = { tipo: 'normal', descricao: 'Dia útil' };
     }
-    if (this.isDomingo(data)) {
-      return { tipo: 'domingo', descricao: 'Domingo' };
-    }
-    if (this.isSabado(data)) {
-      return { tipo: 'sabado', descricao: 'Sábado' };
-    }
-    return { tipo: 'normal', descricao: 'Dia útil' };
+
+    _dayTypeCache.set(data, result);
+    return result;
   }
 
   static getWorkingDaysInMonth(mes, ano) {

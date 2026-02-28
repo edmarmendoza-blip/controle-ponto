@@ -3,12 +3,27 @@ const jwt = require('jsonwebtoken');
 const { body, param, query, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { loginLimiter } = require('../middleware/rateLimiter');
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { authenticateToken, requireAdmin, blacklistToken } = require('../middleware/auth');
 const AuditLog = require('../services/auditLog');
 const EmailService = require('../services/emailService');
 const { db } = require('../config/database');
 
+const crypto = require('crypto');
+
 const router = express.Router();
+
+// Refresh token helpers
+const REFRESH_TOKEN_EXPIRY_DAYS = 30;
+
+function generateRefreshToken(userId) {
+  const token = crypto.randomBytes(40).toString('hex');
+  const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+  const expiresStr = expiresAt.toISOString().replace('T', ' ').split('.')[0];
+  db.prepare('INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)').run(userId, token, expiresStr);
+  // Limit to 5 active tokens per user (cleanup old ones)
+  db.prepare("DELETE FROM refresh_tokens WHERE user_id = ? AND id NOT IN (SELECT id FROM refresh_tokens WHERE user_id = ? ORDER BY created_at DESC LIMIT 5)").run(userId, userId);
+  return token;
+}
 
 function logAccess(userId, nome, email, acao, ip, userAgent) {
   try {
@@ -69,11 +84,14 @@ router.post('/login', loginLimiter, [
       { expiresIn: process.env.JWT_EXPIRATION || '24h' }
     );
 
+    const refreshToken = generateRefreshToken(user.id);
+
     AuditLog.log(user.id, 'login', 'user', user.id, null, req.ip);
     logAccess(user.id, user.name, user.email, 'login', req.ip, req.get('User-Agent'));
 
     res.json({
       token,
+      refreshToken,
       user: { id: user.id, email: user.email, name: user.name, role: user.role }
     });
   } catch (err) {
@@ -90,7 +108,7 @@ router.get('/me', authenticateToken, (req, res) => {
 // PUT /api/auth/password
 router.put('/password', authenticateToken, [
   body('currentPassword').notEmpty().withMessage('Senha atual obrigatória'),
-  body('newPassword').isLength({ min: 6 }).withMessage('Nova senha deve ter no mínimo 6 caracteres')
+  body('newPassword').isLength({ min: 8 }).withMessage('Nova senha deve ter no mínimo 8 caracteres')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -127,7 +145,7 @@ router.get('/users', authenticateToken, requireAdmin, (req, res) => {
 // POST /api/auth/users (admin)
 router.post('/users', authenticateToken, requireAdmin, [
   body('email').isEmail().normalizeEmail().withMessage('Email inválido'),
-  body('password').isLength({ min: 6 }).withMessage('Senha deve ter no mínimo 6 caracteres'),
+  body('password').isLength({ min: 8 }).withMessage('Senha deve ter no mínimo 8 caracteres'),
   body('name').notEmpty().trim().withMessage('Nome obrigatório'),
   body('role').isIn(['admin', 'gestor', 'viewer']).withMessage('Role inválido')
 ], async (req, res) => {
@@ -190,7 +208,7 @@ router.put('/users/:id', authenticateToken, requireAdmin, [
   body('email').optional().isEmail().normalizeEmail().withMessage('Email inválido'),
   body('role').optional().isIn(['admin', 'gestor', 'viewer']).withMessage('Role inválido'),
   body('active').optional().isInt({ min: 0, max: 1 }).withMessage('Active inválido'),
-  body('password').optional().isLength({ min: 6 }).withMessage('Senha deve ter no mínimo 6 caracteres')
+  body('password').optional().isLength({ min: 8 }).withMessage('Senha deve ter no mínimo 8 caracteres')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -472,7 +490,7 @@ router.post('/forgot-password', loginLimiter, [
 router.post('/reset-password', loginLimiter, [
   body('email').isEmail().normalizeEmail().withMessage('Email inválido'),
   body('code').notEmpty().withMessage('Código obrigatório'),
-  body('newPassword').isLength({ min: 6 }).withMessage('Nova senha deve ter pelo menos 6 caracteres')
+  body('newPassword').isLength({ min: 8 }).withMessage('Nova senha deve ter pelo menos 8 caracteres')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -527,9 +545,64 @@ router.get('/audit-log', authenticateToken, requireAdmin, (req, res) => {
   }
 });
 
+// POST /api/auth/refresh - Refresh access token using refresh token
+router.post('/refresh', [
+  body('refreshToken').notEmpty().withMessage('Refresh token obrigatório')
+], (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { refreshToken } = req.body;
+    const stored = db.prepare("SELECT * FROM refresh_tokens WHERE token = ? AND expires_at > datetime('now','localtime')").get(refreshToken);
+
+    if (!stored) {
+      return res.status(401).json({ error: 'Refresh token inválido ou expirado' });
+    }
+
+    const user = db.prepare('SELECT id, email, name, role, active FROM users WHERE id = ? AND active = 1').get(stored.user_id);
+    if (!user) {
+      db.prepare('DELETE FROM refresh_tokens WHERE token = ?').run(refreshToken);
+      return res.status(401).json({ error: 'Usuário não encontrado ou inativo' });
+    }
+
+    // Issue new access token
+    const token = jwt.sign(
+      { userId: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRATION || '24h' }
+    );
+
+    // Rotate refresh token (invalidate old, issue new)
+    db.prepare('DELETE FROM refresh_tokens WHERE token = ?').run(refreshToken);
+    const newRefreshToken = generateRefreshToken(user.id);
+
+    res.json({
+      token,
+      refreshToken: newRefreshToken,
+      user: { id: user.id, email: user.email, name: user.name, role: user.role }
+    });
+  } catch (err) {
+    console.error('Refresh token error:', err);
+    res.status(500).json({ error: 'Erro ao renovar token' });
+  }
+});
+
 // POST /api/auth/logout
 router.post('/logout', authenticateToken, (req, res) => {
   try {
+    // Blacklist the access token so it can't be reused
+    const authHeader = req.headers['authorization'];
+    const accessToken = authHeader && authHeader.split(' ')[1];
+    if (accessToken) blacklistToken(accessToken);
+
+    // Remove refresh tokens for this user
+    const { refreshToken } = req.body || {};
+    if (refreshToken) {
+      db.prepare('DELETE FROM refresh_tokens WHERE token = ?').run(refreshToken);
+    }
     logAccess(req.user.id, req.user.name, req.user.email, 'logout', req.ip, req.get('User-Agent'));
   } catch (err) {
     console.error('[AccessLog] Logout error:', err.message);

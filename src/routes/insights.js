@@ -54,7 +54,7 @@ router.post('/generate', authenticateToken, requireAdmin, async (req, res) => {
     res.json(result);
   } catch (err) {
     console.error('[Insights] Generate error:', err.message);
-    res.status(500).json({ error: 'Erro ao gerar insights: ' + err.message });
+    res.status(500).json({ error: 'Erro ao gerar insights' });
   }
 });
 
@@ -77,7 +77,7 @@ router.post('/generate-period', authenticateToken, requireAdmin, async (req, res
     res.json(result);
   } catch (err) {
     console.error('[Insights] Generate period error:', err.message);
-    res.status(500).json({ error: 'Erro ao gerar insights do período: ' + err.message });
+    res.status(500).json({ error: 'Erro ao gerar insights do período' });
   }
 });
 
@@ -91,7 +91,7 @@ router.post('/generate-melhorias', authenticateToken, requireAdmin, async (req, 
     res.json(result);
   } catch (err) {
     console.error('[Insights] Generate melhorias error:', err.message);
-    res.status(500).json({ error: 'Erro ao gerar insights de melhorias: ' + err.message });
+    res.status(500).json({ error: 'Erro ao gerar insights de melhorias' });
   }
 });
 
