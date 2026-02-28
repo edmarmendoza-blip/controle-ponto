@@ -692,6 +692,34 @@ function initializeDatabase() {
     }
   } catch (e) { console.error('[Migration] pending_confirmations despesa/nota_fiscal:', e.message); }
 
+  // Add email_action, sugestao, documento to pending_confirmations tipo CHECK if needed
+  try {
+    const pcInfo4 = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='pending_confirmations'").get();
+    if (pcInfo4 && pcInfo4.sql && !pcInfo4.sql.includes("'email_action'")) {
+      try { db.exec('DROP TABLE IF EXISTS pending_confirmations_mig4'); } catch(e) {}
+      db.exec(`
+        CREATE TABLE pending_confirmations_mig4 (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          funcionario_id INTEGER,
+          tipo TEXT NOT NULL CHECK(tipo IN ('entrada', 'saida', 'saida_almoco', 'retorno_almoco', 'entrega', 'documento_upload', 'despesa_aprovacao', 'nota_fiscal', 'email_action', 'sugestao', 'documento')),
+          data TEXT,
+          horario TEXT,
+          message_text TEXT,
+          status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'confirmed', 'denied', 'expired', 'rejected')),
+          created_at DATETIME DEFAULT (datetime('now','localtime')),
+          resolved_at DATETIME,
+          whatsapp_chat_id TEXT,
+          FOREIGN KEY (funcionario_id) REFERENCES funcionarios(id)
+        );
+        INSERT INTO pending_confirmations_mig4 (id, funcionario_id, tipo, data, horario, message_text, status, created_at, resolved_at, whatsapp_chat_id) SELECT id, funcionario_id, tipo, data, horario, message_text, status, created_at, resolved_at, whatsapp_chat_id FROM pending_confirmations;
+        DROP TABLE pending_confirmations;
+        ALTER TABLE pending_confirmations_mig4 RENAME TO pending_confirmations;
+        CREATE INDEX IF NOT EXISTS idx_pending_confirmations_status ON pending_confirmations(funcionario_id, status);
+      `);
+      console.log('[Migration] pending_confirmations: added email_action, sugestao, documento to tipo CHECK');
+    }
+  } catch (e) { console.error('[Migration] pending_confirmations email_action/sugestao/documento:', e.message); }
+
   // Migration: cargos.aparece_relatorios
   try {
     const cols = db.prepare("PRAGMA table_info(cargos)").all();
