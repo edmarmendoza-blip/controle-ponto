@@ -291,9 +291,9 @@
 
       try {
         const data = await Shared.api(`/api/insights?page=${currentPage}&limit=10`);
-        const insights = data.insights || [];
+        const insights = data.data || data.insights || [];
         const total = data.total || 0;
-        totalPages = data.pages || 1;
+        totalPages = data.totalPages || data.pages || 1;
 
         document.getElementById('stat-total').textContent = total;
 
