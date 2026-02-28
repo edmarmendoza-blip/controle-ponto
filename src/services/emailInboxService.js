@@ -295,7 +295,7 @@ ${classificationInput.substring(0, 3000)}` }]
       await whatsappService.sendPrivateMessage(admin.telefone, msg);
 
       // Create pending confirmation for response
-      db.prepare(`INSERT INTO pending_confirmations (tipo, funcionario_id, data, horario, message_text, status, whatsapp_chat_id, created_at) VALUES ('email_action', 0, ?, '00:00', ?, 'pending', ?, datetime('now','localtime'))`).run(
+      db.prepare(`INSERT INTO pending_confirmations (tipo, funcionario_id, data, horario, message_text, status, whatsapp_chat_id, created_at) VALUES ('email_action', NULL, ?, '00:00', ?, 'pending', ?, datetime('now','localtime'))`).run(
         new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' }),
         JSON.stringify({ email_id: emailId, suggested_action: suggestedAction, from: fromName, subject }),
         admin.telefone.replace(/\D/g, '').replace(/^55/, '') + '@c.us'
