@@ -122,21 +122,17 @@ class Registro {
   }
 
   static getDashboardSummary(data) {
-    return db.prepare(`
+    const rows = db.prepare(`
       SELECT
         f.id as funcionario_id,
         f.nome,
-        f.cargo,
+        COALESCE(c.nome, f.cargo) as cargo,
         f.salario_hora,
         r.id as registro_id,
         r.entrada,
         r.saida,
         r.tipo,
-        CASE
-          WHEN r.entrada IS NOT NULL AND r.saida IS NULL THEN 'trabalhando'
-          WHEN r.entrada IS NOT NULL AND r.saida IS NOT NULL THEN 'saiu'
-          ELSE 'nao_registrou'
-        END as status_atual
+        r.observacao
       FROM funcionarios f
       LEFT JOIN cargos c ON f.cargo_id = c.id
       LEFT JOIN registros r ON f.id = r.funcionario_id AND r.data = ?
@@ -144,6 +140,39 @@ class Registro {
         AND (c.aparece_relatorios = 1 OR c.id IS NULL)
       ORDER BY f.nome
     `).all(data);
+
+    // Consolidate: 1 row per employee
+    const funcMap = {};
+    for (const row of rows) {
+      if (!funcMap[row.funcionario_id]) {
+        funcMap[row.funcionario_id] = {
+          funcionario_id: row.funcionario_id,
+          nome: row.nome,
+          cargo: row.cargo,
+          salario_hora: row.salario_hora,
+          entrada: null,
+          saida: null,
+          tipo: row.tipo
+        };
+      }
+      const f = funcMap[row.funcionario_id];
+      if (row.entrada || row.saida) {
+        const obs = (row.observacao || '').toLowerCase();
+        const isAlmoco = obs.includes('almoço') || obs.includes('almoco');
+        if (!isAlmoco) {
+          if (row.entrada && (!f.entrada || row.entrada < f.entrada)) f.entrada = row.entrada;
+          if (row.saida && (!f.saida || row.saida > f.saida)) f.saida = row.saida;
+        }
+        if (row.tipo) f.tipo = row.tipo;
+      }
+    }
+
+    return Object.values(funcMap).map(f => {
+      let status_atual = 'nao_registrou';
+      if (f.entrada && f.saida) status_atual = 'saiu';
+      else if (f.entrada) status_atual = 'trabalhando';
+      return { ...f, status_atual };
+    });
   }
 }
 

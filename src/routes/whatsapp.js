@@ -94,10 +94,13 @@ router.post('/test', authenticateToken, requireAdmin, async (req, res) => {
 });
 
 // POST /api/whatsapp/fetch-missed - Fetch and process missed messages from group history
+// body: { limit: N, autoRegister: true/false }
+// autoRegister=true: registers punches directly without SIM/NÃO confirmation (silent, no group messages)
 router.post('/fetch-missed', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const limit = parseInt(req.body.limit) || 100;
-    const result = await whatsappService.fetchMissedMessages(limit);
+    const autoRegister = req.body.autoRegister === true;
+    const result = await whatsappService.fetchMissedMessages(limit, { autoRegister });
     res.json(result);
   } catch (err) {
     res.status(500).json({ success: false, error: 'Erro ao buscar mensagens: ' + err.message });

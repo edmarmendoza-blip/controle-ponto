@@ -450,7 +450,7 @@ NÃO usar parser manual de palavras-chave. Usar IA para interpretar.
 - Endpoint: GET `/api/version` (retorna {version, date, env})
 - Exibida no rodapé do index.html (canto inferior direito) e no copyright do login.html
 - Formato de exibição: "v2.0.0 | Sandbox | 24/02/2026" (versão | ambiente capitalizado | data DD/MM/YYYY)
-- Versão atual: 2.3.0
+- Versão atual: 2.5.0
 
 ## REGISTROS DE PONTO - FILTROS
 - Filtro por mês/ano (dropdown) ou período manual (data início/fim)
@@ -602,11 +602,40 @@ un, kg, g, L, ml, cx, pct, rolo, par, kit
 - Confirmação "SIM": cria entidade + salva documento vinculado
 - Confirmação "NÃO": rejeita sem criar
 
+## HEALTH CHECK
+- Endpoint: GET /api/health (público, sem auth)
+- Retorna: status, version, env, timestamp, services (database, whatsapp, last_whatsapp_message, uptime)
+- Status: "healthy" (tudo ok) ou "degraded" (DB com problemas)
+
+## SCRIPTS
+- `scripts/backup-db.sh` — Backup do banco SQLite, retenção 30 dias, destino ~/backups/lardigital/
+- `scripts/deploy-production.sh <versão>` — Deploy completo: backup → rsync → version.json → npm install → pm2 restart → health check
+- `scripts/update-nginx.sh` — Gzip, security headers, cache de assets (executar como root)
+- Cron backup: `0 3 * * * /home/claude/controle-ponto/scripts/backup-db.sh`
+
+## WHATSAPP — DETECÇÃO DE FOTOS (PRIORIDADE)
+Quando uma foto é recebida no grupo, a ordem de processamento é:
+1. **Documento** (CRLV, RG, CPF, CNH, apólice): detecta via Vision AI → pede confirmação → cria/vincula veículo ou funcionário
+2. **Entrega** (pacote, encomenda): detecta via Vision AI → pede confirmação SIM/NÃO → registra entrega
+3. **Outros** (selfie, serviço, etc): armazena sem ação especial
+- Documento e Entrega são mutuamente exclusivos (is_document=true → is_entrega=false)
+- Fotos NUNCA criam tarefas automaticamente (tarefas só por texto ou mensagem privada)
+
+## WHATSAPP — FETCH MISSED MESSAGES
+- Endpoint: POST /api/whatsapp/fetch-missed (admin, body: {limit: N})
+- Busca últimas N mensagens do grupo quando bot fica offline
+- Usa timestamp original da mensagem (não hora atual)
+- Pede confirmação SIM/NÃO para registros de ponto retroativos
+- Mensagens já armazenadas no DB são ignoradas (INSERT OR IGNORE)
+
+
 ## COMANDOS ÚTEIS
 ```bash
 cd ~/controle-ponto-sandbox
 pm2 restart lardigital-sandbox
 pm2 logs lardigital-sandbox --lines 50
-curl http://localhost:3001
+curl http://localhost:3001/api/health
 sqlite3 database-sandbox.sqlite ".tables"
+bash ~/controle-ponto/scripts/deploy-production.sh 2.4.1
+bash ~/controle-ponto/scripts/backup-db.sh
 ```

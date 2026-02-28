@@ -77,6 +77,43 @@ app.get('/api/version', (req, res) => {
   }
 });
 
+// Health check endpoint (public, no auth)
+app.get('/api/health', (req, res) => {
+  let dbStatus = 'connected';
+  try {
+    const { db } = require('./src/config/database');
+    db.prepare('SELECT 1').get();
+  } catch (e) {
+    dbStatus = 'error: ' + e.message;
+  }
+
+  let whatsappStatus = 'disconnected';
+  let lastWhatsappMessage = null;
+  try {
+    const ws = require('./src/services/whatsapp');
+    whatsappStatus = ws.status || 'disconnected';
+    const { db } = require('./src/config/database');
+    const lastMsg = db.prepare('SELECT created_at FROM whatsapp_mensagens ORDER BY id DESC LIMIT 1').get();
+    if (lastMsg) lastWhatsappMessage = lastMsg.created_at;
+  } catch (e) {}
+
+  let versionData = { version: 'unknown', env: 'unknown' };
+  try { versionData = require('./version.json'); } catch (e) {}
+
+  res.json({
+    status: dbStatus === 'connected' ? 'healthy' : 'degraded',
+    version: versionData.version,
+    env: versionData.env,
+    timestamp: new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }),
+    services: {
+      database: dbStatus,
+      whatsapp: whatsappStatus,
+      last_whatsapp_message: lastWhatsappMessage,
+      uptime: Math.floor(process.uptime()) + 's'
+    }
+  });
+});
+
 // Root redirect to dashboard
 app.get('/', (req, res) => {
   res.redirect('/dashboard.html');

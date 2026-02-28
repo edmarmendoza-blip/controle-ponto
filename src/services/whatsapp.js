@@ -886,8 +886,8 @@ Mensagem: "${text}"`;
     const today = effectiveTime.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' }); // YYYY-MM-DD
     const currentTime = effectiveTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }); // HH:MM
 
-    // For missed messages: ask confirmation with the original time instead of auto-registering
-    if (msg._isMissed) {
+    // For missed messages: ask confirmation (unless autoRegister mode)
+    if (msg._isMissed && !msg._autoRegister) {
       const tipoLabel = intent === 'entrada' ? 'entrada' : intent === 'saida' ? 'saída' : intent === 'saida_almoco' ? 'saída almoço' : intent === 'retorno_almoco' ? 'retorno almoço' : intent;
       this.createPendingConfirmation(funcionario.id, intent, today, currentTime, msg.body || '');
       await this.sendGroupMessage(
@@ -897,6 +897,9 @@ Mensagem: "${text}"`;
       return;
     }
 
+    // Helper: only send group message if not in silent mode (batch import)
+    const notify = async (text) => { if (!msg._silent) await this.sendGroupMessage(text); };
+
     try {
       if (intent === 'entrada') {
         // Check if already has an entrada today
@@ -905,9 +908,7 @@ Mensagem: "${text}"`;
         ).get(funcionario.id, today);
 
         if (existing) {
-          await this.sendGroupMessage(
-            `${funcionario.nome}, sua entrada de hoje ja foi registrada.`
-          );
+          console.log(`[WhatsApp] Entrada already exists: ${funcionario.nome} ${today} (skipped)`);
           return;
         }
 
@@ -921,9 +922,7 @@ Mensagem: "${text}"`;
         });
 
         console.log(`[WhatsApp] Entrada registered: ${funcionario.nome} at ${currentTime}`);
-        await this.sendGroupMessage(
-          `Entrada registrada para ${funcionario.nome} - ${currentTime}`
-        );
+        await notify(`Entrada registrada para ${funcionario.nome} - ${currentTime}`);
 
       } else if (intent === 'saida') {
         // Find today's registro without saida
@@ -935,9 +934,7 @@ Mensagem: "${text}"`;
           // Update existing record with saida
           Registro.update(openRecord.id, { saida: currentTime }, null);
           console.log(`[WhatsApp] Saida registered: ${funcionario.nome} at ${currentTime}`);
-          await this.sendGroupMessage(
-            `Saida registrada para ${funcionario.nome} - ${currentTime}`
-          );
+          await notify(`Saida registrada para ${funcionario.nome} - ${currentTime}`);
         } else {
           // No open entrada found - register saida-only record
           Registro.create({
@@ -950,9 +947,7 @@ Mensagem: "${text}"`;
           });
 
           console.log(`[WhatsApp] Saida (no entrada) registered: ${funcionario.nome} at ${currentTime}`);
-          await this.sendGroupMessage(
-            `Saida registrada para ${funcionario.nome} - ${currentTime} (sem entrada registrada hoje)`
-          );
+          await notify(`Saida registrada para ${funcionario.nome} - ${currentTime} (sem entrada registrada hoje)`);
         }
       } else if (intent === 'saida_almoco') {
         // Check if already has a saida_almoco today
@@ -961,9 +956,7 @@ Mensagem: "${text}"`;
         ).get(funcionario.id, today);
 
         if (existingAlmoco) {
-          await this.sendGroupMessage(
-            `${funcionario.nome}, saída para almoço já registrada hoje.`
-          );
+          console.log(`[WhatsApp] Saida almoco already exists: ${funcionario.nome} ${today} (skipped)`);
           return;
         }
 
@@ -977,9 +970,7 @@ Mensagem: "${text}"`;
         });
 
         console.log(`[WhatsApp] Saida almoco registered: ${funcionario.nome} at ${currentTime}`);
-        await this.sendGroupMessage(
-          `Saída para almoço registrada para ${funcionario.nome} - ${currentTime}`
-        );
+        await notify(`Saída para almoço registrada para ${funcionario.nome} - ${currentTime}`);
 
       } else if (intent === 'retorno_almoco') {
         // Check if already has a retorno_almoco today
@@ -988,9 +979,7 @@ Mensagem: "${text}"`;
         ).get(funcionario.id, today);
 
         if (existingRetorno) {
-          await this.sendGroupMessage(
-            `${funcionario.nome}, retorno do almoço já registrado hoje.`
-          );
+          console.log(`[WhatsApp] Retorno almoco already exists: ${funcionario.nome} ${today} (skipped)`);
           return;
         }
 
@@ -1004,13 +993,11 @@ Mensagem: "${text}"`;
         });
 
         console.log(`[WhatsApp] Retorno almoco registered: ${funcionario.nome} at ${currentTime}`);
-        await this.sendGroupMessage(
-          `Retorno do almoço registrado para ${funcionario.nome} - ${currentTime}`
-        );
+        await notify(`Retorno do almoço registrado para ${funcionario.nome} - ${currentTime}`);
       }
     } catch (err) {
       if (err.message.includes('Ja existe') || err.message.includes('Já existe')) {
-        await this.sendGroupMessage(
+        await notify(
           `${funcionario.nome}, esse horario ja foi registrado hoje.`
         );
       } else {
@@ -1473,13 +1460,14 @@ Retorne APENAS JSON válido (sem markdown):
     }
   }
 
-  async fetchMissedMessages(limit = 100) {
+  async fetchMissedMessages(limit = 100, { autoRegister = false } = {}) {
     if (!this.ready || !this.groupChat) {
       return { success: false, error: 'WhatsApp não conectado ou grupo não encontrado.' };
     }
 
-    console.log(`[WhatsApp] Buscando últimas ${limit} mensagens do grupo...`);
-    const results = { total: 0, processed: 0, skipped: 0, errors: 0, details: [] };
+    const mode = autoRegister ? 'AUTO-REGISTER' : 'CONFIRMATION';
+    console.log(`[WhatsApp] Buscando últimas ${limit} mensagens do grupo (modo: ${mode})...`);
+    const results = { success: true, total: 0, processed: 0, skipped: 0, errors: 0, registered: 0, details: [] };
 
     try {
       const messages = await this.groupChat.fetchMessages({ limit });
@@ -1506,7 +1494,13 @@ Retorne APENAS JSON válido (sem markdown):
           if (msgTimestamp) {
             // Tag the message with original time so registerPunch uses it
             msg._originalTimestamp = msgTimestamp;
-            msg._isMissed = true;
+            if (autoRegister) {
+              // Auto-register: skip confirmation, suppress group messages
+              msg._autoRegister = true;
+              msg._silent = true;
+            } else {
+              msg._isMissed = true;
+            }
           }
 
           // Process this missed message
