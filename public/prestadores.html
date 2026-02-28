@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>Prestadores de Servico - Lar Digital</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { primary: { DEFAULT: '#1e40af', light: '#3b82f6', dark: '#1e3a8a' } } } }
+    }
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen bg-blue-800 text-white transition-transform -translate-x-full md:translate-x-0">
+    <div class="p-4 border-b border-blue-700">
+      <a href="/dashboard.html" class="flex items-center gap-2">
+        <i class="bi bi-clock-history text-2xl"></i>
+        <span class="text-xl font-bold">Lar Digital</span>
+      </a>
+      <p class="text-blue-200 text-xs mt-1">Gestao da Casa</p>
+    </div>
+    <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-180px)]">
+      <a href="/dashboard.html" data-page="dashboard" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+      </a>
+      <a href="/funcionarios.html" data-page="funcionarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-people"></i><span>Funcionarios</span>
+      </a>
+      <a href="/cargos.html" data-page="cargos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-briefcase"></i><span>Cargos</span>
+      </a>
+      <a href="/registros.html" data-page="registros" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-clock"></i><span>Registros</span>
+      </a>
+      <a href="/relatorios.html" data-page="relatorios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-file-earmark-text"></i><span>Relatorios</span>
+      </a>
+      <a href="/relatorios-graficos.html" data-page="relatorios-graficos" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-bar-chart-line"></i><span>Graficos</span>
+      </a>
+      <a href="/presenca.html" data-page="presenca" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-calendar-check"></i><span>Presenca</span>
+      </a>
+      <a href="/entregas.html" data-page="entregas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-box-seam"></i><span>Entregas</span>
+      </a>
+      <a href="/compras.html" data-page="compras" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-cart3"></i><span>Compras</span>
+      </a>
+      <a href="/despesas.html" data-page="despesas" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-receipt-cutoff"></i><span>Despesas</span>
+      </a>
+      <a href="/prestadores.html" data-page="prestadores" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-person-badge"></i><span>Prestadores</span>
+      </a>
+      <a href="/holerites.html" data-page="holerites" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-receipt"></i><span>Holerites</span>
+      </a>
+      <a href="/ferias.html" data-page="ferias" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-calendar-heart"></i><span>Ferias</span>
+      </a>
+      <a href="/sugestoes.html" data-page="sugestoes" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-lightbulb"></i><span>Sugestoes</span>
+      </a>
+      <a href="/usuarios.html" data-page="usuarios" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-shield-lock"></i><span>Usuarios</span>
+      </a>
+      <a href="/feriados.html" data-page="feriados" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-calendar-event"></i><span>Feriados</span>
+      </a>
+      <a href="/insights.html" data-page="insights" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-stars"></i><span>Insights IA</span>
+      </a>
+      <a href="/whatsapp.html" data-page="whatsapp" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
+      </a>
+      <a href="/audit-log.html" data-page="audit-log" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors admin-only hidden">
+        <i class="bi bi-journal-text"></i><span>Audit Log</span>
+      </a>
+      <hr class="border-blue-700 my-2">
+      <a href="/ajuda.html" data-page="ajuda" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-chat-left-dots"></i><span>Ajuda</span>
+      </a>
+      <a href="/perfil.html" data-page="perfil" class="flex items-center gap-3 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-700/50 transition-colors">
+        <i class="bi bi-person-gear"></i><span>Perfil</span>
+      </a>
+    </nav>
+    <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-blue-700 bg-blue-800">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2 text-sm">
+          <i class="bi bi-person-circle"></i>
+          <div>
+            <div id="user-name" class="font-medium">-</div>
+            <div id="user-role" class="text-blue-300 text-xs">-</div>
+          </div>
+        </div>
+        <button id="theme-toggle" class="p-1.5 rounded-lg hover:bg-blue-700 transition-colors">
+          <i id="theme-icon" class="bi bi-moon-fill"></i>
+        </button>
+      </div>
+      <button id="logout-btn" class="w-full py-1.5 text-sm bg-blue-700 hover:bg-blue-600 rounded-lg transition-colors">Sair</button>
+    </div>
+  </aside>
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+
+  <!-- Main Content -->
+  <main class="md:ml-64 min-h-screen">
+    <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
+      <div class="flex items-center gap-3">
+        <button id="sidebar-toggle" class="md:hidden text-gray-600 dark:text-gray-300">
+          <i class="bi bi-list text-xl"></i>
+        </button>
+        <h1 class="text-xl font-semibold">Prestadores de Servico</h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-sm text-gray-500 dark:text-gray-400" id="current-date"></span>
+        <button onclick="openPrestadorModal()" class="gestor-only hidden px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+          <i class="bi bi-plus-lg"></i><span class="hidden sm:inline">Novo Prestador</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="p-4 md:p-6" id="page-content">
+
+      <!-- Stats Row -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div class="flex items-center gap-2 mb-1">
+            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+            <span class="text-xs text-gray-500 dark:text-gray-400">Prestadores Ativos</span>
+          </div>
+          <div class="text-2xl font-bold text-green-600" id="stat-ativos">0</div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div class="flex items-center gap-2 mb-1">
+            <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+            <span class="text-xs text-gray-500 dark:text-gray-400">Visitas esta Semana</span>
+          </div>
+          <div class="text-2xl font-bold text-blue-600" id="stat-visitas-semana">0</div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div class="flex items-center gap-2 mb-1">
+            <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+            <span class="text-xs text-gray-500 dark:text-gray-400">Pagamentos do Mes</span>
+          </div>
+          <div class="text-xl font-bold text-yellow-600" id="stat-pagamentos-mes">R$ 0,00</div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div class="flex items-center gap-2 mb-1">
+            <div class="w-2 h-2 rounded-full bg-purple-500"></div>
+            <span class="text-xs text-gray-500 dark:text-gray-400">Prestadores Fixos</span>
+          </div>
+          <div class="text-2xl font-bold text-purple-600" id="stat-fixos">0</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 w-fit">
+        <button onclick="switchTab('cadastro')" id="tab-cadastro" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 shadow-sm">
+          <i class="bi bi-person-badge"></i> Cadastro
+        </button>
+        <button onclick="switchTab('visitas')" id="tab-visitas" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+          <i class="bi bi-calendar-check"></i> Visitas
+        </button>
+        <button onclick="switchTab('pagamentos')" id="tab-pagamentos" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+          <i class="bi bi-cash-stack"></i> Pagamentos
+        </button>
+      </div>
+
+      <!-- Tab: Cadastro -->
+      <div id="tab-content-cadastro">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-sm text-gray-500 dark:text-gray-400"><span id="prestadores-count">0</span> prestadores</span>
+          <label class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 cursor-pointer">
+            <input type="checkbox" id="toggle-inativos" onchange="renderTabelaCadastro()" class="w-4 h-4 rounded border-gray-300 text-primary cursor-pointer focus:ring-primary">
+            <span>Mostrar inativos (<span id="inativos-count">0</span>)</span>
+          </label>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-4">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50 dark:bg-gray-700/50">
+                <tr>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Nome</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Especialidade</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Tipo</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Telefone</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Ultima Visita</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Acoes</th>
+                </tr>
+              </thead>
+              <tbody id="cadastro-tbody">
+                <tr>
+                  <td colspan="6" class="text-center py-10 text-gray-400">
+                    <i class="bi bi-arrow-repeat animate-spin text-2xl"></i>
+                    <p class="mt-2">Carregando...</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Visitas -->
+      <div id="tab-content-visitas" class="hidden">
+        <!-- Filters -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-4">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div>
+              <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Prestador</label>
+              <select id="filter-visita-prestador" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Data Inicio</label>
+              <input type="date" id="filter-visita-inicio" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            </div>
+            <div>
+              <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Data Fim</label>
+              <input type="date" id="filter-visita-fim" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            </div>
+            <div class="flex items-end">
+              <button onclick="loadAllVisitas()" class="w-full px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                <i class="bi bi-funnel"></i><span>Buscar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-sm text-gray-500 dark:text-gray-400"><span id="visitas-count">0</span> visitas encontradas</span>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-4">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50 dark:bg-gray-700/50">
+                <tr>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Data</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Prestador</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Entrada</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Saida</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Duracao</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Servico</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Observacao</th>
+                </tr>
+              </thead>
+              <tbody id="visitas-tbody">
+                <tr>
+                  <td colspan="7" class="text-center py-10 text-gray-400">
+                    <i class="bi bi-calendar-check text-3xl"></i>
+                    <p class="mt-2">Selecione os filtros e clique em Buscar</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Pagamentos -->
+      <div id="tab-content-pagamentos" class="hidden">
+        <!-- Filters -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-4">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div>
+              <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Prestador</label>
+              <select id="filter-pag-prestador" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Mes</label>
+              <select id="filter-pag-mes" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+                <option value="">Todos</option>
+                <option value="1">Janeiro</option>
+                <option value="2">Fevereiro</option>
+                <option value="3">Marco</option>
+                <option value="4">Abril</option>
+                <option value="5">Maio</option>
+                <option value="6">Junho</option>
+                <option value="7">Julho</option>
+                <option value="8">Agosto</option>
+                <option value="9">Setembro</option>
+                <option value="10">Outubro</option>
+                <option value="11">Novembro</option>
+                <option value="12">Dezembro</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Ano</label>
+              <select id="filter-pag-ano" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026" selected>2026</option>
+              </select>
+            </div>
+            <div class="flex items-end">
+              <button onclick="loadAllPagamentos()" class="w-full px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                <i class="bi bi-funnel"></i><span>Buscar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-sm text-gray-500 dark:text-gray-400"><span id="pagamentos-count">0</span> pagamentos encontrados</span>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-4">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50 dark:bg-gray-700/50">
+                <tr>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Data</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Prestador</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Tipo</th>
+                  <th class="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Valor</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Descricao</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Comprovante</th>
+                </tr>
+              </thead>
+              <tbody id="pagamentos-tbody">
+                <tr>
+                  <td colspan="6" class="text-center py-10 text-gray-400">
+                    <i class="bi bi-cash-stack text-3xl"></i>
+                    <p class="mt-2">Selecione os filtros e clique em Buscar</p>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot id="pagamentos-tfoot" class="hidden">
+                <tr class="bg-gray-50 dark:bg-gray-700/50 border-t-2 border-gray-200 dark:border-gray-600">
+                  <td colspan="3" class="px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Total:</td>
+                  <td class="px-4 py-3 text-right font-bold text-green-600 text-base" id="pagamentos-total">R$ 0,00</td>
+                  <td colspan="2"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+  <!-- Modal: Novo/Editar Prestador -->
+  <div id="modal-prestador" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+        <h3 class="text-lg font-semibold" id="modal-prestador-title">Novo Prestador</h3>
+        <button onclick="closeModal('modal-prestador')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+          <i class="bi bi-x-lg text-xl"></i>
+        </button>
+      </div>
+      <form id="form-prestador" class="p-5 space-y-4" onsubmit="savePrestador(event)">
+        <input type="hidden" id="prestador-id">
+        <div>
+          <label class="block text-sm font-medium mb-1">Nome <span class="text-red-500">*</span></label>
+          <input type="text" id="prestador-nome" required placeholder="Nome do prestador..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Telefone</label>
+          <input type="text" id="prestador-telefone" placeholder="(11) 99999-9999" maxlength="15" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Especialidade</label>
+          <input type="text" id="prestador-especialidade" placeholder="Ex: Eletricista, Jardineiro, Diarista..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Tipo</label>
+            <select id="prestador-tipo" onchange="toggleFrequencia()" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+              <option value="avulso">Avulso</option>
+              <option value="fixo">Fixo</option>
+            </select>
+          </div>
+          <div></div>
+        </div>
+        <div id="frequencia-section" class="hidden">
+          <label class="block text-sm font-medium mb-2">Frequencia (dias da semana)</label>
+          <div class="flex flex-wrap gap-2">
+            <label class="flex items-center gap-1.5 text-sm cursor-pointer">
+              <input type="checkbox" name="freq-dia" value="seg" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"> Seg
+            </label>
+            <label class="flex items-center gap-1.5 text-sm cursor-pointer">
+              <input type="checkbox" name="freq-dia" value="ter" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"> Ter
+            </label>
+            <label class="flex items-center gap-1.5 text-sm cursor-pointer">
+              <input type="checkbox" name="freq-dia" value="qua" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"> Qua
+            </label>
+            <label class="flex items-center gap-1.5 text-sm cursor-pointer">
+              <input type="checkbox" name="freq-dia" value="qui" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"> Qui
+            </label>
+            <label class="flex items-center gap-1.5 text-sm cursor-pointer">
+              <input type="checkbox" name="freq-dia" value="sex" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"> Sex
+            </label>
+            <label class="flex items-center gap-1.5 text-sm cursor-pointer">
+              <input type="checkbox" name="freq-dia" value="sab" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"> Sab
+            </label>
+            <label class="flex items-center gap-1.5 text-sm cursor-pointer">
+              <input type="checkbox" name="freq-dia" value="dom" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"> Dom
+            </label>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Valor Hora (R$)</label>
+            <input type="number" id="prestador-valor-hora" min="0" step="0.01" placeholder="0,00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Valor Diaria (R$)</label>
+            <input type="number" id="prestador-valor-diaria" min="0" step="0.01" placeholder="0,00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Observacoes</label>
+          <textarea id="prestador-observacoes" rows="3" placeholder="Informacoes adicionais..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition resize-none"></textarea>
+        </div>
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="button" onclick="closeModal('modal-prestador')" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm transition-colors">Cancelar</button>
+          <button type="submit" id="btn-submit-prestador" class="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+            <i class="bi bi-check-lg"></i> Salvar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Registrar Visita -->
+  <div id="modal-visita" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+        <h3 class="text-lg font-semibold">Registrar Visita</h3>
+        <button onclick="closeModal('modal-visita')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+          <i class="bi bi-x-lg text-xl"></i>
+        </button>
+      </div>
+      <form id="form-visita" class="p-5 space-y-4" onsubmit="saveVisita(event)">
+        <input type="hidden" id="visita-prestador-id">
+        <p class="text-sm text-gray-500 dark:text-gray-400" id="visita-prestador-nome"></p>
+        <div>
+          <label class="block text-sm font-medium mb-1">Data <span class="text-red-500">*</span></label>
+          <input type="date" id="visita-data" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Entrada</label>
+            <input type="time" id="visita-entrada" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Saida</label>
+            <input type="time" id="visita-saida" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Servico Realizado</label>
+          <input type="text" id="visita-servico" placeholder="Descreva o servico realizado..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Observacao</label>
+          <textarea id="visita-observacao" rows="2" placeholder="Observacoes adicionais..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition resize-none"></textarea>
+        </div>
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="button" onclick="closeModal('modal-visita')" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm transition-colors">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+            <i class="bi bi-calendar-plus"></i> Registrar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Registrar Pagamento -->
+  <div id="modal-pagamento" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+        <h3 class="text-lg font-semibold">Registrar Pagamento</h3>
+        <button onclick="closeModal('modal-pagamento')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+          <i class="bi bi-x-lg text-xl"></i>
+        </button>
+      </div>
+      <form id="form-pagamento" class="p-5 space-y-4" onsubmit="savePagamento(event)">
+        <input type="hidden" id="pagamento-prestador-id">
+        <p class="text-sm text-gray-500 dark:text-gray-400" id="pagamento-prestador-nome"></p>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Valor (R$) <span class="text-red-500">*</span></label>
+            <input type="number" id="pagamento-valor" required min="0.01" step="0.01" placeholder="0,00" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Data <span class="text-red-500">*</span></label>
+            <input type="date" id="pagamento-data" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Tipo</label>
+          <select id="pagamento-tipo" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+            <option value="diaria">Diaria</option>
+            <option value="hora">Hora</option>
+            <option value="fixo">Fixo</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Descricao</label>
+          <input type="text" id="pagamento-descricao" placeholder="Descricao do pagamento..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none transition">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Comprovante (foto/PDF)</label>
+          <div class="flex items-center gap-3">
+            <label for="pagamento-comprovante" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 hover:border-primary cursor-pointer text-sm text-gray-500 dark:text-gray-400 transition-colors">
+              <i class="bi bi-upload"></i><span id="comprovante-pag-label">Selecionar arquivo</span>
+            </label>
+            <input type="file" id="pagamento-comprovante" accept="image/*,.pdf" class="hidden" onchange="updatePagComprovanteLabel(this)">
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="button" onclick="closeModal('modal-pagamento')" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm transition-colors">Cancelar</button>
+          <button type="submit" id="btn-submit-pagamento" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+            <i class="bi bi-cash-stack"></i> Registrar Pagamento
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/utils.js?v=1"></script>
+  <script src="/js/shared.js"></script>
+  <script>
+    // ─── State ────────────────────────────────────────────────────────────────
+    let allPrestadores = [];
+    let allVisitas = [];
+    let allPagamentosData = [];
+    let activeTab = 'cadastro';
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function formatCurrency(val) {
+      const n = parseFloat(val) || 0;
+      return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    }
+
+    function formatPhone(phone) {
+      if (!phone) return '-';
+      const digits = String(phone).replace(/\D/g, '');
+      if (digits.length === 11) {
+        return `(${digits.slice(0,2)}) ${digits.slice(2,7)}-${digits.slice(7)}`;
+      } else if (digits.length === 10) {
+        return `(${digits.slice(0,2)}) ${digits.slice(2,6)}-${digits.slice(6)}`;
+      }
+      return phone;
+    }
+
+    function todayISO() {
+      return new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+    }
+
+    function calcDuration(entrada, saida) {
+      if (!entrada || !saida) return '-';
+      const [eh, em] = entrada.split(':').map(Number);
+      const [sh, sm] = saida.split(':').map(Number);
+      let mins = (sh * 60 + sm) - (eh * 60 + em);
+      if (mins < 0) mins += 24 * 60;
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return `${h}h${m > 0 ? String(m).padStart(2, '0') + 'min' : ''}`;
+    }
+
+    function getTipoBadge(tipo) {
+      if (tipo === 'fixo') {
+        return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">Fixo</span>';
+      }
+      return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">Avulso</span>';
+    }
+
+    function getPagTipoBadge(tipo) {
+      const map = {
+        diaria: { cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', label: 'Diaria' },
+        hora:   { cls: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', label: 'Hora' },
+        fixo:   { cls: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400', label: 'Fixo' }
+      };
+      const s = map[tipo] || { cls: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400', label: tipo || '-' };
+      return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${s.cls}">${escapeHtml(s.label)}</span>`;
+    }
+
+    // Phone mask
+    function applyPhoneMask(input) {
+      input.addEventListener('input', function() {
+        let v = this.value.replace(/\D/g, '');
+        if (v.length > 11) v = v.slice(0, 11);
+        if (v.length > 6) {
+          this.value = `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
+        } else if (v.length > 2) {
+          this.value = `(${v.slice(0,2)}) ${v.slice(2)}`;
+        } else if (v.length > 0) {
+          this.value = `(${v}`;
+        }
+      });
+    }
+
+    // ─── Tab Switching ────────────────────────────────────────────────────────
+
+    function switchTab(tab) {
+      activeTab = tab;
+      ['cadastro', 'visitas', 'pagamentos'].forEach(t => {
+        document.getElementById(`tab-content-${t}`).classList.toggle('hidden', t !== tab);
+        const btn = document.getElementById(`tab-${t}`);
+        if (t === tab) {
+          btn.classList.add('bg-white', 'dark:bg-gray-700', 'text-gray-800', 'dark:text-gray-100', 'shadow-sm');
+          btn.classList.remove('text-gray-600', 'dark:text-gray-400');
+        } else {
+          btn.classList.remove('bg-white', 'dark:bg-gray-700', 'text-gray-800', 'dark:text-gray-100', 'shadow-sm');
+          btn.classList.add('text-gray-600', 'dark:text-gray-400');
+        }
+      });
+      if (tab === 'visitas') loadAllVisitas();
+      if (tab === 'pagamentos') loadAllPagamentos();
+    }
+
+    // ─── Modal Helpers ────────────────────────────────────────────────────────
+
+    function openModal(id) {
+      const el = document.getElementById(id);
+      el.classList.remove('hidden');
+      el.classList.add('flex');
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      el.classList.add('hidden');
+      el.classList.remove('flex');
+    }
+
+    // Close modals on backdrop click
+    ['modal-prestador', 'modal-visita', 'modal-pagamento'].forEach(id => {
+      document.getElementById(id).addEventListener('click', function(e) {
+        if (e.target === this) closeModal(id);
+      });
+    });
+
+    // ─── Load Prestadores ─────────────────────────────────────────────────────
+
+    async function loadPrestadores() {
+      try {
+        const result = await Shared.api('/api/prestadores?includeInactive=true');
+        allPrestadores = result.data || result || [];
+        updateStats();
+        renderTabelaCadastro();
+        populateFilterDropdowns();
+      } catch (err) {
+        console.error('Erro ao carregar prestadores:', err);
+        document.getElementById('cadastro-tbody').innerHTML = `
+          <tr><td colspan="6" class="text-center py-10 text-red-400">
+            <i class="bi bi-exclamation-circle text-2xl"></i>
+            <p class="mt-2">Erro ao carregar prestadores</p>
+          </td></tr>`;
+      }
+    }
+
+    function updateStats() {
+      const ativos = allPrestadores.filter(p => p.status !== 'inativo');
+      const fixos = ativos.filter(p => p.tipo === 'fixo');
+      document.getElementById('stat-ativos').textContent = ativos.length;
+      document.getElementById('stat-fixos').textContent = fixos.length;
+
+      // Visitas esta semana
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      const monday = new Date(now);
+      monday.setDate(now.getDate() + mondayOffset);
+      monday.setHours(0, 0, 0, 0);
+      const mondayStr = monday.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+
+      let visitasSemana = 0;
+      ativos.forEach(p => {
+        if (p.ultima_visita && p.ultima_visita >= mondayStr) visitasSemana++;
+      });
+      document.getElementById('stat-visitas-semana').textContent = visitasSemana;
+
+      // Pagamentos do mes (will be updated separately)
+    }
+
+    function populateFilterDropdowns() {
+      const ativos = allPrestadores.filter(p => p.status !== 'inativo');
+      ['filter-visita-prestador', 'filter-pag-prestador'].forEach(selId => {
+        const sel = document.getElementById(selId);
+        sel.innerHTML = '<option value="">Todos</option>';
+        ativos.forEach(p => {
+          sel.appendChild(new Option(p.nome, p.id));
+        });
+      });
+    }
+
+    function renderTabelaCadastro() {
+      const showInativos = document.getElementById('toggle-inativos').checked;
+      const filtered = showInativos ? allPrestadores : allPrestadores.filter(p => p.status !== 'inativo');
+      const inativos = allPrestadores.filter(p => p.status === 'inativo').length;
+
+      document.getElementById('prestadores-count').textContent = filtered.length;
+      document.getElementById('inativos-count').textContent = inativos;
+
+      const tbody = document.getElementById('cadastro-tbody');
+      if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-gray-400">
+          <i class="bi bi-person-badge text-3xl"></i>
+          <p class="mt-2">Nenhum prestador cadastrado</p>
+        </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(p => {
+        const isInativo = p.status === 'inativo';
+        const rowClass = isInativo ? 'opacity-50' : '';
+        return `
+          <tr class="border-t border-gray-50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 ${rowClass}">
+            <td class="px-4 py-3 font-medium">
+              ${escapeHtml(p.nome)}
+              ${isInativo ? '<span class="ml-1 text-xs text-red-400">(inativo)</span>' : ''}
+            </td>
+            <td class="px-4 py-3 text-gray-600 dark:text-gray-400">${escapeHtml(p.especialidade || '-')}</td>
+            <td class="px-4 py-3">${getTipoBadge(p.tipo)}</td>
+            <td class="px-4 py-3 text-gray-600 dark:text-gray-400">${formatPhone(p.telefone)}</td>
+            <td class="px-4 py-3 text-gray-500 dark:text-gray-400 text-sm">${p.ultima_visita ? formatDate(p.ultima_visita) : '-'}</td>
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-1">
+                <button onclick="openVisitaModal(${p.id})" title="Registrar Visita" class="p-1.5 rounded bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-400 transition-colors">
+                  <i class="bi bi-calendar-plus"></i>
+                </button>
+                <button onclick="openPagamentoModal(${p.id})" title="Registrar Pagamento" class="p-1.5 rounded bg-green-100 hover:bg-green-200 dark:bg-green-900/30 dark:hover:bg-green-900/50 text-green-700 dark:text-green-400 transition-colors">
+                  <i class="bi bi-cash-stack"></i>
+                </button>
+                <button onclick="openPrestadorModal(${p.id})" title="Editar" class="p-1.5 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 transition-colors">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button onclick="deletePrestador(${p.id})" title="Excluir" class="p-1.5 rounded bg-gray-100 hover:bg-red-100 dark:bg-gray-700 dark:hover:bg-red-900/30 text-gray-500 hover:text-red-600 transition-colors">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>`;
+      }).join('');
+    }
+
+    // ─── Prestador CRUD ───────────────────────────────────────────────────────
+
+    function openPrestadorModal(id) {
+      document.getElementById('form-prestador').reset();
+      document.getElementById('prestador-id').value = '';
+      document.getElementById('frequencia-section').classList.add('hidden');
+
+      // Uncheck all freq checkboxes
+      document.querySelectorAll('input[name="freq-dia"]').forEach(cb => cb.checked = false);
+
+      if (id) {
+        const p = allPrestadores.find(x => x.id === id);
+        if (!p) return;
+        document.getElementById('modal-prestador-title').textContent = 'Editar Prestador';
+        document.getElementById('prestador-id').value = p.id;
+        document.getElementById('prestador-nome').value = p.nome || '';
+        document.getElementById('prestador-telefone').value = formatPhone(p.telefone);
+        document.getElementById('prestador-especialidade').value = p.especialidade || '';
+        document.getElementById('prestador-tipo').value = p.tipo || 'avulso';
+        document.getElementById('prestador-valor-hora').value = p.valor_hora || '';
+        document.getElementById('prestador-valor-diaria').value = p.valor_diaria || '';
+        document.getElementById('prestador-observacoes').value = p.observacoes || '';
+
+        // Populate frequency
+        if (p.tipo === 'fixo') {
+          document.getElementById('frequencia-section').classList.remove('hidden');
+          let dias = [];
+          try { dias = typeof p.frequencia_dias === 'string' ? JSON.parse(p.frequencia_dias) : (p.frequencia_dias || []); } catch(e) { dias = []; }
+          document.querySelectorAll('input[name="freq-dia"]').forEach(cb => {
+            cb.checked = dias.includes(cb.value);
+          });
+        }
+      } else {
+        document.getElementById('modal-prestador-title').textContent = 'Novo Prestador';
+      }
+
+      openModal('modal-prestador');
+      setTimeout(() => document.getElementById('prestador-nome').focus(), 100);
+    }
+
+    function toggleFrequencia() {
+      const tipo = document.getElementById('prestador-tipo').value;
+      document.getElementById('frequencia-section').classList.toggle('hidden', tipo !== 'fixo');
+    }
+
+    async function savePrestador(event) {
+      event.preventDefault();
+      const btn = document.getElementById('btn-submit-prestador');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Salvando...';
+
+      try {
+        const id = document.getElementById('prestador-id').value;
+        const telefoneRaw = document.getElementById('prestador-telefone').value.replace(/\D/g, '');
+        const tipo = document.getElementById('prestador-tipo').value;
+
+        let frequencia_dias = null;
+        if (tipo === 'fixo') {
+          const dias = [];
+          document.querySelectorAll('input[name="freq-dia"]:checked').forEach(cb => dias.push(cb.value));
+          frequencia_dias = JSON.stringify(dias);
+        }
+
+        const body = {
+          nome: document.getElementById('prestador-nome').value.trim(),
+          telefone: telefoneRaw || null,
+          especialidade: document.getElementById('prestador-especialidade').value.trim() || null,
+          tipo: tipo,
+          frequencia_dias: frequencia_dias,
+          valor_hora: parseFloat(document.getElementById('prestador-valor-hora').value) || null,
+          valor_diaria: parseFloat(document.getElementById('prestador-valor-diaria').value) || null,
+          observacoes: document.getElementById('prestador-observacoes').value.trim() || null
+        };
+
+        if (id) {
+          await Shared.api(`/api/prestadores/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+          showToast('Prestador atualizado com sucesso!', 'success');
+        } else {
+          await Shared.api('/api/prestadores', { method: 'POST', body: JSON.stringify(body) });
+          showToast('Prestador criado com sucesso!', 'success');
+        }
+
+        closeModal('modal-prestador');
+        await loadPrestadores();
+      } catch (err) {
+        showToast(err.message || 'Erro ao salvar prestador', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check-lg"></i> Salvar';
+      }
+    }
+
+    function deletePrestador(id) {
+      const p = allPrestadores.find(x => x.id === id);
+      const nome = p ? p.nome : 'este prestador';
+      Shared.showConfirmModal(`Deseja realmente excluir "${escapeHtml(nome)}"? Esta acao nao pode ser desfeita.`, async () => {
+        try {
+          await Shared.api(`/api/prestadores/${id}`, { method: 'DELETE' });
+          showToast('Prestador excluido!', 'success');
+          await loadPrestadores();
+        } catch (err) {
+          showToast(err.message || 'Erro ao excluir', 'error');
+        }
+      });
+    }
+
+    // ─── Visitas ──────────────────────────────────────────────────────────────
+
+    function openVisitaModal(prestadorId) {
+      document.getElementById('form-visita').reset();
+      const p = allPrestadores.find(x => x.id === prestadorId);
+      document.getElementById('visita-prestador-id').value = prestadorId;
+      document.getElementById('visita-prestador-nome').textContent = p ? `Prestador: ${p.nome}` : '';
+      document.getElementById('visita-data').value = todayISO();
+      openModal('modal-visita');
+    }
+
+    async function saveVisita(event) {
+      event.preventDefault();
+      const prestadorId = document.getElementById('visita-prestador-id').value;
+
+      const body = {
+        data: document.getElementById('visita-data').value,
+        entrada: document.getElementById('visita-entrada').value || null,
+        saida: document.getElementById('visita-saida').value || null,
+        servico_realizado: document.getElementById('visita-servico').value.trim() || null,
+        observacao: document.getElementById('visita-observacao').value.trim() || null
+      };
+
+      try {
+        await Shared.api(`/api/prestadores/${prestadorId}/visitas`, {
+          method: 'POST',
+          body: JSON.stringify(body)
+        });
+        showToast('Visita registrada com sucesso!', 'success');
+        closeModal('modal-visita');
+        await loadPrestadores();
+        if (activeTab === 'visitas') loadAllVisitas();
+      } catch (err) {
+        showToast(err.message || 'Erro ao registrar visita', 'error');
+      }
+    }
+
+    async function loadAllVisitas() {
+      try {
+        const params = new URLSearchParams();
+        const prestadorId = document.getElementById('filter-visita-prestador').value;
+        const di = document.getElementById('filter-visita-inicio').value;
+        const df = document.getElementById('filter-visita-fim').value;
+
+        // If a specific prestador is selected, load their visits
+        // Otherwise, load visits from all prestadores
+        let visitas = [];
+
+        if (prestadorId) {
+          const result = await Shared.api(`/api/prestadores/${prestadorId}/visitas`);
+          visitas = result.data || result || [];
+          // Enrich with prestador name
+          const p = allPrestadores.find(x => x.id === parseInt(prestadorId));
+          visitas = visitas.map(v => ({ ...v, prestador_nome: p ? p.nome : '-' }));
+        } else {
+          // Load from all prestadores
+          const promises = allPrestadores
+            .filter(p => p.status !== 'inativo')
+            .map(async (p) => {
+              try {
+                const result = await Shared.api(`/api/prestadores/${p.id}/visitas`);
+                const items = result.data || result || [];
+                return items.map(v => ({ ...v, prestador_nome: p.nome }));
+              } catch { return []; }
+            });
+          const results = await Promise.all(promises);
+          visitas = results.flat();
+        }
+
+        // Apply date filters client-side
+        if (di) visitas = visitas.filter(v => v.data >= di);
+        if (df) visitas = visitas.filter(v => v.data <= df);
+
+        // Sort by date desc
+        visitas.sort((a, b) => (b.data || '').localeCompare(a.data || ''));
+
+        allVisitas = visitas;
+        renderVisitasTable();
+
+        // Update stat
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const monday = new Date(now);
+        monday.setDate(now.getDate() + mondayOffset);
+        const mondayStr = monday.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+        const weekVisits = visitas.filter(v => v.data >= mondayStr).length;
+        document.getElementById('stat-visitas-semana').textContent = weekVisits;
+      } catch (err) {
+        console.error('Erro ao carregar visitas:', err);
+        document.getElementById('visitas-tbody').innerHTML = `
+          <tr><td colspan="7" class="text-center py-10 text-red-400">
+            <i class="bi bi-exclamation-circle text-2xl"></i>
+            <p class="mt-2">Erro ao carregar visitas</p>
+          </td></tr>`;
+      }
+    }
+
+    function renderVisitasTable() {
+      const tbody = document.getElementById('visitas-tbody');
+      document.getElementById('visitas-count').textContent = allVisitas.length;
+
+      if (!allVisitas.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-gray-400">
+          <i class="bi bi-calendar-x text-3xl"></i>
+          <p class="mt-2">Nenhuma visita encontrada</p>
+        </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = allVisitas.map(v => `
+        <tr class="border-t border-gray-50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30">
+          <td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">${formatDate(v.data)}</td>
+          <td class="px-4 py-3 font-medium">${escapeHtml(v.prestador_nome || '-')}</td>
+          <td class="px-4 py-3 text-gray-600 dark:text-gray-400">${escapeHtml(v.entrada || '-')}</td>
+          <td class="px-4 py-3 text-gray-600 dark:text-gray-400">${escapeHtml(v.saida || '-')}</td>
+          <td class="px-4 py-3 text-gray-500 dark:text-gray-400">${calcDuration(v.entrada, v.saida)}</td>
+          <td class="px-4 py-3 text-gray-600 dark:text-gray-400 max-w-xs truncate">${escapeHtml(v.servico_realizado || '-')}</td>
+          <td class="px-4 py-3 text-gray-500 dark:text-gray-400 max-w-xs truncate text-sm">${escapeHtml(v.observacao || '-')}</td>
+        </tr>
+      `).join('');
+    }
+
+    // ─── Pagamentos ───────────────────────────────────────────────────────────
+
+    function openPagamentoModal(prestadorId) {
+      document.getElementById('form-pagamento').reset();
+      document.getElementById('comprovante-pag-label').textContent = 'Selecionar arquivo';
+      const p = allPrestadores.find(x => x.id === prestadorId);
+      document.getElementById('pagamento-prestador-id').value = prestadorId;
+      document.getElementById('pagamento-prestador-nome').textContent = p ? `Prestador: ${p.nome}` : '';
+      document.getElementById('pagamento-data').value = todayISO();
+      openModal('modal-pagamento');
+    }
+
+    function updatePagComprovanteLabel(input) {
+      const label = document.getElementById('comprovante-pag-label');
+      label.textContent = input.files[0] ? input.files[0].name : 'Selecionar arquivo';
+    }
+
+    async function savePagamento(event) {
+      event.preventDefault();
+      const btn = document.getElementById('btn-submit-pagamento');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Salvando...';
+
+      try {
+        const prestadorId = document.getElementById('pagamento-prestador-id').value;
+        const formData = new FormData();
+        formData.append('valor', document.getElementById('pagamento-valor').value);
+        formData.append('data', document.getElementById('pagamento-data').value);
+        formData.append('tipo', document.getElementById('pagamento-tipo').value);
+        formData.append('descricao', document.getElementById('pagamento-descricao').value.trim());
+
+        const fileInput = document.getElementById('pagamento-comprovante');
+        if (fileInput.files[0]) {
+          formData.append('comprovante', fileInput.files[0]);
+        }
+
+        const token = localStorage.getItem('ponto_token') || localStorage.getItem('token');
+        const response = await fetch(`/api/prestadores/${prestadorId}/pagamentos`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Erro ao registrar pagamento');
+
+        showToast('Pagamento registrado com sucesso!', 'success');
+        closeModal('modal-pagamento');
+        await loadPrestadores();
+        if (activeTab === 'pagamentos') loadAllPagamentos();
+      } catch (err) {
+        showToast(err.message || 'Erro ao registrar pagamento', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-cash-stack"></i> Registrar Pagamento';
+      }
+    }
+
+    async function loadAllPagamentos() {
+      try {
+        const prestadorId = document.getElementById('filter-pag-prestador').value;
+        const mes = document.getElementById('filter-pag-mes').value;
+        const ano = document.getElementById('filter-pag-ano').value;
+
+        let pagamentos = [];
+
+        if (prestadorId) {
+          const result = await Shared.api(`/api/prestadores/${prestadorId}/pagamentos`);
+          pagamentos = result.data || result || [];
+          const p = allPrestadores.find(x => x.id === parseInt(prestadorId));
+          pagamentos = pagamentos.map(pg => ({ ...pg, prestador_nome: p ? p.nome : '-' }));
+        } else {
+          const promises = allPrestadores
+            .filter(p => p.status !== 'inativo')
+            .map(async (p) => {
+              try {
+                const result = await Shared.api(`/api/prestadores/${p.id}/pagamentos`);
+                const items = result.data || result || [];
+                return items.map(pg => ({ ...pg, prestador_nome: p.nome }));
+              } catch { return []; }
+            });
+          const results = await Promise.all(promises);
+          pagamentos = results.flat();
+        }
+
+        // Apply month/year filter client-side
+        if (mes && ano) {
+          pagamentos = pagamentos.filter(pg => {
+            if (!pg.data) return false;
+            const d = new Date(pg.data);
+            return (d.getMonth() + 1) === parseInt(mes) && d.getFullYear() === parseInt(ano);
+          });
+        } else if (ano) {
+          pagamentos = pagamentos.filter(pg => {
+            if (!pg.data) return false;
+            const d = new Date(pg.data);
+            return d.getFullYear() === parseInt(ano);
+          });
+        }
+
+        // Sort by date desc
+        pagamentos.sort((a, b) => (b.data || '').localeCompare(a.data || ''));
+
+        allPagamentosData = pagamentos;
+        renderPagamentosTable();
+
+        // Update stat-pagamentos-mes
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1;
+        const currentYear = now.getFullYear();
+        const mesTotal = pagamentos
+          .filter(pg => {
+            if (!pg.data) return false;
+            const d = new Date(pg.data);
+            return (d.getMonth() + 1) === currentMonth && d.getFullYear() === currentYear;
+          })
+          .reduce((sum, pg) => sum + (parseFloat(pg.valor) || 0), 0);
+        document.getElementById('stat-pagamentos-mes').textContent = formatCurrency(mesTotal);
+      } catch (err) {
+        console.error('Erro ao carregar pagamentos:', err);
+        document.getElementById('pagamentos-tbody').innerHTML = `
+          <tr><td colspan="6" class="text-center py-10 text-red-400">
+            <i class="bi bi-exclamation-circle text-2xl"></i>
+            <p class="mt-2">Erro ao carregar pagamentos</p>
+          </td></tr>`;
+      }
+    }
+
+    function renderPagamentosTable() {
+      const tbody = document.getElementById('pagamentos-tbody');
+      const tfoot = document.getElementById('pagamentos-tfoot');
+      document.getElementById('pagamentos-count').textContent = allPagamentosData.length;
+
+      if (!allPagamentosData.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-gray-400">
+          <i class="bi bi-cash-stack text-3xl"></i>
+          <p class="mt-2">Nenhum pagamento encontrado</p>
+        </td></tr>`;
+        tfoot.classList.add('hidden');
+        return;
+      }
+
+      const total = allPagamentosData.reduce((sum, pg) => sum + (parseFloat(pg.valor) || 0), 0);
+
+      tbody.innerHTML = allPagamentosData.map(pg => {
+        const comprovanteHtml = pg.comprovante_path
+          ? `<a href="/${escapeHtml(pg.comprovante_path)}" target="_blank" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm flex items-center gap-1"><i class="bi bi-file-earmark"></i> Ver</a>`
+          : '<span class="text-gray-400 text-sm">-</span>';
+        return `
+          <tr class="border-t border-gray-50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30">
+            <td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">${formatDate(pg.data)}</td>
+            <td class="px-4 py-3 font-medium">${escapeHtml(pg.prestador_nome || '-')}</td>
+            <td class="px-4 py-3">${getPagTipoBadge(pg.tipo)}</td>
+            <td class="px-4 py-3 text-right font-semibold text-gray-800 dark:text-gray-200 whitespace-nowrap">${formatCurrency(pg.valor)}</td>
+            <td class="px-4 py-3 text-gray-600 dark:text-gray-400 max-w-xs truncate">${escapeHtml(pg.descricao || '-')}</td>
+            <td class="px-4 py-3">${comprovanteHtml}</td>
+          </tr>`;
+      }).join('');
+
+      document.getElementById('pagamentos-total').textContent = formatCurrency(total);
+      tfoot.classList.remove('hidden');
+    }
+
+    // ─── Init ─────────────────────────────────────────────────────────────────
+
+    window.onAuthReady = function() {
+      // Apply phone mask
+      applyPhoneMask(document.getElementById('prestador-telefone'));
+
+      // Set current month/year for pagamentos filter
+      const now = new Date();
+      document.getElementById('filter-pag-mes').value = now.getMonth() + 1;
+      document.getElementById('filter-pag-ano').value = now.getFullYear();
+
+      // Show gestor-only elements
+      const user = Shared.getUser ? Shared.getUser() : null;
+      if (user && (user.role === 'admin' || user.role === 'gestor')) {
+        document.querySelectorAll('.gestor-only').forEach(el => el.classList.remove('hidden'));
+      }
+
+      loadPrestadores();
+    };
+  </script>
+</body>
+</html>

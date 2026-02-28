@@ -161,11 +161,14 @@ class Schedulers {
       console.log('[Scheduler] WhatsApp Health Check: desativado no sandbox');
     }
 
-    // 5. Weekly summary via WhatsApp - Friday at 18:00
-    this._scheduleWeekly('Resumo Semanal WhatsApp', 5, 18, 0, () => this.sendWeeklySummary());
+    // 5. Weekly summary via WhatsApp - Tuesday at 18:00
+    this._scheduleWeekly('Resumo Semanal WhatsApp', 2, 18, 0, () => this.sendWeeklySummary());
 
     // 6. Absence alert - daily at 09:30 (checks employees who didn't register entry)
     this._scheduleDaily('Alerta de Ausência', 9, 30, () => this.checkAbsences());
+
+    // 7. Prestador frequency alert - daily at 20:00 (fixed prestadores who didn't show up)
+    this._scheduleDaily('Alerta Prestadores', 20, 0, () => this.checkPrestadorFrequency());
 
     console.log('[Scheduler] Todos os schedulers iniciados');
   }
@@ -348,7 +351,7 @@ class Schedulers {
     }
   }
 
-  // Weekly summary via WhatsApp (Friday 18:00)
+  // Weekly summary via WhatsApp (Tuesday 18:00)
   static async sendWeeklySummary() {
     try {
       const whatsappService = require('./whatsapp');
@@ -431,6 +434,40 @@ class Schedulers {
       ).get(mondayStr, today + ' 23:59:59');
       const tarefasTotal = tarefasConcluidas?.total || 0;
 
+      // 6. Prestadores visits this week
+      let prestadorRows = [];
+      try {
+        prestadorRows = db.prepare(
+          `SELECT p.nome, COUNT(v.id) as visitas,
+             SUM(CASE WHEN v.data_saida IS NOT NULL THEN 1 ELSE 0 END) as completas
+           FROM prestador_visitas v
+           JOIN prestadores p ON v.prestador_id = p.id
+           WHERE DATE(v.data_entrada) BETWEEN ? AND ?
+           GROUP BY p.id ORDER BY visitas DESC`
+        ).all(mondayStr, today);
+      } catch (e) { /* table may not exist yet */ }
+
+      // 7. Pending expenses
+      let despesasPendentes = 0;
+      let despesasValor = 0;
+      try {
+        const desp = db.prepare(
+          `SELECT COUNT(*) as total, COALESCE(SUM(valor), 0) as valor
+           FROM despesas WHERE status = 'pendente'`
+        ).get();
+        despesasPendentes = desp?.total || 0;
+        despesasValor = desp?.valor || 0;
+      } catch (e) { /* table may not exist */ }
+
+      // 8. Unprocessed emails
+      let emailsPendentes = 0;
+      try {
+        const emails = db.prepare(
+          `SELECT COUNT(*) as total FROM email_inbox WHERE status = 'pendente'`
+        ).get();
+        emailsPendentes = emails?.total || 0;
+      } catch (e) { /* table may not exist */ }
+
       // Format dates for display
       const formatBR = (d) => { const [y, m, day] = d.split('-'); return `${day}/${m}`; };
 
@@ -456,6 +493,21 @@ class Schedulers {
 
       if (tarefasTotal > 0) {
         msg += `\n✅ *Tarefas concluídas:* ${tarefasTotal}\n`;
+      }
+
+      if (prestadorRows.length > 0) {
+        msg += `\n🔧 *Prestadores:*\n`;
+        for (const p of prestadorRows) {
+          msg += `• ${p.nome}: ${p.visitas} visita(s) (${p.completas} completa(s))\n`;
+        }
+      }
+
+      if (despesasPendentes > 0) {
+        msg += `\n💰 *Despesas pendentes:* ${despesasPendentes} — R$ ${despesasValor.toFixed(2)}\n`;
+      }
+
+      if (emailsPendentes > 0) {
+        msg += `\n📩 *Emails não processados:* ${emailsPendentes}\n`;
       }
 
       if (expiradasTotal > 0) {
@@ -606,6 +658,76 @@ class Schedulers {
 
     } catch (err) {
       console.error('[Scheduler] Alerta ausência error:', err.message);
+      return { success: false, error: err.message };
+    }
+  }
+  // G4: Check prestador frequency — alert admin about fixed prestadores who didn't show up today
+  static async checkPrestadorFrequency() {
+    try {
+      const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+      const dayOfWeek = new Date().getDay(); // 0=Sun, 6=Sat
+      const dayNames = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
+      const todayName = dayNames[dayOfWeek];
+
+      // Get active fixed prestadores
+      let prestadores;
+      try {
+        prestadores = db.prepare(
+          `SELECT id, nome, frequencia_dias FROM prestadores WHERE tipo = 'fixo' AND ativo = 1 AND frequencia_dias IS NOT NULL`
+        ).all();
+      } catch (e) {
+        console.log('[Scheduler] Alerta prestadores: tabela não existe ainda');
+        return { skipped: true };
+      }
+
+      if (!prestadores || prestadores.length === 0) {
+        console.log('[Scheduler] Alerta prestadores: nenhum prestador fixo cadastrado');
+        return { skipped: true, reason: 'no_prestadores' };
+      }
+
+      const ausentes = [];
+      for (const p of prestadores) {
+        // Check if today is an expected day
+        let dias;
+        try { dias = JSON.parse(p.frequencia_dias); } catch (e) { continue; }
+        if (!Array.isArray(dias) || !dias.includes(todayName)) continue;
+
+        // Check if visited today
+        const visita = db.prepare(
+          `SELECT id FROM prestador_visitas WHERE prestador_id = ? AND DATE(data_entrada) = ?`
+        ).get(p.id, today);
+        if (!visita) {
+          ausentes.push(p.nome);
+        }
+      }
+
+      if (ausentes.length === 0) {
+        console.log('[Scheduler] Alerta prestadores: todos os esperados compareceram');
+        return { ausentes: 0 };
+      }
+
+      // Send WhatsApp alert to admin
+      const whatsappService = require('./whatsapp');
+      const admin = db.prepare("SELECT telefone FROM users WHERE role = 'admin' ORDER BY id LIMIT 1").get();
+
+      let msg = `🔧 *Alerta Prestadores — ${today.split('-').reverse().join('/')}*\n\n`;
+      msg += `${ausentes.length} prestador(es) fixo(s) não compareceram hoje:\n\n`;
+      for (const nome of ausentes) {
+        msg += `❌ ${nome}\n`;
+      }
+
+      if (whatsappService.ready && admin?.telefone) {
+        await whatsappService.sendPrivateMessage(admin.telefone, msg);
+        console.log(`[Scheduler] Alerta prestadores: ${ausentes.length} ausente(s), enviado via WhatsApp`);
+        return { ausentes: ausentes.length, via: 'whatsapp' };
+      }
+
+      // Fallback: email
+      await EmailService.sendAlert('prestador_frequency', `Alerta Prestadores — ${ausentes.length} ausência(s)`, msg.replace(/\n/g, '<br>').replace(/\*/g, ''));
+      console.log(`[Scheduler] Alerta prestadores: ${ausentes.length} ausente(s), enviado via email`);
+      return { ausentes: ausentes.length, via: 'email' };
+    } catch (err) {
+      console.error('[Scheduler] Alerta prestadores error:', err.message);
       return { success: false, error: err.message };
     }
   }

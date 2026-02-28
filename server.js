@@ -74,6 +74,8 @@ app.use('/api/sugestoes', require('./src/routes/sugestoes'));
 app.use('/api/listas-compras', require('./src/routes/listasCompras'));
 app.use('/api/despesas', require('./src/routes/despesas'));
 app.use('/api/ajuda', require('./src/routes/ajuda'));
+app.use('/api/prestadores', require('./src/routes/prestadores'));
+app.use('/api/emails', require('./src/routes/emailInbox'));
 
 // Version endpoint
 app.get('/api/version', (req, res) => {
@@ -195,6 +197,10 @@ if (require.main === module || process.env.NODE_ENV === 'production' || process.
     // Initialize email schedulers (vacation alerts, monthly closing, IMAP sync)
     const Schedulers = require('./src/services/schedulers');
     Schedulers.init();
+
+    // Initialize email inbox IMAP checker (every 5 min)
+    const emailInboxService = require('./src/services/emailInboxService');
+    emailInboxService.startChecking();
   });
 
   // Graceful shutdown: destroy WhatsApp client (kill Chrome) before PM2 restart

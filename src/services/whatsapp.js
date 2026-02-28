@@ -883,6 +883,55 @@ class WhatsAppService {
       }
     }
 
+    // Check if sender is a prestador (service provider) before registering ponto
+    if (intent && (intent === 'entrada' || intent === 'saida') && senderPhone) {
+      try {
+        const Prestador = require('../models/Prestador');
+        const prestador = Prestador.findByPhone(senderPhone);
+        if (prestador) {
+          const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+          const currentTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+          const timeToUse = this._pendingExplicitTime || currentTime;
+          this._pendingExplicitTime = null;
+
+          if (intent === 'entrada') {
+            const existing = Prestador.getTodayVisita(prestador.id, today);
+            if (existing) {
+              const entradaTime = existing.data_entrada ? existing.data_entrada.split(' ')[1] || existing.data_entrada : '?';
+              await this.sendGroupMessage(`${prestador.nome}, sua visita de hoje já foi registrada (entrada às ${entradaTime}).`);
+            } else {
+              Prestador.createVisita({ prestador_id: prestador.id, data_entrada: `${today} ${timeToUse}`, fonte: 'whatsapp' });
+              await this.sendGroupMessage(`🔧 ${prestador.nome} (prestador) registrou *chegada* às ${timeToUse}. Bom trabalho!`);
+              console.log(`[WhatsApp] Prestador ${prestador.nome} entrada at ${timeToUse}`);
+            }
+          } else {
+            const existing = Prestador.getTodayVisita(prestador.id, today);
+            if (existing && !existing.data_saida) {
+              Prestador.updateVisita(existing.id, { data_saida: `${today} ${timeToUse}` });
+              const entradaTime = existing.data_entrada ? existing.data_entrada.split(' ')[1] || existing.data_entrada : null;
+              let durStr = '';
+              if (entradaTime) {
+                const [eH, eM] = entradaTime.split(':').map(Number);
+                const [sH, sM] = timeToUse.split(':').map(Number);
+                const durMin = (sH * 60 + sM) - (eH * 60 + eM);
+                if (durMin > 0) durStr = `${Math.floor(durMin / 60)}h${durMin % 60 > 0 ? (durMin % 60) + 'min' : ''}`;
+              }
+              await this.sendGroupMessage(`🔧 ${prestador.nome} (prestador) registrou *saída* às ${timeToUse}.${durStr ? ` Duração: ${durStr}` : ''}`);
+              console.log(`[WhatsApp] Prestador ${prestador.nome} saida at ${timeToUse}`);
+            } else if (!existing) {
+              Prestador.createVisita({ prestador_id: prestador.id, data_entrada: `${today} ${timeToUse}`, data_saida: `${today} ${timeToUse}`, fonte: 'whatsapp' });
+              await this.sendGroupMessage(`🔧 ${prestador.nome} (prestador) registrou *saída* às ${timeToUse} (visita avulsa).`);
+            } else {
+              await this.sendGroupMessage(`${prestador.nome}, sua saída de hoje já foi registrada.`);
+            }
+          }
+          return; // Prestador handled, skip ponto registration
+        }
+      } catch (e) {
+        console.error('[WhatsApp] Prestador check error:', e.message);
+      }
+    }
+
     // If clock-in/out/lunch intent detected and employee found, register the punch
     if (intent && funcionario) {
       await this.registerPunch(funcionario, intent, msg, isAudioMessage);

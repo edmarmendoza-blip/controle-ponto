@@ -210,14 +210,15 @@ APP_NAME=Lar Digital
 13. **Estoque** - CRUD itens, movimentações (entrada/saída/ajuste), alertas estoque baixo, categorias
 14. **Compras** - Listas de compras, histórico de preços, notas fiscais, economia mensal (admin only, bi-cart4)
 15. **Despesas** - Reembolso de despesas, aprovação/rejeição, comprovantes, relatório com gráficos (admin only, bi-receipt)
-16. **Tarefas** - CRUD, multi-assign funcionários, prioridade/prazo, integração WhatsApp
-17. **Insights IA** - Operacional + Melhorias (admin only)
-18. **Sugestões** - Sugestões de melhoria geradas automaticamente do WhatsApp, converter em tarefa (admin only)
-19. **Usuários** - CRUD, roles, permissões tarefas, excluir com confirmação, reenviar senha (admin only)
-20. **Audit Log** - Log de ações (admin only)
-21. **Log de Acessos** - Login/logout/falhas com IP e navegador (admin only, bi-door-open)
-22. **Ajuda** - Chat com IA para dúvidas sobre o sistema (todos os usuários, bi-chat-left-dots)
-23. **Perfil** - Editar dados, trocar senha, 2FA
+16. **Prestadores** - CRUD prestadores, visitas, pagamentos, frequência (admin only, bi-person-badge)
+17. **Tarefas** - CRUD, multi-assign funcionários, prioridade/prazo, integração WhatsApp
+18. **Insights IA** - Operacional + Melhorias (admin only)
+19. **Sugestões** - Sugestões de melhoria geradas automaticamente do WhatsApp, converter em tarefa (admin only)
+20. **Usuários** - CRUD, roles, permissões tarefas, excluir com confirmação, reenviar senha (admin only)
+21. **Audit Log** - Log de ações (admin only)
+22. **Log de Acessos** - Login/logout/falhas com IP e navegador (admin only, bi-door-open)
+23. **Ajuda** - Chat com IA para dúvidas sobre o sistema (todos os usuários, bi-chat-left-dots)
+24. **Perfil** - Editar dados, trocar senha, 2FA
 
 ## CADASTRO DE CARGOS
 nome, precisa_bater_ponto, permite_hora_extra, permite_dia_extra,
@@ -263,7 +264,8 @@ funcionario_transportes, entregas, holerites, email_logs,
 audit_log, access_log, ferias, pending_confirmations,
 tarefas, tarefa_funcionarios, whatsapp_chats, veiculos, documentos,
 estoque_itens, estoque_movimentacoes, refresh_tokens,
-listas_compras, lista_compras_itens, historico_precos, despesas
+listas_compras, lista_compras_itens, historico_precos, despesas,
+prestadores, prestador_visitas, prestador_pagamentos, email_inbox
 
 ## ENTREGAS - FLUXO COMPLETO
 ### Via WhatsApp (automático com confirmação):
@@ -458,7 +460,9 @@ NÃO usar parser manual de palavras-chave. Usar IA para interpretar.
 - Mensal: Sync feriados via Google Calendar (respeitar manual=true)
 - Diário 08:00: Alertas férias
 - Diário 09:30: Alerta de ausência — verifica funcionários sem registro de entrada (WhatsApp DM / email)
-- Sexta 18:00: Resumo semanal via WhatsApp DM para admin (fallback email)
+- Terça 18:00: Resumo semanal via WhatsApp DM para admin (fallback email)
+- Diário 20:00: Alerta prestadores fixos que não compareceram (WhatsApp DM / email)
+- 5min: IMAP email inbox — verifica emails UNSEEN, classifica com Claude Haiku
 
 ## ALERTA DE AUSÊNCIA (G3)
 - Scheduler diário às 09:30 (src/services/schedulers.js → checkAbsences)
@@ -469,6 +473,67 @@ NÃO usar parser manual de palavras-chave. Usar IA para interpretar.
 - Alerta via WhatsApp DM para admin (fallback: email)
 - Mensagem lista cada funcionário ausente com horário esperado e tempo de atraso
 - Endpoint manual: POST /api/dashboard/presenca/check-ausencias (admin only)
+
+## PRESTADORES DE SERVIÇO
+### Tabelas
+- `prestadores` (id, nome, telefone, email, empresa, cnpj, cpf, tipo [fixo|avulso], frequencia_tipo, frequencia_vezes, frequencia_dias JSON, servico_descricao, valor_visita, valor_mensal, pix_chave, pix_tipo, banco, agencia, conta, observacoes, status [ativo|inativo])
+- `prestador_visitas` (id, prestador_id FK, data_entrada TEXT, data_saida TEXT, servico_realizado, valor_cobrado, avaliacao, observacao, fonte [manual|whatsapp])
+- `prestador_pagamentos` (id, prestador_id FK, visita_id FK, valor, data_pagamento, metodo, comprovante_path, status, observacao)
+
+### API Endpoints
+- GET /api/prestadores — lista (param: includeInactive=true)
+- GET /api/prestadores/:id — detalhes
+- POST /api/prestadores — criar (gestor)
+- PUT /api/prestadores/:id — atualizar (gestor)
+- DELETE /api/prestadores/:id — soft delete (gestor)
+- GET /api/prestadores/:id/visitas — listar visitas
+- POST /api/prestadores/:id/visitas — registrar visita (gestor)
+- GET /api/prestadores/:id/pagamentos — listar pagamentos
+- POST /api/prestadores/:id/pagamentos — registrar pagamento com comprovante (gestor, multer)
+
+### Frontend: prestadores.html (Tailwind)
+- 3 tabs: Cadastro, Visitas, Pagamentos
+- Stats: total ativos, visitas semana, pagamentos mês, prestadores fixos
+- CRUD modal com frequência (checkboxes seg-dom para tipo=fixo)
+- Modal visita com entrada/saída/serviço
+- Modal pagamento com upload comprovante
+
+### WhatsApp Integration
+- Prestador identificado por telefone (últimos 8 dígitos)
+- "Cheguei"/"Terminei" → registra visita entrada/saída automaticamente
+- Prioridade: prestador verificado ANTES do ponto de funcionário
+- Mensagem com emoji 🔧 e duração calculada na saída
+
+### Cron
+- Diário 20:00: checkPrestadorFrequency() — alerta admin sobre prestadores fixos ausentes
+
+## EMAIL INBOX INTELIGENTE
+### Tabela: email_inbox
+id, message_id UNIQUE, from_email, from_name, subject, body_text, attachments_count, attachment_paths JSON, classificacao, dados_extraidos JSON, acao_sugerida, status [pendente|processado|ignorado], whatsapp_notified, created_at
+
+### Serviço: emailInboxService.js
+- IMAP: Gmail (imap.gmail.com:993), verifica UNSEEN a cada 5min
+- Máx 10 emails por batch, marca como lido (markSeen: true)
+- Parse com mailparser, PDF text extraction com pdf-parse
+- Classificação Claude Haiku: convite|nota_fiscal|boleto|contrato|orcamento|comunicado|propaganda|outro
+- Dados extraídos: date, time, location, value, person, description
+- Ação sugerida: criar_evento|criar_tarefa|cadastrar_prestador|registrar_despesa|salvar_documento|ignorar
+- Attachments salvos em /uploads/emails/{safeId}/
+- WhatsApp: notifica admin (exceto propaganda) com 4 opções (1-4)
+- pending_confirmation tipo='email_action' para resposta do admin
+
+### API Endpoints
+- GET /api/emails — lista com filtros (status, classificacao, dataInicio, dataFim, limit, offset)
+- GET /api/emails/:id — detalhes
+- PUT /api/emails/:id — atualizar status (gestor)
+
+### .env
+```
+IMAP_HOST=imap.gmail.com
+IMAP_PORT=993
+IMAP_USER=edmarmbull@gmail.com
+IMAP_PASSWORD=*** (app password Gmail)
+```
 
 ## FERIADOS - SYNC GOOGLE CALENDAR
 - Sincronizar feriados do Google Calendar API (calendário público brasileiro)
@@ -484,7 +549,7 @@ NÃO usar parser manual de palavras-chave. Usar IA para interpretar.
 - Endpoint: GET `/api/version` (retorna {version, date, env})
 - Exibida no rodapé do index.html (canto inferior direito) e no copyright do login.html
 - Formato de exibição: "v2.0.0 | Sandbox | 24/02/2026" (versão | ambiente capitalizado | data DD/MM/YYYY)
-- Versão atual: 2.6.0
+- Versão atual: 2.8.0
 
 ## REGISTROS DE PONTO - FILTROS
 - Filtro por mês/ano (dropdown) ou período manual (data início/fim)

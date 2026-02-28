@@ -1,5 +1,26 @@
 # Changelog — Lar Digital
 
+## v2.8.0 (2026-02-28)
+### Novas funcionalidades
+- **Prestadores de Serviço**: CRUD completo com visitas, pagamentos, frequência
+  - Tabelas: prestadores, prestador_visitas, prestador_pagamentos
+  - Frontend: prestadores.html (Tailwind, tabs cadastro/visitas/pagamentos)
+  - WhatsApp: "cheguei"/"terminei" registra visita automaticamente
+  - Cron diário 20:00: alerta prestadores fixos que não vieram
+- **Email Inbox Inteligente**: IMAP Gmail → Claude Haiku → WhatsApp
+  - Verifica emails a cada 5 min (UNSEEN)
+  - Classifica: convite, nota_fiscal, boleto, contrato, orçamento, comunicado, propaganda, outro
+  - Extrai texto de PDFs anexos (pdf-parse)
+  - Notifica admin via WhatsApp com 4 opções de ação
+  - Tabela email_inbox com status e dados extraídos
+- **ElevenLabs**: Voice ID atualizada para RGymW84CSmfVugnA5tvA (Dorothy)
+- **Relatório semanal**: Alterado de sexta para terça-feira 18:00
+  - Novas seções: prestadores visitas, despesas pendentes, emails não processados
+- **Sidebar**: Link Prestadores (bi-person-badge) em todas as 21 páginas HTML
+
+### Dependências
+- imap, mailparser, pdf-parse (para email inbox)
+
 ## v2.4.0 (2026-02-26)
 ### Correções
 - **Presença**: Dashboard consolida 1 linha por funcionário (sem duplicatas de almoço)

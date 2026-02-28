@@ -69,7 +69,7 @@ class ElevenLabsService {
    * @param {string} [voiceId] - Voice ID (default: Dorothy - friendly female)
    * @returns {Promise<string>} Path to generated audio file
    */
-  async synthesize(text, voiceId = 'ThT5KcBeYPX3keUQqHPh') {
+  async synthesize(text, voiceId = 'RGymW84CSmfVugnA5tvA') {
     if (!process.env.ELEVENLABS_API_KEY) {
       throw new Error('ELEVENLABS_API_KEY não configurada');
     }

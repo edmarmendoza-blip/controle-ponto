@@ -853,6 +853,88 @@ function initializeDatabase() {
     `);
   } catch (e) { console.error('[Migration] despesas table:', e.message); }
 
+  // Prestadores tables
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS prestadores (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        telefone TEXT,
+        email TEXT,
+        empresa TEXT,
+        cnpj TEXT,
+        cpf TEXT,
+        tipo TEXT DEFAULT 'avulso',
+        frequencia_tipo TEXT,
+        frequencia_vezes INTEGER,
+        frequencia_dias TEXT,
+        servico_descricao TEXT,
+        valor_visita REAL,
+        valor_mensal REAL,
+        pix_chave TEXT,
+        pix_tipo TEXT,
+        banco TEXT,
+        agencia TEXT,
+        conta TEXT,
+        observacoes TEXT,
+        status TEXT DEFAULT 'ativo',
+        created_at TEXT DEFAULT (datetime('now','localtime')),
+        updated_at TEXT DEFAULT (datetime('now','localtime'))
+      );
+      CREATE TABLE IF NOT EXISTS prestador_visitas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        prestador_id INTEGER REFERENCES prestadores(id),
+        data_entrada TEXT,
+        data_saida TEXT,
+        servico_realizado TEXT,
+        valor_cobrado REAL,
+        avaliacao INTEGER,
+        observacao TEXT,
+        fonte TEXT DEFAULT 'manual',
+        created_at TEXT DEFAULT (datetime('now','localtime'))
+      );
+      CREATE TABLE IF NOT EXISTS prestador_pagamentos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        prestador_id INTEGER REFERENCES prestadores(id),
+        visita_id INTEGER REFERENCES prestador_visitas(id),
+        valor REAL,
+        data_pagamento TEXT,
+        metodo TEXT DEFAULT 'pix',
+        comprovante_path TEXT,
+        status TEXT DEFAULT 'pendente',
+        observacao TEXT,
+        created_at TEXT DEFAULT (datetime('now','localtime'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_prestador_visitas_pid ON prestador_visitas(prestador_id);
+      CREATE INDEX IF NOT EXISTS idx_prestador_pagamentos_pid ON prestador_pagamentos(prestador_id);
+    `);
+  } catch (e) { console.error('[Migration] prestadores tables:', e.message); }
+
+  // Email inbox table
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS email_inbox (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        message_id TEXT UNIQUE,
+        from_email TEXT,
+        from_name TEXT,
+        subject TEXT,
+        body_text TEXT,
+        attachments_count INTEGER DEFAULT 0,
+        attachment_paths TEXT,
+        classificacao TEXT,
+        dados_extraidos TEXT,
+        acao_sugerida TEXT,
+        acao_executada TEXT,
+        status TEXT DEFAULT 'pendente',
+        whatsapp_notified INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now','localtime'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_email_inbox_status ON email_inbox(status);
+      CREATE INDEX IF NOT EXISTS idx_email_inbox_msgid ON email_inbox(message_id);
+    `);
+  } catch (e) { console.error('[Migration] email_inbox table:', e.message); }
+
   // Cleanup expired refresh tokens
   try {
     db.prepare("DELETE FROM refresh_tokens WHERE expires_at < datetime('now','localtime')").run();
