@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0E1625">
+  <title>Lar Digital — Gestão inteligente da sua casa</title>
+  <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
+  <link rel="stylesheet" href="/css/brand.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            graphite: '#0E1625', eucalyptus: '#697F71', porcelain: '#F7F4EE',
+            mist: '#E7ECE8', sand: '#D8CCB8', indigo: '#7279F8', ink: '#1B2430',
+            muted: '#667085', success: '#1F8F5F', warning: '#C98A2E',
+            danger: '#B5473C', border: '#E8E4DE'
+          },
+          borderRadius: { sm: '8px', md: '12px', lg: '16px' },
+          boxShadow: {
+            sm: '0 1px 3px rgba(14,22,37,0.04)',
+            md: '0 4px 16px rgba(14,22,37,0.06)',
+            lg: '0 8px 40px rgba(14,22,37,0.08)'
+          },
+          fontFamily: { sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    html { scroll-behavior: smooth; }
+  </style>
+</head>
+<body class="bg-porcelain text-ink font-sans">
+
+  <!-- ===== 1. HERO ===== -->
+  <section class="bg-graphite text-white min-h-[90vh] flex flex-col">
+    <!-- Nav -->
+    <nav class="w-full px-6 py-4 flex items-center justify-between max-w-6xl mx-auto">
+      <a href="/site.html" class="flex items-center gap-3">
+        <img src="/img/logo-light.svg" alt="Lar Digital" class="h-8">
+        <span class="text-lg font-semibold tracking-tight">Lar Digital</span>
+      </a>
+      <a href="/login.html"
+         class="px-5 py-2 rounded-md bg-eucalyptus text-white text-sm font-medium hover:opacity-90 transition-opacity">
+        Acessar
+      </a>
+    </nav>
+
+    <!-- Hero Content -->
+    <div class="flex-1 flex items-center justify-center px-6">
+      <div class="max-w-3xl text-center">
+        <div class="mb-8 flex justify-center">
+          <span class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white/10">
+            <i class="bi bi-house-heart text-5xl text-eucalyptus"></i>
+          </span>
+        </div>
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+          Gestão inteligente<br>da sua casa
+        </h1>
+        <p class="text-lg md:text-xl text-white/70 mb-10 max-w-2xl mx-auto">
+          Controle de funcionários, ponto, estoque, prestadores e muito mais em um só lugar.
+        </p>
+        <a href="/login.html"
+           class="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg bg-eucalyptus text-white font-semibold text-lg hover:opacity-90 transition-opacity">
+          Começar agora
+          <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Scroll hint -->
+    <div class="pb-8 flex justify-center">
+      <a href="#funcionalidades" class="text-white/40 hover:text-white/70 transition-colors">
+        <i class="bi bi-chevron-double-down text-2xl animate-bounce"></i>
+      </a>
+    </div>
+  </section>
+
+  <!-- ===== 2. FUNCIONALIDADES ===== -->
+  <section id="funcionalidades" class="bg-porcelain py-20 px-6">
+    <div class="max-w-6xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold text-center mb-4">Tudo o que você precisa</h2>
+      <p class="text-muted text-center mb-14 max-w-xl mx-auto">
+        Funcionalidades completas para gerenciar todos os aspectos da sua residência.
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Card 1 -->
+        <div class="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 rounded-lg bg-eucalyptus/10 flex items-center justify-center mb-4">
+            <i class="bi bi-clock-history text-2xl text-eucalyptus"></i>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Controle de Ponto</h3>
+          <p class="text-muted text-sm leading-relaxed">
+            Registro via web ou WhatsApp com geolocalização. Entrada, saída e horário de almoço em tempo real.
+          </p>
+        </div>
+        <!-- Card 2 -->
+        <div class="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 rounded-lg bg-eucalyptus/10 flex items-center justify-center mb-4">
+            <i class="bi bi-people text-2xl text-eucalyptus"></i>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Funcionários</h3>
+          <p class="text-muted text-sm leading-relaxed">
+            Cadastro completo com benefícios, férias, documentos, jornada de trabalho e dados pessoais.
+          </p>
+        </div>
+        <!-- Card 3 -->
+        <div class="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 rounded-lg bg-eucalyptus/10 flex items-center justify-center mb-4">
+            <i class="bi bi-cart4 text-2xl text-eucalyptus"></i>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Estoque e Compras</h3>
+          <p class="text-muted text-sm leading-relaxed">
+            Controle de itens, listas de compras, histórico de preços e alertas de estoque baixo.
+          </p>
+        </div>
+        <!-- Card 4 -->
+        <div class="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 rounded-lg bg-eucalyptus/10 flex items-center justify-center mb-4">
+            <i class="bi bi-person-badge text-2xl text-eucalyptus"></i>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Prestadores</h3>
+          <p class="text-muted text-sm leading-relaxed">
+            Gestão de visitas, pagamentos, alertas de frequência e controle de prestadores fixos e avulsos.
+          </p>
+        </div>
+        <!-- Card 5 -->
+        <div class="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 rounded-lg bg-eucalyptus/10 flex items-center justify-center mb-4">
+            <i class="bi bi-bar-chart-line text-2xl text-eucalyptus"></i>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Relatórios</h3>
+          <p class="text-muted text-sm leading-relaxed">
+            Folha de pagamento, gráficos interativos, presença mensal e exportação em Excel e PDF.
+          </p>
+        </div>
+        <!-- Card 6 -->
+        <div class="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 rounded-lg bg-eucalyptus/10 flex items-center justify-center mb-4">
+            <i class="bi bi-whatsapp text-2xl text-eucalyptus"></i>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">WhatsApp</h3>
+          <p class="text-muted text-sm leading-relaxed">
+            Bot inteligente com IA, comandos por voz, notificações automáticas e registro de ponto por mensagem.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 3. DESTAQUES ===== -->
+  <section class="bg-white py-20 px-6">
+    <div class="max-w-6xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold text-center mb-4">Tecnologia a serviço do lar</h2>
+      <p class="text-muted text-center mb-14 max-w-xl mx-auto">
+        Recursos avançados que simplificam o dia a dia da gestão residencial.
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Destaque 1 -->
+        <div class="text-center px-4">
+          <div class="w-16 h-16 rounded-2xl bg-indigo/10 flex items-center justify-center mx-auto mb-5">
+            <i class="bi bi-stars text-3xl text-indigo"></i>
+          </div>
+          <h3 class="text-lg font-semibold mb-3">Inteligência Artificial</h3>
+          <p class="text-muted text-sm leading-relaxed">
+            Análise automática de documentos, insights operacionais, transcrição de áudio e classificação inteligente de e-mails.
+          </p>
+        </div>
+        <!-- Destaque 2 -->
+        <div class="text-center px-4">
+          <div class="w-16 h-16 rounded-2xl bg-indigo/10 flex items-center justify-center mx-auto mb-5">
+            <i class="bi bi-chat-dots text-3xl text-indigo"></i>
+          </div>
+          <h3 class="text-lg font-semibold mb-3">Comunicação Integrada</h3>
+          <p class="text-muted text-sm leading-relaxed">
+            WhatsApp bot com IA, alertas de ausência, resumo semanal automático e notificações em tempo real.
+          </p>
+        </div>
+        <!-- Destaque 3 -->
+        <div class="text-center px-4">
+          <div class="w-16 h-16 rounded-2xl bg-indigo/10 flex items-center justify-center mx-auto mb-5">
+            <i class="bi bi-shield-check text-3xl text-indigo"></i>
+          </div>
+          <h3 class="text-lg font-semibold mb-3">Controle Total</h3>
+          <p class="text-muted text-sm leading-relaxed">
+            Ponto, férias, holerites, auditoria completa, permissões por cargo e log de acessos detalhado.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 4. COMO FUNCIONA ===== -->
+  <section class="bg-porcelain py-20 px-6">
+    <div class="max-w-4xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold text-center mb-4">Simples de usar</h2>
+      <p class="text-muted text-center mb-14 max-w-xl mx-auto">
+        Comece a usar em minutos com apenas três passos.
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <!-- Passo 1 -->
+        <div class="text-center">
+          <div class="w-14 h-14 rounded-full bg-graphite text-white flex items-center justify-center mx-auto mb-5 text-xl font-bold">
+            1
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Cadastre</h3>
+          <p class="text-muted text-sm leading-relaxed">
+            Adicione funcionários, cargos e prestadores com todos os dados necessários.
+          </p>
+        </div>
+        <!-- Passo 2 -->
+        <div class="text-center">
+          <div class="w-14 h-14 rounded-full bg-graphite text-white flex items-center justify-center mx-auto mb-5 text-xl font-bold">
+            2
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Registre</h3>
+          <p class="text-muted text-sm leading-relaxed">
+            Ponto via WhatsApp, web ou automático. Estoque, compras e despesas no mesmo lugar.
+          </p>
+        </div>
+        <!-- Passo 3 -->
+        <div class="text-center">
+          <div class="w-14 h-14 rounded-full bg-graphite text-white flex items-center justify-center mx-auto mb-5 text-xl font-bold">
+            3
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Acompanhe</h3>
+          <p class="text-muted text-sm leading-relaxed">
+            Relatórios, gráficos e insights em tempo real. Tudo acessível de qualquer lugar.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 5. FOOTER ===== -->
+  <footer class="bg-graphite text-white py-12 px-6">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <img src="/img/logo-light.svg" alt="Lar Digital" class="h-7">
+        <div>
+          <span class="font-semibold">Lar Digital</span>
+          <span class="text-white/50 text-sm ml-1">— Gestão da Casa</span>
+        </div>
+      </div>
+      <div class="flex flex-col md:flex-row items-center gap-4 text-sm text-white/50">
+        <span id="footer-version"></span>
+        <a href="/login.html" class="text-eucalyptus hover:text-white transition-colors font-medium">
+          Acessar Sistema <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Load version from API
+    fetch('/api/version')
+      .then(r => r.json())
+      .then(d => {
+        const dt = d.date ? new Date(d.date + 'T12:00:00').toLocaleDateString('pt-BR') : '';
+        document.getElementById('footer-version').textContent =
+          'v' + d.version + ' | ' + dt;
+      })
+      .catch(() => {});
+  </script>
+
+</body>
+</html>

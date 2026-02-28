@@ -49,7 +49,7 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 const fs = require('fs');
 app.use((req, res, next) => {
   if (req.path === '/' || req.path === '/index.html') {
-    return res.redirect(302, '/dashboard.html');
+    return res.redirect(302, '/site.html');
   }
   if (!req.path.startsWith('/api') && !req.path.includes('.') && req.path !== '/') {
     const htmlPath = path.join(__dirname, 'public', req.path + '.html');
@@ -139,9 +139,9 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Root redirect to dashboard
+// Root redirect to landing page
 app.get('/', (req, res) => {
-  res.redirect('/dashboard.html');
+  res.redirect('/site.html');
 });
 
 // Error handler

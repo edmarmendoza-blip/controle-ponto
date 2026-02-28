@@ -263,6 +263,9 @@ APP_NAME=Lar Digital
   - `paidApiLimiter`: 20 req/hora por usuário — aplicado em enrich-cpf, analyze-crlv, buscar-placa
 - **Segurança de erros**: rotas NUNCA expõem err.message ao cliente (apenas console.error no servidor)
 
+## PÁGINAS PÚBLICAS (sem auth, sem sidebar)
+- **site.html** — Landing page institucional (ROOT `/` redireciona aqui). Apresenta o sistema para visitantes. 5 seções: Hero, Funcionalidades, Destaques, Como Funciona, Footer. Tailwind + brand.css, 100% pública, responsiva. Carrega versão via /api/version. CTA → /login.html.
+
 ## PÁGINAS DO SISTEMA (sidebar - ordem exata)
 1. **Dashboard** - Resumo do dia, presentes/ausentes, últimos registros
 2. **Funcionários** - CRUD, todos os campos, benefícios, dropdown cargo
